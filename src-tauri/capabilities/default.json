@@ -1,0 +1,13 @@
+{
+  "identifier": "default",
+  "description": "默认能力：核心 API + fs 插件 + shell 插件的最小权限（新增能力需经评审后在此显式添加）",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "fs:default",
+    "shell:default",
+    "dialog:default"
+  ]
+}

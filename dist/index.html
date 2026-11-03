@@ -1,0 +1,2587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TDev</title>
+  <style>
+    /* ===== tokens（承接 theme/tokens.json · 北极冰山·深邃蓝） ===== */
+    :root {
+      --p900:#072B4E; --p700:#0A4D8C; --p500:#1A6CB3; --p300:#5C9FD6; --p100:#C9E2F5; --p050:#E8F3FB;
+      --ink900:#102A43; --ink700:#334E68; --ink500:#627D98; --ink300:#9FB3C8; --line300:#D2E0EC;
+      --bg:#F4F8FC; --surface:#FFFFFF; --sunken:#EAF2FA;
+      --success:#2E9E6B; --warning:#D9822B; --danger:#D64545;
+      --r-sm:4px; --r-md:6px; --r-lg:8px; --r-xl:12px;
+      --sh-sm:0 1px 2px rgba(7,43,78,.08); --sh-md:0 2px 8px rgba(7,43,78,.10); --sh-lg:0 8px 24px rgba(7,43,78,.16);
+      --ease:cubic-bezier(.2,.8,.2,1);
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html,body { height:100%; }
+    body {
+      font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+      background:var(--bg); color:var(--ink900);
+      display:flex; flex-direction:column; height:100vh; overflow:hidden;
+    }
+    /* ===== 顶部标题栏 ===== */
+    .topbar {
+      height:56px; flex:none; background:var(--surface); border-bottom:1px solid var(--line300);
+      display:flex; align-items:center; padding:0 20px; gap:12px;
+    }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:600; font-size:16px; color:var(--p700); }
+    .brand .mark { width:14px; height:14px; border-radius:4px; background:linear-gradient(135deg,var(--p700),var(--p300)); }
+    .topbar .right { margin-left:auto; display:flex; align-items:center; gap:12px; font-size:13px; color:var(--ink500); }
+    /* ===== 中部主功能区 ===== */
+    .main { flex:1; display:flex; min-height:0; }
+    /* 左侧功能导航菜单栏 */
+    .menu {
+      width:240px; flex:none; background:var(--surface); border-right:1px solid var(--line300);
+      padding:16px 12px; overflow-y:auto;
+    }
+    .menu .menu-title { font-size:12px; color:var(--ink500); letter-spacing:.5px; padding:0 8px 10px; }
+    .menu .mi {
+      display:flex; align-items:center; gap:10px; padding:12px 12px; border-radius:var(--r-md);
+      font-size:14px; color:var(--ink700); cursor:pointer; transition:background .15s var(--ease),color .15s var(--ease);
+      position:relative; user-select:none;
+    }
+    .menu .mi:hover { background:var(--p050); }
+    .menu .mi.active { background:var(--p050); color:var(--p700); font-weight:600; }
+    .menu .mi.active::before { content:""; position:absolute; left:0; top:9px; bottom:9px; width:3px; border-radius:2px; background:var(--p700); }
+    .menu .mi svg { width:20px; height:20px; flex:none; stroke-width:1.5; }
+    /* 右侧功能展示、操作区 */
+    .content { flex:1; overflow-y:auto; padding:24px; }
+    .content.chat-page { overflow:hidden; padding-bottom:12px; }
+    .content.theme-page { overflow:hidden; padding-bottom:12px; }
+    .content.constr-page { overflow:hidden; padding-bottom:12px; }
+    .content.process-page { overflow:hidden; padding-bottom:12px; }
+    .page-title { font-size:24px; font-weight:600; margin-bottom:4px; }
+    .page-sub { font-size:14px; color:var(--ink500); margin-bottom:24px; }
+    .panel { background:var(--surface); border:1px solid var(--line300); border-radius:var(--r-lg); box-shadow:var(--sh-sm); padding:24px; }
+    .panel h4 { font-size:20px; font-weight:600; margin-bottom:12px; }
+    .panel p { font-size:14px; color:var(--ink700); line-height:1.6; margin-bottom:8px; }
+    .ph { height:10px; border-radius:var(--r-sm); background:var(--p050); margin-bottom:8px; }
+    .ph.short { width:70%; }
+    .ph.xs { width:40%; }
+    /* ===== 底部标题栏（状态栏） ===== */
+    .bottombar {
+      height:32px; flex:none; background:var(--surface); border-top:1px solid var(--line300);
+      display:flex; align-items:center; padding:0 20px; gap:20px; font-size:12px; color:var(--ink500);
+    }
+    .bottombar .r { margin-left:auto; display:flex; align-items:center; gap:8px; }
+    .status-dot { width:8px; height:8px; border-radius:50%; background:var(--success); }
+    /* ===== 项目下拉条 ===== */
+    .proj-bar { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+    .proj-sel {
+      flex:1; height:32px; padding:0 10px; border:1px solid var(--line300); border-radius:var(--r-md);
+      font-size:13px; font-family:inherit; color:var(--ink900); background:var(--surface);
+    }
+    .proj-sel:focus { outline:none; border-color:var(--p500); box-shadow:0 0 0 2px rgba(26,108,179,.25); }
+    .proj-add {
+      width:32px; height:32px; flex:none; border:none; border-radius:var(--r-md); background:var(--p700); color:#fff;
+      font-size:20px; line-height:1; cursor:pointer; transition:background .15s var(--ease);
+    }
+    .proj-add:hover { background:var(--p900); }
+    /* ===== 模态框 ===== */
+    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(16,42,67,.45); z-index:50; }
+    .modal.show { display:flex; }
+    .modal-box { width:440px; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--sh-lg); padding:24px; }
+    .modal-box h4 { font-size:20px; font-weight:600; margin-bottom:16px; }
+    .field { margin-bottom:14px; }
+    .field label { display:block; font-size:13px; color:var(--ink700); margin-bottom:6px; font-weight:600; }
+    .field input, .field select, .field textarea {
+      width:100%; padding:8px 10px; border:1px solid var(--line300); border-radius:var(--r-md);
+      font-size:14px; font-family:inherit; color:var(--ink900); background:var(--surface);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:var(--p500); box-shadow:0 0 0 2px rgba(26,108,179,.25); }
+    .field textarea { resize:vertical; min-height:64px; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:12px; margin-top:20px; }
+    .btn { border:none; border-radius:var(--r-md); font-size:14px; cursor:pointer; padding:0 16px; height:32px; transition:background .15s var(--ease); }
+    .btn-primary { background:var(--p700); color:#fff; }
+    .btn-primary:hover { background:var(--p900); }
+    .btn-secondary { background:var(--surface); color:var(--ink900); border:1px solid var(--line300); }
+    .btn-secondary:hover { border-color:var(--p500); color:var(--p500); }
+    .btn-danger { background:var(--danger); color:#fff; }
+    .btn-danger:hover { background:#b93a3a; }
+    /* 基础信息面板 */
+    .info-grid { display:flex; flex-direction:column; gap:0; border:1px solid var(--line300); border-radius:var(--r-lg); overflow:hidden; }
+    .info-row { display:flex; padding:12px 16px; border-bottom:1px solid var(--line300); font-size:14px; }
+    .info-row:last-child { border-bottom:none; }
+    .info-row:nth-child(even) { background:var(--bg); }
+    .info-label { width:140px; flex:none; color:var(--ink500); font-weight:600; }
+    .info-value { flex:1; color:var(--ink900); }
+    .info-value.mono { font-family:Consolas,monospace; font-size:13px; color:var(--p700); }
+    .info-actions { display:flex; justify-content:flex-end; margin-top:20px; }
+    /* 项目空间 */
+    .ws-row { display:flex; gap:8px; align-items:center; }
+    .ws-input { flex:1; height:32px; padding:0 10px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:14px; font-family:inherit; color:var(--ink900); background:var(--surface); }
+    .ws-input:focus { outline:none; border-color:var(--p500); box-shadow:0 0 0 2px rgba(26,108,179,.25); }
+    /* 配置网格（模型 / Agent 表单） */
+    .cfg-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
+    .cfg-grid .field { margin-bottom:14px; }
+    /* 已配置条目 */
+    .cfg-item { display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--line300); border-radius:var(--r-md); margin-bottom:8px; background:var(--surface); }
+    .cfg-item-main { flex:1; min-width:0; }
+    .cfg-item-name { display:block; font-size:14px; font-weight:600; color:var(--ink900); }
+    .cfg-item-sub { display:block; font-size:12px; color:var(--ink500); margin-top:2px; word-break:break-all; }
+    .cfg-item-key { display:block; font-size:12px; color:var(--p700); margin-top:2px; font-family:Consolas,monospace; }
+    .btn-sm { height:24px; padding:0 12px; font-size:12px; }
+    /* 新增项目进度框 */
+    .proj-progress {
+      position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+      width:420px; background:var(--surface); border-radius:var(--r-xl);
+      box-shadow:var(--sh-lg); border:1px solid var(--line300);
+      padding:20px 24px; z-index:100; display:none;
+    }
+    .proj-progress.show { display:block; }
+    .prog-title { font-size:15px; font-weight:600; color:var(--ink900); margin-bottom:14px; }
+    .prog-list { display:flex; flex-direction:column; gap:8px; }
+    .prog-step { display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--bg); border-radius:var(--r-md); font-size:13px; color:var(--ink700); }
+    .prog-dot { width:18px; height:18px; flex:none; border-radius:50%; background:var(--p300); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; }
+    .prog-step.ok .prog-dot { background:var(--success); }
+    .prog-step.fail .prog-dot { background:var(--danger); }
+    .prog-step.fail { color:var(--danger); }
+    /* ===== 聊天界面（QQ 风格） ===== */
+    .chat-panel { display:flex; flex-direction:column; height:calc(100vh - 225px); min-height:380px; background:var(--surface); border:1px solid var(--line300); border-radius:var(--r-lg); overflow:hidden; }
+    .chat-head { display:flex; align-items:center; gap:10px; padding:10px 16px; background:var(--bg); border-bottom:1px solid var(--line300); }
+    .chat-agent-label { font-size:13px; color:var(--ink700); font-weight:600; }
+    .chat-sel { height:28px; padding:0 8px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:12px; color:var(--ink900); background:var(--surface); min-width:160px; max-width:280px; }
+    .chat-status { font-size:12px; padding:2px 10px; border-radius:10px; font-weight:600; }
+    .chat-status.on { background:rgba(46,158,107,.15); color:#1e7a52; }
+    .chat-status.off { background:rgba(214,69,69,.12); color:#b03a3a; }
+    .chat-status.pending { background:rgba(217,130,43,.15); color:#a4651a; }
+    .chat-msg-list { flex:1; overflow-y:auto; padding:16px; background:var(--bg); display:flex; flex-direction:column; gap:10px; }
+    .chat-row { display:flex; }
+    .chat-row.me { justify-content:flex-end; }
+    .chat-row.agent { justify-content:flex-start; }
+    .chat-bubble { max-width:70%; padding:9px 14px; border-radius:12px; font-size:14px; line-height:1.5; word-break:break-word; }
+    .chat-row.me .chat-bubble { background:var(--p700); color:#fff; border-bottom-right-radius:4px; }
+    .chat-row.agent .chat-bubble { background:var(--surface); color:var(--ink900); border:1px solid var(--line300); border-bottom-left-radius:4px; }
+    .chat-sys { text-align:center; font-size:12px; color:var(--ink500); padding:4px 0; }
+    .chat-input-row { display:flex; gap:10px; padding:12px 16px; background:var(--surface); border-top:1px solid var(--line300); }
+    .chat-input { flex:1; height:36px; padding:0 14px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:14px; font-family:inherit; color:var(--ink900); background:var(--surface); }
+    .chat-input:focus { outline:none; border-color:var(--p500); box-shadow:0 0 0 2px rgba(26,108,179,.25); }
+    /* ===== 主题风格页 ===== */
+    .theme-panel { display:flex; flex-direction:column; gap:16px; max-width:1204px; height:calc(100vh - 190px); min-height:440px; background:var(--surface); border:1px solid var(--line300); border-radius:var(--r-lg); padding:24px; overflow:hidden; }
+    .theme-row { display:flex; align-items:center; gap:12px; }
+    .theme-row-preview { flex:1; min-height:0; align-items:stretch; }
+    .theme-label { font-size:13px; color:var(--ink700); font-weight:600; min-width:70px; }
+    .theme-result { flex:1; min-height:260px; max-height:420px; overflow:auto; background:var(--bg); border:1px solid var(--line300); border-radius:var(--r-md); padding:12px; font-family:"Cascadia Code",Consolas,monospace; font-size:12px; color:var(--ink900); white-space:pre-wrap; word-break:break-all; }
+    .theme-color { width:44px; height:32px; border:1px solid var(--line300); border-radius:var(--r-md); padding:2px; background:var(--surface); cursor:pointer; }
+    .theme-color-hint { font-size:12px; color:var(--ink500); }
+    .theme-tpl-info { font-size:12px; color:var(--ink500); font-family:Consolas,monospace; }
+    .theme-preview { flex:1; width:100%; height:100%; min-height:0; border:1px solid var(--line300); border-radius:var(--r-md); background:#fff; }
+    .theme-panel .theme-row:last-child { margin-top:auto; }
+    /* ===== 项目约束页 ===== */
+    .constr-panel { display:flex; flex-direction:column; gap:20px; max-width:960px; background:var(--surface); border:1px solid var(--line300); border-radius:var(--r-lg); padding:24px; overflow-y:auto; max-height:calc(100vh - 190px); }
+    .constr-loading, .constr-empty { color:var(--ink500); font-size:14px; padding:20px; text-align:center; }
+    .constr-sec { font-size:16px; font-weight:600; color:var(--ink900); margin:8px 0 12px; padding-left:12px; border-left:3px solid var(--p700); }
+    .constr-files { display:flex; gap:12px; flex-wrap:wrap; }
+    .constr-card { display:flex; align-items:center; gap:12px; flex:1; min-width:240px; padding:14px 16px; background:var(--bg); border:1px solid var(--line300); border-radius:var(--r-lg); cursor:pointer; transition:all .15s; }
+    .constr-card:hover { border-color:var(--p500); box-shadow:0 2px 8px rgba(26,108,179,.12); transform:translateY(-1px); }
+    .cc-icon { width:40px; height:40px; border-radius:10px; background:var(--p700); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; flex:none; }
+    .cc-body { flex:1; min-width:0; }
+    .cc-name { font-size:14px; font-weight:600; color:var(--ink900); }
+    .cc-desc { font-size:12px; color:var(--ink500); margin-top:2px; }
+    .cc-arrow { font-size:20px; color:var(--ink400); }
+    .constr-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .constr-table th { background:var(--bg); color:var(--ink700); font-weight:600; text-align:left; padding:10px 12px; border-bottom:2px solid var(--line300); }
+    .constr-table td { padding:10px 12px; border-bottom:1px solid var(--line200); color:var(--ink900); vertical-align:top; }
+    .constr-forbid { color:var(--danger); }
+    .constr-list { display:flex; flex-direction:column; gap:8px; }
+    .constr-item { display:flex; align-items:flex-start; gap:8px; font-size:13px; color:var(--ink900); cursor:default; }
+    .constr-item input { margin-top:2px; }
+    .constr-steps { display:flex; gap:8px; flex-wrap:wrap; }
+    .constr-step { display:flex; align-items:center; gap:10px; flex:1; min-width:200px; padding:12px; background:var(--bg); border:1px solid var(--line300); border-radius:var(--r-lg); }
+    .cs-num { width:28px; height:28px; border-radius:50%; background:var(--p700); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; flex:none; }
+    .cs-text { font-size:13px; color:var(--ink900); }
+    .constr-details { border:1px solid var(--line300); border-radius:var(--r-md); padding:12px 16px; }
+    .constr-details summary { cursor:pointer; font-size:13px; font-weight:600; color:var(--ink700); }
+    .constr-modal { position:fixed; inset:0; background:rgba(16,42,67,.5); z-index:999; display:flex; align-items:center; justify-content:center; }
+    .cm-box { width:80%; max-width:900px; height:80%; background:var(--surface); border-radius:var(--r-lg); display:flex; flex-direction:column; overflow:hidden; box-shadow:var(--sh-lg); }
+    .cm-head { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; background:var(--bg); border-bottom:1px solid var(--line300); font-weight:600; color:var(--ink900); }
+    .cm-close { background:none; border:none; font-size:24px; color:var(--ink500); cursor:pointer; }
+    .cm-body { flex:1; overflow:auto; padding:20px; font-family:"Cascadia Code",Consolas,monospace; font-size:12px; color:var(--ink900); white-space:pre-wrap; }
+    /* ===== 业务流程页 ===== */
+    .proc-layout { display:flex; gap:16px; height:calc(100vh - 190px); min-height:440px; }
+    .proc-chat { flex:1 1 37.5%; min-width:0; display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--line300); border-radius:var(--r-lg); overflow:hidden; }
+    .proc-chat-head { padding:12px 16px; background:var(--bg); border-bottom:1px solid var(--line300); font-weight:600; color:var(--ink900); font-size:14px; }
+    .proc-chat-list { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; background:var(--bg); }
+    .proc-chat-input { display:flex; gap:8px; padding:12px; border-top:1px solid var(--line300); background:var(--surface); align-items:flex-end; }
+    .proc-ta { flex:1; min-height:56px; max-height:140px; resize:vertical; font-family:inherit; line-height:1.5; }
+    .proc-canvas { flex:1 1 62.5%; min-width:0; display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--line300); border-radius:var(--r-lg); overflow:hidden; }
+    .proc-canvas-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg); border-bottom:1px solid var(--line300); }
+    .proc-canvas-head span { font-weight:600; color:var(--ink900); font-size:14px; }
+    .proc-hint { font-size:12px; color:var(--ink500); font-weight:400; display:flex; align-items:center; gap:6px; }
+    .btn-xs { padding:3px 10px; font-size:12px; border:1px solid var(--line300); border-radius:6px; background:var(--surface); color:var(--ink700); cursor:pointer; }
+    .btn-xs:hover { border-color:var(--p500); color:var(--p700); }
+    .proc-sep { width:1px; height:16px; background:var(--line300); display:inline-block; vertical-align:middle; margin:0 6px; }
+    .btn-acc { border-color:var(--p500); color:var(--p700); font-weight:600; }
+    .btn-acc:hover { background:rgba(26,108,179,.1); }
+    .proc-canvas-body { flex:1; overflow-y:auto; padding:24px; }
+    .proc-empty { text-align:center; color:var(--ink400); font-size:14px; padding:60px 0; }
+    .proc-flow { display:flex; flex-direction:column; align-items:stretch; }
+    .proc-row { display:flex; align-items:flex-start; gap:0; min-height:56px; }
+    .proc-main-col { flex:none; width:270px; }
+    .proc-node-col { flex:none; width:250px; }
+    .proc-node-col.main { width:200px; }
+    .proc-sub-node { position:relative; display:flex; align-items:center; gap:6px; padding:7px 12px; min-width:220px; background:var(--bg); border:1px solid var(--line300); border-radius:var(--r-md); cursor:pointer; font-weight:500; color:var(--ink900); transition:all .15s; font-size:13px; }
+    .proc-sub-node:hover { border-color:var(--p500); background:var(--bg); }
+    .proc-sub-node.expanded { border-color:var(--p500); background:rgba(26,108,179,.08); }
+    .proc-main-node { position:relative; display:flex; align-items:center; gap:8px; padding:10px 14px; min-width:240px; background:var(--p700); color:#fff; border-radius:var(--r-lg); cursor:pointer; font-weight:600; transition:all .15s; box-shadow:0 2px 6px rgba(26,108,179,.2); }
+    .proc-main-node:hover { transform:translateY(-1px); box-shadow:0 4px 10px rgba(26,108,179,.3); }
+    .proc-main-node.expanded { background:var(--p500); }
+    .proc-node-num { width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-size:12px; flex:none; }
+    .proc-node-name { font-size:14px; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .proc-node-more { margin-left:8px; font-size:16px; opacity:.9; }
+    .proc-node-flag { margin-left:8px; width:22px; height:22px; font-size:14px; line-height:22px; text-align:center; cursor:pointer; color:var(--ink400); flex:none; border-radius:50%; background:var(--bg); border:1px solid var(--line300); }
+    .proc-main-node .proc-node-flag { background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.4); color:#fff; }
+    .proc-node-flag:hover { border-color:var(--p500); }
+    .proc-main-node.has-props .proc-node-flag, .proc-sub-node.has-props .proc-node-flag { color:#2e9e6b; border-color:#2e9e6b; background:rgba(46,158,107,.15); }
+    .proc-node-ops { position:absolute; top:-16px; right:0; display:flex; gap:4px; opacity:0; transition:opacity .15s; z-index:30; background:var(--surface); border:1px solid var(--line300); border-radius:8px; padding:2px 4px; box-shadow:0 2px 8px rgba(16,42,67,.15); }
+    .proc-main-node:hover .proc-node-ops, .proc-sub-node:hover .proc-node-ops { opacity:1; }
+    .proc-op { padding:1px 5px; font-size:10px; border:1px solid var(--line300); border-radius:5px; background:var(--surface); color:var(--ink700); cursor:pointer; line-height:1.5; white-space:nowrap; flex:none; }
+    .proc-op:hover { border-color:var(--p500); color:var(--p700); }
+    .proc-main-node .proc-op { background:var(--surface); border-color:var(--line300); color:var(--ink700); }
+    .proc-main-node .proc-op:hover { border-color:var(--p500); color:var(--p700); }
+    .proc-op-del { color:#b03a3a; }
+    .proc-op-del:hover { border-color:#b03a3a; color:#b03a3a; }
+    .proc-main-node .proc-node-flag { color:rgba(255,255,255,.6); }
+    .proc-main-node.has-props, .proc-sub-node.has-props { box-shadow:0 0 0 2px var(--p400); }
+
+    .proc-sub-node.has-props { border-color:var(--p500); }
+    /* 属性编辑弹窗 */
+    .proc-modal { position:fixed; inset:0; background:rgba(16,42,67,.5); z-index:999; display:flex; align-items:center; justify-content:center; }
+    .pm-box { width:784px; max-height:90%; background:var(--surface); border-radius:var(--r-lg); display:flex; flex-direction:column; overflow:hidden; box-shadow:var(--sh-lg); }
+    .pm-head { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; background:var(--bg); border-bottom:1px solid var(--line300); font-weight:600; color:var(--ink900); }
+    .pm-close { background:none; border:none; font-size:22px; color:var(--ink500); cursor:pointer; }
+    .pm-body { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:12px; }
+    .pm-field { display:flex; flex-direction:column; gap:4px; }
+    .pm-row { display:flex; gap:16px; align-items:stretch; }
+    .pm-row .pm-field { flex:1; min-width:0; }
+    .pm-hor { flex-direction:row; align-items:center; gap:8px; }
+    .pm-hor label { flex:none; width:64px; text-align:right; }
+    .pm-hor input { flex:1; min-width:0; }
+    .pm-hor-ta { flex:1; min-width:0; }
+    .pm-field label { font-size:12px; font-weight:600; color:var(--ink700); }
+    .pm-field input { padding:8px 12px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:13px; color:var(--ink900); background:var(--bg); }
+    .pm-field select#bkSel { width:100%; min-height:96px; padding:10px 12px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:16px; color:var(--ink900); background:var(--bg); cursor:pointer; }
+    .pm-field select#bkSel:focus { outline:none; border-color:var(--p500); box-shadow:0 0 0 2px rgba(26,108,179,.15); }
+    .pm-field select#bkSel option { font-size:15px; padding:6px 4px; }
+    .pm-field input:focus { outline:none; border-color:var(--p500); box-shadow:0 0 0 2px rgba(26,108,179,.15); }
+    .pm-ta { min-height:100px; max-height:200px; padding:8px 12px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:13px; color:var(--ink900); background:var(--bg); resize:vertical; font-family:inherit; line-height:1.5; }
+    .pm-ta-sm { min-height:52px; max-height:80px; }   /* 输入/输出：2 行文字高 */
+    .pm-ta-lg { min-height:220px; max-height:320px; } /* 业务逻辑：吸收省出的高度 */
+    .pm-ta:focus { outline:none; border-color:var(--p500); box-shadow:0 0 0 2px rgba(26,108,179,.15); }
+    .pm-foot { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background:var(--bg); border-top:1px solid var(--line300); }
+    .pm-hint { font-size:12px; color:var(--ink500); }
+    .pm-box-sm { width:520px; }
+    .pm-radio-row { display:flex; gap:16px; font-size:13px; color:var(--ink900); }
+    .pm-radio-row label { display:flex; align-items:center; gap:4px; cursor:pointer; }
+    .pm-info { font-size:13px; color:var(--ink900); background:var(--bg); border:1px solid var(--line300); border-radius:var(--r-md); padding:10px 12px; line-height:1.7; min-height:60px; }
+    .proc-main-arrow { color:var(--p500); font-size:18px; padding:4px 0 4px 16px; margin-left:0; }
+    .proc-drop-slot { padding:4px 0; border-radius:8px; transition:background .15s; }
+    .proc-child-slot { padding:2px 0; width:100%; }
+    .proc-child-slot .proc-child-arrow { text-align:left; padding-left:6px; color:var(--ink400); font-size:11px; }
+    .proc-drop-slot.drag-over { background:rgba(26,108,179,.12); box-shadow:inset 0 0 0 2px var(--p400); }
+    .proc-main-node.drag-target, .proc-sub-node.drag-target { box-shadow:0 0 0 3px #ffd700; outline:2px dashed #ffd700; }
+    .proc-main-node[draggable="true"], .proc-sub-node[draggable="true"] { cursor:grab; }
+    .proc-main-node[draggable="true"]:active, .proc-sub-node[draggable="true"]:active { cursor:grabbing; }
+    /* 右列分支：连接线 + 子流程列 */
+    .proc-branch { display:flex; align-items:center; flex:1; min-width:0; }
+    .proc-branch-link { width:36px; flex:none; height:0; border-top:2px solid var(--p400); position:relative; margin-top:0; }
+    .proc-branch-link::after { content:''; position:absolute; right:-5px; top:-5px; width:8px; height:8px; border-radius:50%; background:var(--p400); }
+    .proc-branch-col { display:flex; flex-direction:column; align-items:flex-start; padding:4px 0 4px 10px; border-left:2px dashed var(--line300); }
+    .proc-child-node { display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--bg); border:1px solid var(--line300); border-radius:var(--r-md); font-size:13px; color:var(--ink900); }
+    .proc-child-num { font-size:11px; color:var(--ink400); min-width:32px; }
+    .proc-child-name { font-size:13px; }
+    .proc-child-arrow { color:var(--ink400); font-size:12px; padding-left:14px; }
+    .cm-edit { border:none; resize:none; outline:none; background:var(--surface); line-height:1.6; }
+    .cm-edit:focus { box-shadow:inset 0 0 0 1px var(--p500); }
+    .cm-foot { display:flex; align-items:center; justify-content:space-between; padding:10px 20px; background:var(--bg); border-top:1px solid var(--line300); }
+    .cm-hint { font-size:12px; color:var(--ink500); }
+    .cm-save-status { font-size:12px; padding:2px 10px; border-radius:10px; margin-right:8px; }
+    .cm-save-status.ok { background:rgba(46,158,107,.15); color:#1e7a52; }
+    .cm-save-status.dirty { background:rgba(217,130,43,.15); color:#a4651a; }
+    .cm-save-status.err { background:rgba(214,69,69,.12); color:#b03a3a; }
+  </style>
+</head>
+<body>
+  <!-- 顶部标题栏 -->
+  <header class="topbar">
+    <div class="brand"><span class="mark"></span>TDev</div>
+    <div class="right">
+      <span id="envTag">北极冰山 · 深邃蓝</span>
+      <span id="ipcState">未连接</span>
+    </div>
+  </header>
+
+  <!-- 中部主功能区 -->
+  <div class="main">
+    <!-- 左侧功能导航菜单栏 -->
+    <aside class="menu">
+      <div class="proj-bar">
+        <select id="projSel" class="proj-sel"><option value="">未选择项目</option></select>
+        <button id="projAdd" class="proj-add" title="新增项目">＋</button>
+      </div>
+      <div class="menu-title">项目工作</div>
+      <div class="mi active" data-m="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11v5"/></svg>基础信息</div>
+      <div class="mi" data-m="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 0 0 0 18h1.5a2 2 0 0 0 1.6-3.2A2 2 0 0 1 14 15.6H19a2 2 0 0 0 2-2A9 9 0 0 0 12 3z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg>主题风格</div>
+      <div class="mi" data-m="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9.5 12l2 2 3.5-3.5"/></svg>项目约束</div>
+      <div class="mi" data-m="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="5" rx="1"/><rect x="14" y="15" width="7" height="5" rx="1"/><path d="M6.5 9v3a3 3 0 0 0 3 3h4.5"/></svg>业务流程</div>
+      <div class="mi" data-m="4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>部署发布</div>
+      <div class="menu-title" style="margin-top:24px">工具设置</div>
+      <div class="mi" data-m="5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 12h18"/></svg>项目空间</div>
+      <div class="mi" data-m="6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M6 6l1.8 1.8M16.2 16.2L18 18M18 6l-1.8 1.8M7.8 16.2L6 18"/></svg>模型配置</div>
+      <div class="mi" data-m="7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 3v5"/><circle cx="9" cy="13" r="0.6"/><circle cx="15" cy="13" r="0.6"/></svg>Agent配置</div>
+      <div class="menu-title" style="margin-top:24px">测试模块</div>
+      <div class="mi" data-m="8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Agent连接测试</div>
+    </aside>
+
+    <!-- 右侧功能展示、操作区 -->
+    <section class="content" id="content"></section>
+  </div>
+
+  <!-- 底部标题栏（状态栏） -->
+  <footer class="bottombar">
+    <span>TDev v0.1.0</span>
+    <span class="r"><span class="status-dot"></span><span id="statusText">就绪</span></span>
+  </footer>
+
+  <!-- 新增项目模态框 -->
+  <div class="modal" id="projModal">
+    <div class="modal-box">
+      <h4>新增项目</h4>
+      <div class="field"><label>项目名称</label><input id="pjName" type="text" placeholder="请输入项目名称" /></div>
+      <div class="field"><label>项目类型</label>
+        <select id="pjType">
+          <option value="web">web</option>
+          <option value="windows program">windows program</option>
+          <option value="Tauri">Tauri</option>
+        </select>
+      </div>
+      <div class="field"><label>项目说明</label><textarea id="pjDesc" placeholder="请输入项目说明"></textarea></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="pjCancel">取消</button>
+        <button class="btn btn-primary" id="pjSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== 五大菜单面板内容 =====
+    var MODULES = {
+      0: { t: "基础信息", s: "所选项目的基础信息", body: [] },
+      1: { t: "主题风格", s: "AI 生成主题交互定义（基于模板）", body: [], dynamic: "theme" },
+      2: { t: "项目约束", s: "开发规范与红线约束（模板：devStandard）", body: [], dynamic: "constraints" },
+      3: { t: "业务流程", s: "AI 梳理业务流程，生成可交互流程图", body: [], dynamic: "process" },
+      4: { t: "部署发布", s: "构建、打包与发布", body: [
+            "构建：cargo build --manifest-path src-tauri/Cargo.toml",
+            "发布：cargo build --release（无黑窗），产物 target/release/tdev.exe",
+            "打包安装器：cargo tauri build（NSIS/MSI）。"
+          ]},
+      5: { t: "项目空间", s: "设定 TDev 工具的工作路径", body: [], dynamic: "workspace" },
+      6: { t: "模型配置", s: "大模型接入参数配置（URL / API Key / 模型名）", body: [], dynamic: "models" },
+      7: { t: "Agent配置", s: "OpenClaw / Hermes 等 Agent 接入参数", body: [], dynamic: "agents" },
+      8: { t: "Agent连接测试", s: "在线与 Agent 沟通聊天（对接 Hermes Dashboard）", body: [], dynamic: "chat" }
+    };
+
+    var content = document.getElementById("content");
+    var items = document.querySelectorAll(".mi");
+    var current = 0;
+    var dbState = { ready:false, msg:"初始化中…", meta:null };
+
+    function dbBox() {
+      return '<div class="panel" style="margin-top:16px"><h4>本地数据库（SQLite）</h4>' +
+        '<p>' + dbState.msg + '</p>' +
+        (dbState.meta ? '<p style="font-family:Consolas,monospace;font-size:12px;color:var(--ink700)">app_meta = ' + JSON.stringify(dbState.meta) + '</p>' : '') +
+        '</div>';
+    }
+
+    // ===== 基础信息页：渲染所选项目信息 + 删除项目 =====
+    var currentProject = null; // 当前选中项目对象
+
+    function escHtml(s) {
+      return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function infoRow(label, value, mono) {
+      return '<div class="info-row"><span class="info-label">' + escHtml(label) + '</span>' +
+        '<span class="info-value' + (mono ? ' mono' : '') + '">' + escHtml(value == null ? "-" : value) + '</span></div>';
+    }
+
+    function renderInfoPanel() {
+      var panel = '<div class="panel info-panel">' +
+        '<h4>项目基础信息</h4>' +
+        '<div class="info-grid">' +
+        infoRow("项目名称", currentProject ? currentProject.prjName : "-") +
+        infoRow("项目类型", currentProject ? currentProject.prjType : "-") +
+        infoRow("项目说明", currentProject ? currentProject.prjDescription : "-") +
+        infoRow("项目标识 (prjGUID)", currentProject ? currentProject.prjGUID : "-", true) +
+        infoRow("创建时间", currentProject ? currentProject.created_at : "-") +
+        '</div>' +
+        (currentProject ? '<div class="info-actions"><button class="btn btn-danger" id="delProjBtn">删除项目</button></div>' : '') +
+        '</div>';
+      content.innerHTML = '<div class="page-title">基础信息</div>' +
+        '<div class="page-sub">所选项目的基础信息</div>' + panel;
+      var delBtn = document.getElementById("delProjBtn");
+      if (delBtn) delBtn.addEventListener("click", deleteCurrentProject);
+    }
+
+    function deleteCurrentProject() {
+      if (!currentProject) return;
+      if (!window.confirm("确定删除项目「" + currentProject.prjName + "」？此操作不可撤销。")) return;
+      window.__TAURI__.core.invoke("project_delete", { prjGuid: currentProject.prjGUID })
+        .then(function(ok) {
+          if (ok) {
+            document.getElementById("statusText").textContent = "已删除项目：" + currentProject.prjName;
+            currentProject = null;
+            document.getElementById("projSel").value = "";
+            loadProjects();
+            renderInfoPanel();
+          } else {
+            alert("删除失败：未找到该项目");
+          }
+        })
+        .catch(function(e) { alert("删除失败：" + e); });
+    }
+
+    // 项目下拉框选中联动：记录 currentProject 并在基础信息页刷新
+    function bindProjSel() {
+      var sel = document.getElementById("projSel");
+      if (!sel) return;
+      sel.addEventListener("change", function() {
+        var guid = sel.value;
+        if (!guid) {
+          currentProject = null;
+          if (current === 0) renderInfoPanel();
+          if (current === 1) { thUpdateStatus(); thRestore(); }  // 主题页：刷新状态 + 加载该项目主题
+          if (current === 2) renderConstraints();  // 约束页：加载该项目 devStandard
+          if (current === 3) renderProcess();  // 流程页：加载该项目业务流程
+          if (current === 8) renderChat();  // 聊天页：切到默认会话（无项目）
+          return;
+        }
+        window.__TAURI__.core.invoke("project_list").then(function(list) {
+          var found = null;
+          (list || []).forEach(function(p){ if (p.prjGUID === guid) found = p; });
+          currentProject = found;
+          if (current === 0) renderInfoPanel();
+          if (current === 1) { thUpdateStatus(); thRestore(); }  // 主题页：刷新状态 + 加载该项目主题
+          if (current === 2) renderConstraints();  // 约束页：加载该项目 devStandard
+          if (current === 3) renderProcess();  // 流程页：加载该项目业务流程
+          if (current === 8) renderChat();  // 聊天页：切换会话 + 加载该项目历史
+        });
+      });
+    }
+
+
+    // ================= 工具设置：动态页面渲染 =================
+    var cfgCache = { workspace: null, models: [], agents: [] };
+
+    function escHtml(s) {
+      return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    // 通用: 读取配置（category: workspace/models/agents）
+    function cfgLoad(category) {
+      if (!window.__TAURI__ || !window.__TAURI__.core) return Promise.resolve(null);
+      return window.__TAURI__.core.invoke("cfg_load", { category: category }).then(function(v){
+        try { return v ? JSON.parse(v) : null; } catch(e) { return null; }
+      }).catch(function(){ return null; });
+    }
+    // 通用: 保存配置
+    function cfgSave(category, payload) {
+      if (!window.__TAURI__ || !window.__TAURI__.core) return Promise.reject("Tauri 不可用");
+      return window.__TAURI__.core.invoke("cfg_save", { category: category, payload: JSON.stringify(payload) });
+    }
+
+    // ---------- 项目空间 ----------
+    function renderWorkspace() {
+      cfgLoad("workspace").then(function(cfg){
+        var path = cfg && cfg.path ? cfg.path : "";
+        content.innerHTML =
+          '<div class="page-title">项目空间</div>' +
+          '<div class="page-sub">设定 TDev 工具的主要工作路径</div>' +
+          '<div class="panel">' +
+            '<h4>工作路径</h4>' +
+            '<p style="margin-bottom:12px;color:var(--ink700)">选择一个系统硬盘路径作为 TDev 的主要工作目录，项目文件、配置与产出将存放于此。</p>' +
+            '<div class="ws-row">' +
+              '<input id="wsPath" class="ws-input" type="text" value="' + escHtml(path) + '" placeholder="例如 D:\Work\TDev" />' +
+              '<button class="btn btn-secondary" id="wsBrowse" style="flex:none">浏览…</button>' +
+              '<button class="btn btn-primary" id="wsSave" style="flex:none">保存</button>' +
+            '</div>' +
+            '<p id="wsStatus" style="margin-top:10px;font-size:13px;color:var(--ink500)">' + (path ? "当前：" + escHtml(path) : "尚未设置工作路径") + '</p>' +
+          '</div>';
+        document.getElementById("wsSave").addEventListener("click", function(){
+          var v = document.getElementById("wsPath").value.trim();
+          if (!v) { document.getElementById("wsStatus").textContent = "请输入路径"; return; }
+          cfgSave("workspace", { path: v }).then(function(){
+            document.getElementById("wsStatus").textContent = "已保存：" + v;
+            document.getElementById("statusText").textContent = "工作路径已保存";
+          }).catch(function(e){ document.getElementById("wsStatus").textContent = "保存失败：" + e; });
+        });
+        document.getElementById("wsBrowse").addEventListener("click", function(){
+          if (window.__TAURI__ && window.__TAURI__.dialog) {
+            window.__TAURI__.dialog.open({ directory: true, multiple: false }).then(function(sel){
+              if (sel) document.getElementById("wsPath").value = sel;
+            }).catch(function(){});
+          } else {
+            document.getElementById("wsStatus").textContent = "文件对话框不可用（非 Tauri 环境）";
+          }
+        });
+      });
+    }
+
+    // ---------- 模型配置 ----------
+    function renderModels() {
+      cfgLoad("models").then(function(cfg){
+        var list = (cfg && cfg.list) ? cfg.list : [];
+        content.innerHTML =
+          '<div class="page-title">模型配置</div>' +
+          '<div class="page-sub">配置大模型接入参数（支持 OpenAI / DeepSeek / 通义 / 方舟 / Anthropic / Gemini 等）</div>' +
+          '<div class="panel">' +
+            '<h4>新增模型</h4>' +
+            '<div class="cfg-grid">' +
+              '<div class="field"><label>配置名称</label><input id="mName" placeholder="例如 DeepSeek 主模型" /></div>' +
+              '<div class="field"><label>提供商</label><select id="mProvider">' +
+                '<option value="openai">OpenAI</option><option value="deepseek">DeepSeek</option>' +
+                '<option value="ark">火山方舟 (Volcengine Ark)</option><option value="dashscope">阿里通义 (DashScope)</option>' +
+                '<option value="anthropic">Anthropic</option><option value="gemini">Google Gemini</option>' +
+                '<option value="ollama">Ollama (本地)</option><option value="custom">自定义 (OpenAI 兼容)</option>' +
+              '</select></div>' +
+              '<div class="field"><label>模型 URL 地址</label><input id="mUrl" placeholder="https://api.deepseek.com/v1" /></div>' +
+              '<div class="field"><label>API Key</label><input id="mKey" type="password" placeholder="sk-..." /></div>' +
+              '<div class="field"><label>模型名称</label><input id="mModel" placeholder="deepseek-chat / gpt-4o / ..." /></div>' +
+            '</div>' +
+            '<div class="info-actions"><button class="btn btn-primary" id="mAdd">添加模型</button></div>' +
+            '<h4 style="margin-top:24px">已配置模型</h4>' +
+            '<div id="mList"></div>' +
+          '</div>';
+        document.getElementById("mAdd").addEventListener("click", function(){
+          var name = document.getElementById("mName").value.trim();
+          var provider = document.getElementById("mProvider").value;
+          var url = document.getElementById("mUrl").value.trim();
+          var key = document.getElementById("mKey").value.trim();
+          var model = document.getElementById("mModel").value.trim();
+          if (!name || !url || !key || !model) { alert("请填写全部字段"); return; }
+          list.push({ name: name, provider: provider, url: url, key: key, model: model });
+          cfgSave("models", { list: list }).then(function(){
+            renderModels();
+            document.getElementById("statusText").textContent = "已添加模型：" + name;
+          }).catch(function(e){ alert("保存失败：" + e); });
+        });
+        renderModelList(list);
+      });
+    }
+    function renderModelList(list) {
+      var box = document.getElementById("mList");
+      if (!box) return;
+      if (!list.length) { box.innerHTML = '<p style="color:var(--ink500);font-size:13px">暂无模型配置，请添加。</p>'; return; }
+      var rows = list.map(function(m, i){
+        var masked = m.key ? m.key.slice(0, 6) + "••••" + m.key.slice(-4) : "";
+        return '<div class="cfg-item">' +
+          '<div class="cfg-item-main"><span class="cfg-item-name">' + escHtml(m.name) + '</span>' +
+          '<span class="cfg-item-sub">' + escHtml(m.provider) + ' · ' + escHtml(m.model) + ' · ' + escHtml(m.url) + '</span>' +
+          '<span class="cfg-item-key">Key: ' + escHtml(masked) + '</span></div>' +
+          '<button class="btn btn-danger btn-sm" data-idx="' + i + '">删除</button>' +
+          '</div>';
+      }).join("");
+      box.innerHTML = rows;
+      box.querySelectorAll("button[data-idx]").forEach(function(btn){
+        btn.addEventListener("click", function(){
+          var idx = +btn.dataset.idx;
+          if (!window.confirm("确定删除模型「" + list[idx].name + "」？")) return;
+          list.splice(idx, 1);
+          cfgSave("models", { list: list }).then(function(){ renderModels(); });
+        });
+      });
+    }
+
+    // ---------- Agent 配置 ----------
+    function renderAgents() {
+      cfgLoad("agents").then(function(cfg){
+        var list = (cfg && cfg.list) ? cfg.list : [];
+        content.innerHTML =
+          '<div class="page-title">Agent 配置</div>' +
+          '<div class="page-sub">配置 OpenClaw / Hermes 等 Agent 接入参数，支撑在线沟通</div>' +
+          '<div class="panel">' +
+            '<h4>新增 Agent</h4>' +
+            '<div class="cfg-grid">' +
+              '<div class="field"><label>Agent 名称</label><input id="aName" placeholder="例如 Hermes-Hulk" /></div>' +
+              '<div class="field"><label>Agent 类型</label><select id="aType">' +
+                '<option value="hermes">Hermes</option><option value="openclaw">OpenClaw</option>' +
+                '<option value="openai">OpenAI Agent</option><option value="custom">自定义</option>' +
+              '</select></div>' +
+              '<div class="field"><label>接入地址 (Base URL)</label><input id="aUrl" placeholder="http://127.0.0.1:xxxx 或 https://..." /></div>' +
+              '<div class="field"><label>API Key / Token</label><input id="aKey" type="password" placeholder="可选" /></div>' +
+              '<div class="field"><label>会话标识 / 附加参数</label><input id="aExtra" placeholder="可选：如 session_id / agent_id" /></div>' +
+            '</div>' +
+            '<div class="info-actions"><button class="btn btn-primary" id="aAdd">添加 Agent</button></div>' +
+            '<h4 style="margin-top:24px">已配置 Agent</h4>' +
+            '<div id="aList"></div>' +
+          '</div>';
+        document.getElementById("aAdd").addEventListener("click", function(){
+          var name = document.getElementById("aName").value.trim();
+          var type = document.getElementById("aType").value;
+          var url = document.getElementById("aUrl").value.trim();
+          var key = document.getElementById("aKey").value.trim();
+          var extra = document.getElementById("aExtra").value.trim();
+          if (!name || !url) { alert("请填写 Agent 名称与接入地址"); return; }
+          list.push({ name: name, type: type, url: url, key: key, extra: extra });
+          cfgSave("agents", { list: list }).then(function(){
+            renderAgents();
+            document.getElementById("statusText").textContent = "已添加 Agent：" + name;
+          }).catch(function(e){ alert("保存失败：" + e); });
+        });
+        renderAgentList(list);
+      });
+    }
+    function renderAgentList(list) {
+      var box = document.getElementById("aList");
+      if (!box) return;
+      if (!list.length) { box.innerHTML = '<p style="color:var(--ink500);font-size:13px">暂无 Agent 配置，请添加。</p>'; return; }
+      var rows = list.map(function(a, i){
+        var masked = a.key ? a.key.slice(0, 6) + "••••" + a.key.slice(-4) : "（未设置）";
+        return '<div class="cfg-item">' +
+          '<div class="cfg-item-main"><span class="cfg-item-name">' + escHtml(a.name) + '</span>' +
+          '<span class="cfg-item-sub">' + escHtml(a.type) + ' · ' + escHtml(a.url) + (a.extra ? ' · ' + escHtml(a.extra) : '') + '</span>' +
+          '<span class="cfg-item-key">Token: ' + escHtml(masked) + '</span></div>' +
+          '<button class="btn btn-danger btn-sm" data-idx="' + i + '">删除</button>' +
+          '</div>';
+      }).join("");
+      box.innerHTML = rows;
+      box.querySelectorAll("button[data-idx]").forEach(function(btn){
+        btn.addEventListener("click", function(){
+          var idx = +btn.dataset.idx;
+          if (!window.confirm("确定删除 Agent「" + list[idx].name + "」？")) return;
+          list.splice(idx, 1);
+          cfgSave("agents", { list: list }).then(function(){ renderAgents(); });
+        });
+      });
+    }
+
+    // ================= Agent 连接测试：在线聊天（QQ 风格） =================
+    var chatWs = null;
+    var chatConnected = false;
+    var chatBuf = "";
+
+    // ANSI 转义剥离
+    function stripAnsi(s) {
+      s = s.replace(/\x1b\][^]*/g, "");
+      s = s.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, "");
+      s = s.replace(/\x1b\[[0-9;?']*[A-Za-z'{}]/g, "");
+      s = s.replace(/\x1b\[[<>][0-9;?]*[A-Za-z]/g, "");
+      s = s.replace(/\x1b[()=><][0-9A-Z?]*/g, "");
+      s = s.replace(/\x1b\[[0-9;?<>]*/g, "");
+      // 过滤 TUI 装饰边框线
+      s = s.replace(/[─-╿]+/g, " ").replace(/[─-╿]/g, "");
+      return s;
+    }
+
+    function escHtml(s) {
+      return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function chatSid() {
+      return (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "tdev-chat";
+    }
+    function chatLoadHist() {
+      try { return JSON.parse(localStorage.getItem("chat_hist_" + chatSid()) || "[]"); }
+      catch(e) { return []; }
+    }
+    function chatSaveHist(hist) {
+      try { localStorage.setItem("chat_hist_" + chatSid(), JSON.stringify(hist.slice(-200))); }
+      catch(e) {}
+    }
+    function chatAddMsg(text, fromMe) {
+      var list = document.getElementById("chatMsgList");
+      // 持久化（页面不在也保存）
+      var hist = chatLoadHist();
+      hist.push({t: text, me: fromMe, ts: Date.now()});
+      chatSaveHist(hist);
+      if (!list) return;
+      var row = document.createElement("div");
+      row.className = "chat-row " + (fromMe ? "me" : "agent");
+      row.innerHTML = '<div class="chat-bubble">' + escHtml(text) + '</div>';
+      list.appendChild(row);
+      list.scrollTop = list.scrollHeight;
+    }
+    function chatRestoreHist() {
+      var list = document.getElementById("chatMsgList");
+      if (!list) return;
+      var hist = chatLoadHist();
+      hist.forEach(function(m){
+        var row = document.createElement("div");
+        row.className = "chat-row " + (m.me ? "me" : "agent");
+        row.innerHTML = '<div class="chat-bubble">' + escHtml(m.t) + '</div>';
+        list.appendChild(row);
+      });
+      list.scrollTop = list.scrollHeight;
+      return hist.length;
+    }
+    function chatSetPending(on) {
+      try { localStorage.setItem("chat_pending_" + chatSid(), on ? "1" : "0"); }
+      catch(e) {}
+    }
+    function chatShowThinking() {
+      var list = document.getElementById("chatMsgList");
+      var oldThink = document.getElementById("chatThinking");
+      if (oldThink) oldThink.remove();
+      if (list) {
+        var think = document.createElement("div");
+        think.id = "chatThinking";
+        think.className = "chat-sys";
+        think.textContent = "Agent 思考中...（可能需要 1-3 分钟）";
+        list.appendChild(think);
+        list.scrollTop = list.scrollHeight;
+      }
+    }
+    function chatAddSystem(text) {
+      var list = document.getElementById("chatMsgList");
+      if (!list) return;
+      var row = document.createElement("div");
+      row.className = "chat-sys";
+      row.textContent = text;
+      list.appendChild(row);
+      list.scrollTop = list.scrollHeight;
+    }
+
+    function chatSetStatus(status, cls) {
+      var el = document.getElementById("chatStatus");
+      if (!el) return;
+      el.textContent = status;
+      el.className = "chat-status " + cls;
+    }
+
+    function chatConnect() {
+      // API Server 模式：填充 Agent 下拉框（供查看/选择），聊天走 agent_ask HTTP 调用
+      if (!window.__TAURI__ || !window.__TAURI__.core) {
+        chatAddSystem("Tauri 环境不可用");
+        chatSetStatus("不可用", "off");
+        return;
+      }
+      window.__TAURI__.core.invoke("cfg_load", { category: "agents" }).then(function(v){
+        var list = [];
+        try { var parsed = JSON.parse(v || "{}"); list = (parsed && parsed.list) ? parsed.list : []; } catch(e) {}
+        var sel = document.getElementById("chatAgentSel");
+        if (sel) {
+          sel.innerHTML = "";
+          if (list.length) {
+            list.forEach(function(a){
+              var o = document.createElement("option");
+              o.value = (a.url || "") + "||" + (a.key || "");
+              o.textContent = (a.name || "Agent") + " · " + (a.type || "");
+              sel.appendChild(o);
+            });
+            sel.style.minWidth = "160px";
+          } else {
+            var o = document.createElement("option");
+            o.value = "";
+            o.textContent = "未配置 Agent";
+            sel.appendChild(o);
+          }
+        }
+        chatSetStatus("API Server", "on");
+        chatAddSystem("已连接 Hermes API Server（会话按项目隔离），可直接发送消息");
+      }).catch(function(){
+        chatSetStatus("读取失败", "off");
+        chatAddSystem("读取 Agent 配置失败");
+      });
+    }
+
+function doConnect(baseUrl, token) {
+      if (!baseUrl) { chatSetStatus("无地址", "off"); return; }
+      // 从 baseUrl 解析 ws 地址
+      // session_id = 当前项目 prjGUID（无则 default）；fresh=1 强制新会话避免串线
+      var wsUrl = baseUrl.replace(/^http/, "ws").replace(/\/$/, "") +
+        "/api/pty?token=" + encodeURIComponent(token || "") +
+        "&fresh=1";
+      try {
+        chatWs = new WebSocket(wsUrl);
+        chatSetStatus("连接中…", "pending");
+        chatWs.onopen = function() {
+          chatConnected = true;
+          chatSetStatus("在线", "on");
+          chatAddSystem("已连接 Agent（" + baseUrl + "）");
+          // 发送初始命令触发欢迎输出
+          chatWs.send("\r");
+        };
+        chatWs.onmessage = function(ev) {
+          var text = "";
+          if (ev.data instanceof Blob) {
+            var reader = new FileReader();
+            reader.onload = function(){ handleChatChunk(String(reader.result)); };
+            reader.readAsText(ev.data);
+            return;
+          } else {
+            text = String(ev.data);
+          }
+          handleChatChunk(text);
+        };
+        chatWs.onclose = function() {
+          chatConnected = false;
+          chatSetStatus("已断开", "off");
+          chatAddSystem("连接已断开");
+        };
+        chatWs.onerror = function() {
+          chatConnected = false;
+          chatSetStatus("连接失败", "off");
+          chatAddSystem("连接失败，请确认 Dashboard 已启动（dashboard.bat）");
+        };
+      } catch(e) {
+        chatSetStatus("无法连接", "off");
+        chatAddSystem("WebSocket 创建失败：" + e);
+      }
+    }
+
+    var chatShownMsgs = [];  // 去重
+    var chatThinking = false;
+
+    function handleChatChunk(chunk) {
+      chatBuf += chunk;
+      var lines2 = chatBuf.split(String.fromCharCode(10));
+      chatBuf = lines2.pop();
+      lines2.forEach(function(ln){
+        var clean = stripAnsi(ln).replace(/\s+/g, " ").trim();
+        if (!clean) return;
+        // 过滤 TUI 装饰行
+        if (isTuiDeco(clean)) return;
+        // 去重
+        if (chatShownMsgs.indexOf(clean) >= 0) return;
+        chatShownMsgs.push(clean);
+        // 用户输入回显（提示符后）判为用户消息，否则 Agent 回复
+        var isUser = ln.indexOf("❯") >= 0;
+        chatAddMsg(clean, isUser);
+      });
+      // 有内容时清除思考中状态
+      var list = document.getElementById("chatMsgList");
+      if (list && list.querySelectorAll(".chat-row").length > 0) {
+        var think = document.getElementById("chatThinking");
+        if (think) think.remove();
+      }
+    }
+
+    function isTuiDeco(t) {
+      var deco = ["HermesAgent","NousResearch","session","Session:","Available","skills","help","starting agent","ready","deepseek","E:\\","❯","ask me anything","summoning","resuming"];
+      for (var i = 0; i < deco.length; i++) {
+        if (t.indexOf(deco[i]) >= 0) return true;
+      }
+      return false;
+    }
+    function chatSend() {
+      var input = document.getElementById("chatInput");
+      if (!input) return;
+      var text = input.value.trim();
+      if (!text) return;
+      if (!window.__TAURI__ || !window.__TAURI__.core) { chatAddSystem("Tauri 不可用"); return; }
+      chatAddMsg(text, true);
+      input.value = "";
+      chatSetPending(true);
+      chatShowThinking();
+      var sid = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "tdev-chat";
+      window.__TAURI__.core.invoke("agent_ask", { question: text, sessionId: sid })
+        .then(function(reply) {
+          chatSetPending(false);
+          var think2 = document.getElementById("chatThinking");
+          if (think2) think2.remove();
+          if (reply && reply.trim()) chatAddMsg(reply.trim(), false);
+          else chatAddSystem("Agent 无回复");
+        })
+        .catch(function(e) {
+          chatSetPending(false);
+          var think3 = document.getElementById("chatThinking");
+          if (think3) think3.remove();
+          chatAddSystem("调用失败：" + e);
+        });
+    }
+
+    function renderChat() {
+      content.classList.add("chat-page");  // 禁止外层滚动，避免双滚动条
+      content.innerHTML =
+        '<div class="page-title">Agent连接测试</div>' +
+        '<div class="page-sub">在线与 Agent 沟通聊天（对接 Hermes Dashboard /api/pty）</div>' +
+        '<div class="chat-panel">' +
+          '<div class="chat-head">' +
+            '<span class="chat-agent-label">Agent：</span>' +
+            '<select id="chatAgentSel" class="chat-sel"></select>' +
+            '<span id="chatStatus" class="chat-status off">未连接</span>' +
+            '<button class="btn btn-secondary btn-sm" id="chatReconnect" style="margin-left:auto">重新连接</button>' +
+          '</div>' +
+          '<div class="chat-msg-list" id="chatMsgList"></div>' +
+          '<div class="chat-input-row">' +
+            '<input id="chatInput" class="chat-input" type="text" placeholder="输入消息，回车发送…" />' +
+            '<button class="btn btn-primary" id="chatSendBtn">发送</button>' +
+          '</div>' +
+        '</div>';
+      document.getElementById("chatSendBtn").addEventListener("click", chatSend);
+      document.getElementById("chatInput").addEventListener("keydown", function(e){
+        if (e.key === "Enter") { e.preventDefault(); chatSend(); }
+      });
+      document.getElementById("chatReconnect").addEventListener("click", function(){
+        if (chatWs) { try { chatWs.close(); } catch(e){} chatWs = null; }
+        chatConnect();
+      });
+      chatRestoreHist();
+      // 恢复思考中状态（上轮未完成）
+      var pending = false;
+      try { pending = localStorage.getItem("chat_pending_" + chatSid()) === "1"; }
+      catch(e) {}
+      if (pending) chatShowThinking();
+      chatConnect();
+    }
+
+    // ================= 主题风格：AI 生成交互定义 =================
+    function renderTheme() {
+      content.classList.add("theme-page");
+      content.innerHTML =
+        '<div class="page-title">主题风格</div>' +
+        '<div class="page-sub">根据你的描述和主题色，让 Agent 基于参考模板生成交互定义</div>' +
+        '<div class="theme-panel">' +
+          '<div class="theme-row">' +
+            '<label class="theme-label">主题描述</label>' +
+            '<input id="thDesc" class="chat-input" placeholder="例如：简洁现代、适合工具类软件的界面风格" />' +
+          '</div>' +
+          '<div class="theme-row">' +
+            '<label class="theme-label">主题色</label>' +
+            '<input type="color" id="thColor" value="#0067C0" class="theme-color" />' +
+            '<span class="theme-color-hint">选择项目 UI 主色，Agent 将围绕它生成完整色板</span>' +
+          '</div>' +
+          '<div class="theme-row">' +
+            '<span class="theme-label">参考模板</span>' +
+            '<span class="theme-tpl-info">E:\88.project\TDev\src	emplate	heme（tokens.json + theme.md + ui-preview.html）</span>' +
+          '</div>' +
+          '<div class="theme-row">' +
+            '<button class="btn btn-primary" id="thGenBtn">生成主题</button>' +
+            '<span id="thStatus" class="chat-status off"></span>' +
+          '</div>' +
+          '<div class="theme-row theme-row-preview">' +
+            '<iframe id="thPreview" class="theme-preview" sandbox="allow-same-origin"></iframe>' +
+          '</div>' +
+          '<div class="theme-row">' +
+            '<button class="btn btn-secondary" id="thSaveBtn" style="display:none">保存到项目目录</button>' +
+            '<span id="thSaveStatus" class="chat-status off"></span>' +
+          '</div>' +
+        '</div>';
+      document.getElementById("thGenBtn").addEventListener("click", thGenerate);
+      document.getElementById("thSaveBtn").addEventListener("click", thSave);
+      thUpdateStatus();
+      thRestore();
+    }
+
+    function thRestore() {
+      // 重启/切页后恢复该项目的主题结果：优先从项目 theme 目录加载，localStorage 兜底
+      if (!currentProject) return;
+      if (!window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+        if (!ws) return;
+        // 尝试读项目目录的 tokens.json（真实文件优先）
+        window.__TAURI__.core.invoke("theme_read_project", {
+          prjName: currentProject.prjName,
+          workspace: ws,
+          file: "tokens.json"
+        }).then(function(saved){
+          if (saved && saved.trim()) {
+            thResultJson = saved;
+            var st = document.getElementById("thStatus");
+            st.textContent = "已从项目目录加载";
+            st.className = "chat-status on";
+            var btn = document.getElementById("thSaveBtn");
+            if (btn) btn.style.display = "";
+            thPreview();
+          } else {
+            thRestoreLocal();
+          }
+        }).catch(function(){ thRestoreLocal(); });
+      }).catch(function(){ thRestoreLocal(); });
+    }
+    function thRestoreLocal() {
+      var saved = null;
+      try { saved = localStorage.getItem("theme_json_" + currentProject.prjGUID); } catch(e) {}
+      if (saved) {
+        thResultJson = saved;
+        try {
+          var d = document.getElementById("thDesc");
+          var c = document.getElementById("thColor");
+          if (d) d.value = localStorage.getItem("theme_desc_" + currentProject.prjGUID) || d.value;
+          if (c) c.value = localStorage.getItem("theme_color_" + currentProject.prjGUID) || c.value;
+        } catch(e) {}
+        var st = document.getElementById("thStatus");
+        st.textContent = "已加载（上次生成）";
+        st.className = "chat-status on";
+        var btn = document.getElementById("thSaveBtn");
+        if (btn) btn.style.display = "";
+        thPreview();
+      }
+    }
+
+    function thUpdateStatus() {
+      var st = document.getElementById("thStatus");
+      if (!st) return;
+      if (!currentProject) { st.textContent = "请先选择项目"; st.className = "chat-status off"; }
+      else { st.textContent = "就绪"; st.className = "chat-status on"; }
+    }
+
+    var thResultJson = null;
+
+    function thGenerate() {
+      var desc = document.getElementById("thDesc").value.trim();
+      if (!desc) { alert("请输入主题描述"); return; }
+      if (!currentProject) { alert("请先选择项目"); return; }
+      if (!window.__TAURI__ || !window.__TAURI__.core) { alert("Tauri 不可用"); return; }
+      var st = document.getElementById("thStatus");
+      st.textContent = "Agent 生成中...";
+      st.className = "chat-status pending";
+      var accent = document.getElementById("thColor").value;
+      try {
+        localStorage.setItem("theme_desc_" + currentProject.prjGUID, desc);
+        localStorage.setItem("theme_color_" + currentProject.prjGUID, accent);
+      } catch(e) {}
+      var prompt = "请为项目 " + currentProject.prjName + " 生成完整的主题风格交互定义（Design Tokens），严格遵循模板文件结构。" +
+        "结构参考模板目录：E:\88.project\TDev\src\template\theme\（内含 tokens.json / theme.md / ui-preview.html，遵循其中定义的结构与命名规范，可自行发挥配色方案）。" +
+        "用户需求：" + desc + "。主题主色（accent）：" + accent +
+        "。请基于主色生成完整主题（含浅色/深色色系与 10 阶色卡），只输出完整可用的 tokens.json JSON，不要多余文字。";
+      window.__TAURI__.core.invoke("agent_ask", { question: prompt, sessionId: currentProject.prjGUID })
+        .then(function(reply) {
+          thResultJson = reply;
+          try { localStorage.setItem("theme_json_" + currentProject.prjGUID, reply); } catch(e) {}
+          st.textContent = "生成完成，正在保存...";
+          st.className = "chat-status pending";
+          document.getElementById("thSaveBtn").style.display = "";
+          thPreview();
+          // 自动保存到项目 theme 目录（Agent 生成 → 直接落盘）
+          window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+            var ws = "";
+            try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+            if (!ws) {
+              st.textContent = "生成完成（未设工作路径，未保存）";
+              st.className = "chat-status off";
+              return;
+            }
+            window.__TAURI__.core.invoke("project_save_theme", {
+              prjGuid: currentProject.prjGUID,
+              prjName: currentProject.prjName,
+              workspace: ws,
+              content: reply
+            }).then(function(r){
+              st.textContent = "生成完成，已保存到项目 theme 目录";
+              st.className = "chat-status on";
+            }).catch(function(e){
+              st.textContent = "生成完成，保存失败：" + e;
+              st.className = "chat-status off";
+            });
+          });
+        })
+        .catch(function(e) {
+          st.textContent = "生成失败";
+          st.className = "chat-status off";
+          alert("生成失败：" + e);
+        });
+    }
+
+    function thPreview() {
+      var frame = document.getElementById("thPreview");
+      if (!frame || !thResultJson) return;
+      // 读取模板 ui-preview.html，替换 accent 色为生成结果的主色
+      if (!window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("theme_preview_html", {
+        content: thResultJson
+      }).then(function(html){
+        frame.srcdoc = html;
+      }).catch(function(e){ console.error("preview:", e); });
+    }
+
+    function thSave() {
+      if (!thResultJson) return;
+      if (!window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+        if (!ws) { alert("请先在项目空间页设定工作路径"); return; }
+        window.__TAURI__.core.invoke("project_save_theme", {
+          prjGuid: currentProject.prjGUID,
+          prjName: currentProject.prjName,
+          workspace: ws,
+          content: thResultJson
+        }).then(function(r){
+          var st = document.getElementById("thSaveStatus");
+          st.textContent = "已保存：" + r;
+          st.className = "chat-status on";
+        }).catch(function(e){
+          alert("保存失败：" + e);
+        });
+      });
+    }
+
+    // ================= 项目约束：开发规范与红线（devStandard 模板） =================
+    var constrData = null;
+
+    function renderConstraints() {
+      content.classList.add("constr-page");
+      content.innerHTML =
+        '<div class="page-title">项目约束</div>' +
+        '<div class="page-sub">开发规范与红线约束（基于 devStandard 模板）</div>' +
+        '<div class="constr-panel" id="constrPanel">' +
+          '<div class="constr-loading">加载规范文件...</div>' +
+        '</div>';
+      // 读取模板 devStandard 文件
+      if (!window.__TAURI__ || !window.__TAURI__.core) {
+        document.getElementById("constrPanel").innerHTML = '<div class="constr-empty">Tauri 环境不可用</div>';
+        return;
+      }
+      var ws = "";
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+        try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+        loadConstrFiles(ws);
+      }).catch(function(){ loadConstrFiles(""); });
+    }
+
+    function loadConstrFiles(ws) {
+      var pn = currentProject ? currentProject.prjName : "";
+      Promise.all([
+        window.__TAURI__.core.invoke("constr_read_tpl", { file: "AGENTS.md", prjName: pn, workspace: ws }),
+        window.__TAURI__.core.invoke("constr_read_tpl", { file: "ARCHITECTURE.md", prjName: pn, workspace: ws }),
+        window.__TAURI__.core.invoke("constr_read_tpl", { file: "CODING-STANDARDS.md", prjName: pn, workspace: ws })
+      ]).then(function(results) {
+        constrData = { agents: results[0], arch: results[1], coding: results[2] };
+        renderConstrUI();
+      }).catch(function(e){
+        document.getElementById("constrPanel").innerHTML = '<div class="constr-empty">读取失败：' + e + '</div>';
+      });
+    }
+
+    function renderConstrUI() {
+      if (!constrData) return;
+      var agents = constrData.agents || "";
+      var arch = constrData.arch || "";
+      var coding = constrData.coding || "";
+      var panel = document.getElementById("constrPanel");
+      if (!panel) return;
+
+      // 提取技术栈表格（AGENTS.md §2）
+      var stackRows = extractTable(agents, "技术栈");
+      // 提取反模式（AGENTS.md §5）
+      var antiPatterns = extractList(agents, "反模式速查");
+      // 提取开工流程（AGENTS.md §6）
+      var workflow = extractList(agents, "开工流程");
+      // 提取自检清单（CODING-STANDARDS 末尾）
+      var checklist = extractList(coding, "自检清单");
+
+      var html = '';
+
+      // 1) 规范文件卡片
+      html += '<h3 class="constr-sec">规范文件</h3>';
+      html += '<div class="constr-files">';
+      html += '<div class="constr-card" data-view="agents"><div class="cc-icon">A</div><div class="cc-body"><div class="cc-name">AGENTS.md</div><div class="cc-desc">Agent 开工必读：技术栈硬约束 + 目录 + 反模式 + 流程</div></div><div class="cc-arrow">&#8250;</div></div>';
+      html += '<div class="constr-card" data-view="arch"><div class="cc-icon">B</div><div class="cc-body"><div class="cc-name">ARCHITECTURE.md</div><div class="cc-desc">分层边界、依赖方向、数据库/Redis 设计规范</div></div><div class="cc-arrow">&#8250;</div></div>';
+      html += '<div class="constr-card" data-view="coding"><div class="cc-icon">C</div><div class="cc-body"><div class="cc-name">CODING-STANDARDS.md</div><div class="cc-desc">代码/SQL/前端规范 + 交付自检清单</div></div><div class="cc-arrow">&#8250;</div></div>';
+      html += '</div>';
+
+      // 2) 技术栈速查
+      html += '<h3 class="constr-sec">技术栈速查（硬约束）</h3>';
+      html += '<table class="constr-table"><thead><tr><th>层</th><th>规定</th><th>禁止</th></tr></thead><tbody>';
+      (stackRows || []).forEach(function(r){
+        html += '<tr><td>' + escHtml(r[0]) + '</td><td>' + escHtml(r[1]) + '</td><td class="constr-forbid">' + escHtml(r[2]) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+
+      // 3) 反模式清单
+      html += '<h3 class="constr-sec">反模式速查（禁止，违反即返工）</h3>';
+      html += '<div class="constr-list">';
+      (antiPatterns || []).forEach(function(item){
+        html += '<label class="constr-item"><input type="checkbox" disabled />' + escHtml(item) + '</label>';
+      });
+      html += '</div>';
+
+      // 4) 开工流程步骤条
+      html += '<h3 class="constr-sec">开工流程</h3>';
+      html += '<div class="constr-steps">';
+      (workflow || []).forEach(function(item, i){
+        html += '<div class="constr-step"><div class="cs-num">' + (i+1) + '</div><div class="cs-text">' + escHtml(item) + '</div></div>';
+      });
+      html += '</div>';
+
+      // 5) 自检清单（折叠）
+      html += '<h3 class="constr-sec">交付自检清单（CODING-STANDARDS）</h3>';
+      html += '<details class="constr-details"><summary>展开查看 ' + (checklist ? checklist.length : 0) + ' 项自检</summary><div class="constr-list">';
+      (checklist || []).forEach(function(item){
+        html += '<label class="constr-item"><input type="checkbox" />' + escHtml(item) + '</label>';
+      });
+      html += '</div></details>';
+
+      panel.innerHTML = html;
+      // 事件委托：点击 constr-card 打开对应规范文件
+      panel.querySelectorAll(".constr-card").forEach(function(card){
+        card.addEventListener("click", function(){
+          var v = card.getAttribute("data-view");
+          if (v) constrView(v);
+        });
+      });
+    }
+
+    var constrEditFile = "";
+
+    function constrView(which) {
+      var content = which === "agents" ? constrData.agents : which === "arch" ? constrData.arch : constrData.coding;
+      var title = which === "agents" ? "AGENTS.md" : which === "arch" ? "ARCHITECTURE.md" : "CODING-STANDARDS.md";
+      constrEditFile = which === "agents" ? "AGENTS.md" : which === "arch" ? "ARCHITECTURE.md" : "CODING-STANDARDS.md";
+      showConstrModal(title, content);
+    }
+
+    var constrSaveTimer = null;
+
+    function showConstrModal(title, content) {
+      var m = document.createElement("div");
+      m.className = "constr-modal";
+      m.innerHTML = '<div class="cm-box">' +
+        '<div class="cm-head"><span>' + escHtml(title) + '</span>' +
+        '<span class="cm-save-status" id="cmSaveStatus"></span>' +
+        '<button class="cm-close" onclick="this.parentNode.parentNode.parentNode.remove()">×</button></div>' +
+        '<textarea class="cm-body cm-edit" id="cmText">' + escHtml(content) + '</textarea>' +
+        '<div class="cm-foot"><span class="cm-hint">编辑后自动保存（Ctrl+S 立即保存）</span><button class="btn btn-primary" id="cmSaveBtn">保存</button></div>' +
+        '</div>';
+      document.body.appendChild(m);
+      var ta = document.getElementById("cmText");
+      var status = document.getElementById("cmSaveStatus");
+      // 自动保存：编辑停止 2 秒后保存
+      ta.addEventListener("input", function() {
+        status.textContent = "编辑中...";
+        status.className = "cm-save-status dirty";
+        if (constrSaveTimer) clearTimeout(constrSaveTimer);
+        constrSaveTimer = setTimeout(function(){ constrSaveNow(); }, 2000);
+      });
+      // Ctrl+S 立即保存
+      ta.addEventListener("keydown", function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+          e.preventDefault();
+          constrSaveNow();
+        }
+      });
+      document.getElementById("cmSaveBtn").addEventListener("click", constrSaveNow);
+    }
+
+    function constrSaveNow() {
+      if (!currentProject) { alert("请先选择项目"); return; }
+      var ta = document.getElementById("cmText");
+      if (!ta) return;
+      var status = document.getElementById("cmSaveStatus");
+      if (!status) return;
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+        if (!ws) { status.textContent = "未设工作路径"; return; }
+        status.textContent = "保存中...";
+        status.className = "cm-save-status dirty";
+        window.__TAURI__.core.invoke("constr_save", {
+          file: constrEditFile,
+          prjName: currentProject.prjName,
+          workspace: ws,
+          content: ta.value
+        }).then(function(r){
+          status.textContent = "已保存";
+          status.className = "cm-save-status ok";
+          // 更新内存缓存
+          if (constrEditFile === "AGENTS.md") constrData.agents = ta.value;
+          else if (constrEditFile === "ARCHITECTURE.md") constrData.arch = ta.value;
+          else constrData.coding = ta.value;
+        }).catch(function(e){
+          status.textContent = "保存失败";
+          status.className = "cm-save-status err";
+          alert("保存失败：" + e);
+        });
+      });
+    }
+
+    // 提取 Markdown 表格（## 标题后的第一个 | 表格）
+    function extractTable(md, sectionHint) {
+      var rows = [];
+      var lines = md.split(String.fromCharCode(10));
+      var inTable = false;
+      var started = false;
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (line.indexOf("|") === 0) {
+          var cells = line.split("|").slice(1, -1).map(function(c){ return c.trim(); });
+          if (!started) { started = true; continue; }  // 跳过表头
+          if (/^[\-: ]+$/.test(cells.join(""))) continue;  // 跳过分隔行
+          if (cells.length >= 2) rows.push(cells);
+          inTable = true;
+        } else if (inTable) {
+          break;
+        }
+      }
+      return rows;
+    }
+
+    // 提取无序列表（## 标题后的 - 项）
+    function extractList(md, sectionHint) {
+      var items = [];
+      var lines = md.split(String.fromCharCode(10));
+      var capture = false;
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (line.indexOf("##") === 0) {
+          capture = line.indexOf(sectionHint) >= 0;
+          continue;
+        }
+        if (capture && line.indexOf("- ") === 0) {
+          items.push(line.slice(2).trim());
+        } else if (capture && line.indexOf("1.") === 0) {
+          items.push(line.slice(3).trim());
+        } else if (capture && line.trim() === "") {
+          continue;
+        } else if (capture && line.indexOf("-") !== 0 && line.indexOf("1.") !== 0 && line.trim() !== "") {
+          break;  // 遇到非列表内容结束
+        }
+      }
+      return items;
+    }
+
+    // ================= 业务流程：AI 梳理 + 交互流程图 =================
+    var procFlow = null;
+    var procExpanded = {};
+    var procSid = "";
+
+    function renderProcess() {
+      content.classList.add("process-page");
+      content.innerHTML =
+        '<div class="page-title">业务流程</div>' +
+        '<div class="page-sub">与 Agent 沟通梳理业务流程，生成可交互流程图并保存到项目 doc 目录</div>' +
+        '<div class="proc-layout">' +
+          '<div class="proc-chat">' +
+            '<div class="proc-chat-head">Agent 流程梳理</div>' +
+            '<div class="proc-chat-list" id="procMsgList"></div>' +
+            '<div class="proc-chat-input">' +
+              '<textarea id="procInput" class="chat-input proc-ta" placeholder="描述你的业务流程（支持多行，Enter 发送，Shift+Enter 换行）..."></textarea>' +
+              '<button class="btn btn-primary" id="procSendBtn">发送</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="proc-canvas">' +
+            '<div class="proc-canvas-head">' +
+              '<span id="procFlowName">业务流程图</span>' +
+              '<span class="proc-hint">' +
+                '<button class="btn btn-xs" id="procExpandAll">展开全部</button> ' +
+                '<button class="btn btn-xs" id="procCollapseAll">折叠全部</button> ' +
+                '<span class="proc-sep"></span> ' +
+                '<button class="btn btn-xs btn-acc" id="procBackup">专题备份</button> ' +
+                '<button class="btn btn-xs" id="procLoadBackup">载入备份</button>' +
+              '</span>' +
+            '</div>' +
+            '<div class="proc-canvas-body" id="procCanvasBody">' +
+              '<div class="proc-empty">在左侧描述业务流程，Agent 将在这里生成流程图</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      document.getElementById("procSendBtn").addEventListener("click", procSend);
+      document.getElementById("procInput").addEventListener("keydown", function(e){
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); procSend(); }
+      });
+      procSid = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "tdev-proc";
+      procRestoreChat();
+      procRestore();
+      procStartWatch();
+      var ea = document.getElementById("procExpandAll");
+      var ca = document.getElementById("procCollapseAll");
+      if (ea) ea.addEventListener("click", function(){ procExpandAll(); });
+      if (ca) ca.addEventListener("click", function(){ procCollapseAll(); });
+      var bk = document.getElementById("procBackup");
+      var ld = document.getElementById("procLoadBackup");
+      if (bk) bk.addEventListener("click", function(){ procBackupModal(); });
+      if (ld) ld.addEventListener("click", function(){ procLoadModal(); });
+    }
+    var procWatchTimer = null;
+    var procLastFiles = null;
+
+    function procStartWatch() {
+      // 监测 doc 目录 JSON 文件变化：每 2 秒检查一次，有新文件/变更自动加载
+      if (procWatchTimer) clearInterval(procWatchTimer);
+      if (!currentProject || !window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+        if (!ws) return;
+        procWatchTimer = setInterval(function(){
+          window.__TAURI__.core.invoke("process_list", {
+            prjName: currentProject.prjName,
+            workspace: ws
+          }).then(function(files){
+            if (!files || !files.length) { procLastFiles = []; return; }
+            var sig = files.join(",");
+            if (procLastFiles !== null && sig !== procLastFiles) {
+              // 文件列表变化 → 自动加载最新 JSON
+              procLastFiles = sig;
+              procAddSys("检测到流程文档更新，自动加载：" + (files[0] || "").split("|")[0]);
+              procLoadLatest(ws, files);
+            }
+            if (procLastFiles === null) procLastFiles = sig;
+          }).catch(function(){});
+        }, 2000);
+      });
+    }
+
+    function procLoadLatest(ws, files) {
+      var fname = (files[0] || "").split("|")[0];
+      window.__TAURI__.core.invoke("process_load", {
+        prjName: currentProject.prjName,
+        workspace: ws,
+        fileName: fname
+      }).then(function(content){
+        var json = null;
+        var m = content.match(/\{[\s\S]*\}/);
+        if (m) { try { json = JSON.parse(m[0]); } catch(e) {} }
+        if (json && json.steps) {
+          procFlow = json;
+          procExpanded = {};
+          for (var i = 0; i < json.steps.length; i++) {
+            var kids = json.steps[i].children || [];
+            if (kids.length) {
+              procExpanded[String(i)] = true;
+              break;
+            }
+          }
+          procRenderFlow();
+        }
+      }).catch(function(){});
+    }
+    function procRestoreChat() {
+      var hist = procLoadHist();
+      var list = document.getElementById("procMsgList");
+      if (!list || !hist.length) return;
+      hist.forEach(function(m){
+        var row = document.createElement("div");
+        row.className = "chat-row " + (m.me ? "me" : "agent");
+        row.innerHTML = '<div class="chat-bubble">' + escHtml(m.t) + '</div>';
+        list.appendChild(row);
+      });
+      list.scrollTop = list.scrollHeight;
+    }
+
+    function procAddMsg(text, fromMe) {
+      // 持久化聊天记录（按项目隔离）
+      var hist = procLoadHist();
+      hist.push({t: text, me: fromMe, ts: Date.now()});
+      procSaveHist(hist);
+      var list = document.getElementById("procMsgList");
+      if (!list) return;
+      var row = document.createElement("div");
+      row.className = "chat-row " + (fromMe ? "me" : "agent");
+      row.innerHTML = '<div class="chat-bubble">' + escHtml(text) + '</div>';
+      list.appendChild(row);
+      list.scrollTop = list.scrollHeight;
+    }
+    function procAddSys(text) {
+      var list = document.getElementById("procMsgList");
+      if (!list) return;
+      var row = document.createElement("div");
+      row.className = "chat-sys";
+      row.textContent = text;
+      list.appendChild(row);
+      list.scrollTop = list.scrollHeight;
+    }
+    function procLoadHist() {
+      try { return JSON.parse(localStorage.getItem("proc_hist_" + procSid) || "[]"); }
+      catch(e) { return []; }
+    }
+    function procSaveHist(hist) {
+      try { localStorage.setItem("proc_hist_" + procSid, JSON.stringify(hist.slice(-100))); }
+      catch(e) {}
+    }
+
+    function procSend() {
+      var input = document.getElementById("procInput");
+      if (!input) return;
+      var text = input.value.trim();
+      if (!text) return;
+      if (!window.__TAURI__ || !window.__TAURI__.core) { procAddSys("Tauri 不可用"); return; }
+      procAddMsg(text, true);
+      input.value = "";
+      // 识别回退指令：直接恢复版本（不走 Agent）
+      if (/回退|撤销|undo|上一步|恢复/.test(text)) {
+        procAddSys("执行回退操作...");
+        window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+          var ws = "";
+          try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+          if (!ws) { procAddSys("未设置工作路径"); return; }
+          var fileName = currentProject.prjName + "_flow.json";
+          window.__TAURI__.core.invoke("process_restore", {
+            prjName: currentProject.prjName,
+            workspace: ws,
+            fileName: fileName
+          }).then(function(content){
+            var json = null;
+            var m = content.match(/\{[\s\S]*\}/);
+            if (m) { try { json = JSON.parse(m[0]); } catch(e) {} }
+            if (json && json.steps) {
+              procFlow = json;
+              procExpanded = {};
+              for (var i = 0; i < json.steps.length; i++) {
+                if ((json.steps[i].children || []).length) { procExpanded[String(i)] = true; break; }
+              }
+              procRenderFlow();
+              procAddSys("已回退到上一个版本");
+            } else {
+              procAddSys("回退内容无法解析");
+            }
+          }).catch(function(e){
+            procAddSys("回退失败：" + e);
+          });
+        });
+        return;
+      }
+      procAddSys("Agent 梳理中，将直接生成 JSON 到项目 doc 目录...");
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+        if (!ws) { procAddSys("未设置工作路径"); return; }
+        var wsMnt = ws.replace(/^[A-Za-z]:/, function(m){ return "/mnt/" + m[0].toLowerCase(); }).split("\\").join("/");
+        var docDirMnt = wsMnt + "/" + currentProject.prjName + "/doc";
+        var fileName = currentProject.prjName + "_flow.json";
+        var q = String.fromCharCode(34);
+        // 读取当前已有流程（若有）作为上下文，防止修改时丢失其他节点
+        var currentJson = "";
+        var loadProm = window.__TAURI__.core.invoke("process_load", {
+          prjName: currentProject.prjName,
+          workspace: ws,
+          fileName: fileName
+        }).then(function(c){ currentJson = c; }).catch(function(){ currentJson = ""; });
+        loadProm.then(function(){
+          var prompt = "请把以下业务流程描述整理为结构化流程图 JSON，并用 terminal 工具（python 命令）直接写入文件：" + docDirMnt + "/" + fileName + "。" +
+          "注意：当前是 WSL 环境，路径必须用 /mnt/ 前缀（如 /mnt/e/...），绝对不要用 E: 盘符。必须用 terminal 工具执行 python 命令写入，不要用 write_file（会失败）。目录不存在就先 os.makedirs(..., exist_ok=True)。" +
+          "JSON 格式严格为：{" + q + "flow_name" + q + ":流程名称," + q + "steps" + q + ":[{" + q + "name" + q + ":主流程节点1," + q + "children" + q + ":[{" + q + "name" + q + ":子流程节点a," + q + "children" + q + ":[{" + q + "name" + q + ":三级节点," + q + "children" + q + ":[]}]}]}]}。" +
+          "主流程节点从上到下排列（steps 数组顺序即主流程顺序）；children 数组每个元素是对象 {name, children}，无下级则 children 为空数组；支持无限层级嵌套。" +
+          "当前已有流程文件内容（未修改的节点必须原样保留，只按用户要求增删改指定节点，禁止丢失或改写其他节点）：" +
+          (currentJson ? currentJson : "（无）") +
+          "。用户要求：" + text + "。写完文件后回复：已生成";
+          var newSid = "proc-" + Date.now();
+          window.__TAURI__.core.invoke("agent_ask", { question: prompt, sessionId: newSid })
+            .then(function(reply) {
+              procAddSys(reply || "Agent 已响应");
+            })
+            .catch(function(e) {
+              procAddSys("梳理失败：" + e);
+            });
+        });
+      });
+    }
+
+    function procSaveFlowJson(reply) {
+      // 解析 JSON 并保存到项目 doc 目录
+      var json = null;
+      var m = reply.match(/\{[\s\S]*\}/);
+      if (m) {
+        try { json = JSON.parse(m[0]); } catch(e) {}
+      }
+      if (!json || !json.steps) {
+        procAddSys("无法解析为结构化流程，已保存原始描述");
+        procSaveRaw(reply);
+        return;
+      }
+      procFlow = json;
+      procExpanded = {};
+      // 默认展开第一个有子流程的节点（递归第一层）
+      for (var i = 0; i < json.steps.length; i++) {
+        var kids = json.steps[i].children || [];
+        if (kids.length) {
+          procExpanded[String(i)] = true;
+          break;
+        }
+      }
+      procRenderFlow();
+      procSave();
+    }
+
+    function procParseFlow(reply) {
+      var json = null;
+      var m = reply.match(/\{[\s\S]*\}/);
+      if (m) {
+        try { json = JSON.parse(m[0]); } catch(e) {}
+      }
+      if (!json || !json.steps) {
+        procAddSys("无法解析为结构化流程，已保存原始描述到 doc 目录");
+        procSaveRaw(reply);
+        return;
+      }
+      procFlow = json;
+      procExpanded = {};
+      for (var i = 0; i < json.steps.length; i++) {
+        if (json.steps[i].children && json.steps[i].children.length) {
+          procExpanded[i] = true;
+          break;
+        }
+      }
+      procRenderFlow();
+      procSave();
+    }
+
+    // ===== 节点增删操作 =====
+    function procNewNode(name) {
+      return { name: name || "新节点", children: [] };
+    }
+
+    function procAddBefore(path) {
+      if (!procFlow) return;
+      var loc = procLocate(procFlow, path);
+      if (!loc) return;
+      var node = procNewNode("新前置节点");
+      loc.parent.splice(loc.index, 0, node);
+      // 同级插入后，后续兄弟展开状态 +1，源节点展开迁移到新位置
+      var isRoot = loc.parent === procFlow.steps;
+      var prefix = isRoot ? "" : procPathOfParent(procFlow, loc);
+      procShiftExpanded(prefix, loc.index, 1);
+      procRenderFlow();
+      procSaveFlowDoc();
+      procAddSys("已增加前置节点（" + path + " 前）");
+    }
+
+    function procAddAfter(path) {
+      if (!procFlow) return;
+      var loc = procLocate(procFlow, path);
+      if (!loc) return;
+      var node = procNewNode("新后置节点");
+      loc.parent.splice(loc.index + 1, 0, node);
+      var isRoot = loc.parent === procFlow.steps;
+      var prefix = isRoot ? "" : procPathOfParent(procFlow, loc);
+      procShiftExpanded(prefix, loc.index + 1, 1);
+      procRenderFlow();
+      procSaveFlowDoc();
+      procAddSys("已增加后置节点（" + path + " 后）");
+    }
+
+    function procAddChild(path) {
+      if (!procFlow) return;
+      var loc = procLocate(procFlow, path);
+      if (!loc) return;
+      var pnode = loc.parent[loc.index];
+      if (!pnode.children) pnode.children = [];
+      var node = procNewNode("新子节点");
+      pnode.children.push(node);
+      // 展开父节点让新子节点可见
+      procExpanded[path] = true;
+      procRenderFlow();
+      procSaveFlowDoc();
+      procAddSys("已增加子节点（" + path + " 末尾）");
+    }
+
+    function procDeleteNode(path) {
+      if (!procFlow) return;
+      var loc = procLocate(procFlow, path);
+      if (!loc) return;
+      var node = loc.parent[loc.index];
+      if (!window.confirm("确定删除节点「" + (node.name || path) + "」及其所有子节点？")) return;
+      loc.parent.splice(loc.index, 1);
+      // 删除后续兄弟展开状态 -1
+      var isRoot = loc.parent === procFlow.steps;
+      var prefix = isRoot ? "" : procPathOfParent(procFlow, loc);
+      procShiftExpanded(prefix, loc.index, -1);
+      // 删除该节点及其子树的展开状态
+      Object.keys(procExpanded).forEach(function(k){
+        if (k === path || k.indexOf(path + ".") === 0) delete procExpanded[k];
+      });
+      procRenderFlow();
+      procSaveFlowDoc();
+      procAddSys("已删除节点：" + (node.name || path));
+    }
+
+    // 找父数组对应的路径前缀（用于兄弟迁移）；根 steps 返回 ""
+    function procPathOfParent(root, loc) {
+      if (loc.parent === root.steps) return "";
+      var found = null;
+      (function walk(nodes, prefix){
+        nodes.forEach(function(n, i){
+          if (n.children === loc.parent) { found = prefix + "." + i; return; }
+          if (n.children) walk(n.children, prefix + "." + i);
+        });
+      })(root.steps, "");
+      return found || "";
+    }
+
+    // 把 prefix 下 index >= fromIndex 的展开状态路径整体平移 delta
+    function procShiftExpanded(prefix, fromIndex, delta) {
+      var updates = [];
+      Object.keys(procExpanded).forEach(function(k){
+        var rest = prefix ? (k.indexOf(prefix + ".") === 0 ? k.slice(prefix.length + 1) : null) : k;
+        if (rest === null) return;
+        var parts = rest.split(".");
+        var idx = parseInt(parts[0]);
+        if (!isNaN(idx) && idx >= fromIndex) {
+          parts[0] = String(idx + delta);
+          updates.push([k, prefix ? prefix + "." + parts.join(".") : parts.join(".")]);
+        }
+      });
+      updates.forEach(function(u){
+        procExpanded[u[1]] = procExpanded[u[0]];
+        delete procExpanded[u[0]];
+      });
+    }
+
+    // 迁移展开状态：srcPath 及其子树 -> newPath 及其子树
+    function procMigrateExpanded(srcPath, newPath) {
+      var keys = Object.keys(procExpanded);
+      keys.forEach(function(k){
+        if (k === srcPath || k.indexOf(srcPath + ".") === 0) {
+          var suffix = k === srcPath ? "" : k.slice(srcPath.length);
+          procExpanded[newPath + suffix] = procExpanded[k];
+          delete procExpanded[k];
+        }
+      });
+    }
+
+    function procRenderFlow() {
+      var body = document.getElementById("procCanvasBody");
+      var name = document.getElementById("procFlowName");
+      if (!body || !procFlow) return;
+      name.textContent = procFlow.flow_name || "业务流程图";
+      var html = '<div class="proc-flow">';
+      procFlow.steps.forEach(function(step, i) {
+        html += procRenderNode(step, String(i), true);
+        if (i < procFlow.steps.length - 1) {
+          html += '<div class="proc-drop-slot" data-before="' + (i + 1) + '"><div class="proc-main-arrow">↓</div></div>';
+        }
+      });
+      html += '</div>';
+      body.innerHTML = html;
+      // 事件委托：点击节点切换展开/收起
+      Array.prototype.forEach.call(body.querySelectorAll(".proc-main-node, .proc-sub-node"), function(el){
+        el.addEventListener("click", function(e){
+          if (e.target.closest(".proc-node-flag")) return; // 点属性图标不展开
+          var p = el.getAttribute("data-path");
+          if (p) procToggle(p);
+        });
+      });
+      // 属性图标点击：弹属性编辑窗口
+      Array.prototype.forEach.call(body.querySelectorAll(".proc-node-flag"), function(el){
+        el.addEventListener("click", function(e){
+          e.stopPropagation();
+          var p = el.getAttribute("data-prop");
+          if (p) procEditProps(p);
+        });
+      });
+      // 鼠标事件自定义拖拽（WebView2 中 HTML5 DnD 不可靠）
+      var dragState = null;
+      var procDragJustMoved = false;
+      function clearDragHighlights(){
+        var b2 = document.getElementById("procCanvasBody");
+        if (!b2) return;
+        b2.querySelectorAll(".drag-target").forEach(function(x){ x.classList.remove("drag-target"); });
+        b2.querySelectorAll(".proc-drop-slot.drag-over").forEach(function(x){ x.classList.remove("drag-over"); });
+      }
+      Array.prototype.forEach.call(body.querySelectorAll(".proc-main-node, .proc-sub-node"), function(el){
+        el.addEventListener("mousedown", function(e){
+          if (e.button !== 0) return;
+          if (e.target.closest(".proc-node-flag")) return; // 属性图标不拖拽
+          var path = el.getAttribute("data-path");
+          dragState = { srcPath: path, startX: e.clientX, startY: e.clientY, moved: false };
+          el.style.opacity = "0.6";
+          // 创建拖拽虚影（接近透明的节点副本，跟随鼠标）
+          var ghost = el.cloneNode(true);
+          ghost.id = "procDragGhost";
+          ghost.style.position = "fixed";
+          ghost.style.left = (e.clientX - 40) + "px";
+          ghost.style.top = (e.clientY - 20) + "px";
+          ghost.style.opacity = "0.55";
+          ghost.style.pointerEvents = "none";
+          ghost.style.zIndex = "999";
+          ghost.style.boxShadow = "0 8px 24px rgba(16,42,67,.3)";
+          // 虚影内按钮不显示
+          var gops = ghost.querySelector(".proc-node-ops");
+          if (gops) gops.style.opacity = "0";
+          document.body.appendChild(ghost);
+          dragState.ghost = ghost;
+          e.preventDefault();
+        });
+      });
+      document.addEventListener("mousemove", function(e){
+        if (!dragState) return;
+        if (!dragState.moved && Math.abs(e.clientX - dragState.startX) + Math.abs(e.clientY - dragState.startY) > 6) {
+          dragState.moved = true;
+        }
+        if (!dragState.moved) return;
+        // 虚影跟随鼠标
+        if (dragState.ghost) {
+          dragState.ghost.style.left = (e.clientX - 40) + "px";
+          dragState.ghost.style.top = (e.clientY - 20) + "px";
+        }
+        var el = document.elementFromPoint(e.clientX, e.clientY);
+        clearDragHighlights();
+        if (!el) return;
+        var nodeEl = el.closest(".proc-main-node, .proc-sub-node");
+        var slotEl = el.closest(".proc-drop-slot");
+        if (nodeEl) nodeEl.classList.add("drag-target");
+        else if (slotEl) slotEl.classList.add("drag-over");
+      });
+      document.addEventListener("mouseup", function(e){
+        if (!dragState) return;
+        var src = dragState.srcPath;
+        var moved = dragState.moved;
+        var el = document.elementFromPoint(e.clientX, e.clientY);
+        // 移除虚影
+        if (dragState.ghost && dragState.ghost.parentNode) {
+          dragState.ghost.parentNode.removeChild(dragState.ghost);
+        }
+        dragState = null;
+        clearDragHighlights();
+        var srcEl = document.querySelector('[data-path="' + src + '"]');
+        if (srcEl) srcEl.style.opacity = "";
+        if (!moved || !el) return;
+        var nodeEl = el.closest(".proc-main-node, .proc-sub-node");
+        var slotEl = el.closest(".proc-drop-slot");
+        if (nodeEl) {
+          var dst = nodeEl.getAttribute("data-path");
+          if (src !== dst) {
+            procDragJustMoved = true;
+            procMoveNode(src, dst, "child");
+          }
+        } else if (slotEl) {
+          var before = slotEl.getAttribute("data-before");
+          procDragJustMoved = true;
+          procMoveNode(src, before, "before");
+        }
+      });
+      // 拖拽后不触发展开
+      Array.prototype.forEach.call(body.querySelectorAll(".proc-main-node, .proc-sub-node"), function(el){
+        el.addEventListener("click", function(e){
+          if (procDragJustMoved) { procDragJustMoved = false; return; }
+        });
+      });
+      // 节点操作按钮（前置/后置/子节点/删除）
+      Array.prototype.forEach.call(body.querySelectorAll(".proc-op"), function(btn){
+        btn.addEventListener("click", function(e){
+          e.stopPropagation();
+          var op = btn.getAttribute("data-op");
+          var target = btn.getAttribute("data-opath");
+          if (op === "before") procAddBefore(target);
+          else if (op === "after") procAddAfter(target);
+          else if (op === "child") procAddChild(target);
+          else if (op === "delete") procDeleteNode(target);
+        });
+      });
+    }
+
+    // 递归渲染节点（支持无限层级）：path 如 "0" / "0.1" / "0.1.2"
+    function procRenderNode(node, path, isMain) {
+      var expanded = !!procExpanded[path];
+      var kids = node.children || [];
+      var hasKids = kids.length > 0;
+      var numLabel = isMain ? (parseInt(path) + 1) : path.split(".").map(function(n){ return parseInt(n) + 1; }).join(".");
+      var hasProps = node.props && (node.props.formName || node.props.indexField || node.props.input || node.props.logic || node.props.output);
+      var html = '<div class="proc-row">';
+      html += '<div class="proc-node-col' + (isMain ? ' main' : '') + '">';
+      html += '<div class="' + (isMain ? 'proc-main-node' : 'proc-sub-node') + (expanded ? ' expanded' : '') + (hasProps ? ' has-props' : '') + '" draggable="true" data-path=' + String.fromCharCode(34) + path + String.fromCharCode(34) + '>' +
+        '<div class="proc-node-num">' + numLabel + '</div>' +
+        '<div class="proc-node-name">' + escHtml(node.name) + '</div>' +
+        (hasKids ? '<div class="proc-node-more">' + (expanded ? "-" : "+") + '</div>' : '') +
+        (hasProps ? '<div class="proc-node-flag" title="已配置属性" data-prop="' + path + '">●</div>' : '<div class="proc-node-flag" data-prop="' + path + '">○</div>') +
+        '<div class="proc-node-ops">' +
+          '<button class="proc-op" data-op="before" data-opath="' + path + '" title="增加前置节点（同级）">前+</button>' +
+          '<button class="proc-op" data-op="after" data-opath="' + path + '" title="增加后置节点（同级）">后+</button>' +
+          '<button class="proc-op" data-op="child" data-opath="' + path + '" title="增加子节点（下一级，追加末尾）">子+</button>' +
+          '<button class="proc-op proc-op-del" data-op="delete" data-opath="' + path + '" title="删除该节点及所有子节点">✕</button>' +
+        '</div>' +
+        '</div>';
+      html += '</div>';
+      if (expanded && hasKids) {
+        html += '<div class="proc-branch">';
+        html += '<div class="proc-branch-link"></div>';
+        html += '<div class="proc-branch-col">';
+        kids.forEach(function(kid, j) {
+          // 每个子节点前放插入槽位（拖到此 = 插入到该子节点之前）
+          html += '<div class="proc-drop-slot proc-child-slot" data-before="' + path + "." + j + '"><div class="proc-child-arrow">↕</div></div>';
+          // 兼容旧格式：字符串子节点转为对象
+          if (typeof kid === "string") kid = { name: kid, children: [] };
+          html += procRenderNode(kid, path + "." + j, false);
+        });
+        html += '</div>';
+        html += '</div>';
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function procToggle(path) {
+      procExpanded[path] = !procExpanded[path];
+      procRenderFlow();
+    }
+
+    // 展开全部：遍历树，所有有 children 的节点都展开
+    function procExpandAll() {
+      if (!procFlow) return;
+      procExpanded = {};
+      (function walk(nodes, prefix){
+        nodes.forEach(function(n, i){
+          var p = prefix ? (prefix + "." + i) : String(i);
+          if (n.children && n.children.length) {
+            procExpanded[p] = true;
+            walk(n.children, p);
+          }
+        });
+      })(procFlow.steps, "");
+      procRenderFlow();
+    }
+
+    // 折叠全部
+    function procCollapseAll() {
+      procExpanded = {};
+      procRenderFlow();
+    }
+
+    // ===== 专题备份弹窗 =====
+    function procBackupModal() {
+      if (!procFlow) { procAddSys("请先生成流程"); return; }
+      if (!currentProject) { procAddSys("请先选择项目"); return; }
+      var m = document.createElement("div");
+      m.className = "proc-modal";
+      m.innerHTML =
+        '<div class="pm-box pm-box-sm">' +
+        '<div class="pm-head"><span>专题备份</span>' +
+        '<button class="pm-close" onclick="this.parentNode.parentNode.parentNode.remove()">×</button></div>' +
+        '<div class="pm-body">' +
+          '<div class="pm-field"><label>备份名称</label><input id="bkName" placeholder="例如：外贸流程 v1.0 定稿" /></div>' +
+          '<div class="pm-field"><label>说明</label><textarea id="bkDesc" class="pm-ta pm-ta-sm" placeholder="备份说明"></textarea></div>' +
+          '<div class="pm-field"><label>生成时间（自动）</label><input id="bkTime" disabled value="' + new Date().toLocaleString('zh-CN', {hour12:false}) + '" /></div>' +
+        '</div>' +
+        '<div class="pm-foot"><span class="pm-hint">保存到数据库（关联当前项目）</span><button class="btn btn-primary" id="bkSaveBtn">保存备份</button></div>' +
+        '</div>';
+      document.body.appendChild(m);
+      // 点击外部关闭
+      setTimeout(function(){
+        document.addEventListener("mousedown", function(e){
+          if (!document.body.contains(m)) return;
+          if (!m.contains(e.target)) m.remove();
+        });
+      }, 50);
+      document.getElementById("bkSaveBtn").addEventListener("click", function(){
+        var name = document.getElementById("bkName").value.trim();
+        var desc = document.getElementById("bkDesc").value.trim();
+        if (!name) { alert("请输入备份名称"); return; }
+        window.__TAURI__.core.invoke("flow_backup", {
+          prjGuid: currentProject.prjGUID,
+          name: name,
+          desc: desc,
+          content: JSON.stringify(procFlow, null, 2)
+        }).then(function(r){
+          m.remove();
+          procAddSys(r);
+        }).catch(function(e){
+          alert("备份失败：" + e);
+        });
+      });
+    }
+
+    // ===== 载入备份弹窗 =====
+    function procLoadModal() {
+      if (!currentProject) { procAddSys("请先选择项目"); return; }
+      var m = document.createElement("div");
+      m.className = "proc-modal";
+      m.innerHTML =
+        '<div class="pm-box">' +
+        '<div class="pm-head"><span>载入备份</span>' +
+        '<button class="pm-close" onclick="this.parentNode.parentNode.parentNode.remove()">×</button></div>' +
+        '<div class="pm-body">' +
+          '<div class="pm-field"><label>备份类型（二选一）</label>' +
+            '<div class="pm-radio-row">' +
+              '<label><input type="radio" name="bkType" value="auto" checked /> 自动备份（versions 目录）</label>' +
+              '<label><input type="radio" name="bkType" value="snap" /> 专题备份（数据库）</label>' +
+            '</div></div>' +
+          '<div class="pm-field"><label>选择备份</label><select id="bkSel"><option value="">加载中...</option></select></div>' +
+          '<div class="pm-field"><label>备份信息</label><div class="pm-info" id="bkInfo">请选择备份</div></div>' +
+        '</div>' +
+        '<div class="pm-foot"><span class="pm-hint">恢复将覆盖当前编辑版本</span><button class="btn btn-primary" id="bkRestoreBtn">恢复备份</button></div>' +
+        '</div>';
+      document.body.appendChild(m);
+      setTimeout(function(){
+        document.addEventListener("mousedown", function(e){
+          if (!document.body.contains(m)) return;
+          if (!m.contains(e.target)) m.remove();
+        });
+      }, 50);
+
+      var sel = document.getElementById("bkSel");
+      var info = document.getElementById("bkInfo");
+      var typeRadios = m.querySelectorAll("input[name=bkType]");
+      var curType = "auto";
+      var autoList = [];    // [{id/name, label, info}]
+      var snapList = [];
+      var snapIdMap = {};
+
+      function loadAuto() {
+        window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+          var ws = "";
+          try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+          if (!ws) { sel.innerHTML = '<option value="">未设工作路径</option>'; return; }
+          window.__TAURI__.core.invoke("process_versions", {
+            prjName: currentProject.prjName,
+            workspace: ws
+          }).then(function(vers){
+            autoList = (vers || []);
+            if (!autoList.length) { sel.innerHTML = '<option value="">无自动备份</option>'; return; }
+            var opts = autoList.map(function(ts, i){
+              return '<option value="auto-' + i + '">' + procTsLabel(ts) + '</option>';
+            }).join("");
+            sel.innerHTML = opts;
+            showAutoInfo(0);
+          }).catch(function(e){ sel.innerHTML = '<option value="">加载失败</option>'; });
+        });
+      }
+      function loadSnap() {
+        window.__TAURI__.core.invoke("flow_backup_list", {
+          prjGuid: currentProject.prjGUID
+        }).then(function(items){
+          snapList = (items || []);
+          if (!snapList.length) { sel.innerHTML = '<option value="">无专题备份</option>'; info.textContent = "暂无专题备份"; return; }
+          var opts = snapList.map(function(item, i){
+            var parts = item.split("|");
+            return '<option value="snap-' + i + '">' + (parts[1] || "备份") + '（' + parts[3] + '）</option>';
+          }).join("");
+          sel.innerHTML = opts;
+          showSnapInfo(0);
+        }).catch(function(e){ sel.innerHTML = '<option value="">加载失败</option>'; });
+      }
+      function procTsLabel(ts) {
+        try {
+          var d = new Date(parseInt(ts));
+          return d.toLocaleString('zh-CN', {hour12:false});
+        } catch(e) { return ts; }
+      }
+      function showAutoInfo(idx) {
+        var ts = autoList[idx];
+        info.innerHTML = '<b>类型：</b>自动备份<br/><b>时间：</b>' + procTsLabel(ts) + '<br/><b>位置：</b>doc/versions/' + ts;
+      }
+      function showSnapInfo(idx) {
+        var parts = snapList[idx].split("|");
+        info.innerHTML = '<b>类型：</b>专题备份<br/><b>名称：</b>' + (parts[1]||"") + '<br/><b>说明：</b>' + (parts[2]||"-") + '<br/><b>时间：</b>' + (parts[3]||"");
+      }
+      function refresh() {
+        if (curType === "auto") loadAuto(); else loadSnap();
+      }
+      typeRadios.forEach(function(r){
+        r.addEventListener("change", function(){
+          curType = r.value;
+          refresh();
+        });
+      });
+      sel.addEventListener("change", function(){
+        var val = sel.value;
+        if (!val) return;
+        var idx = parseInt(val.split("-")[1]);
+        if (curType === "auto") showAutoInfo(idx);
+        else showSnapInfo(idx);
+      });
+      // 恢复
+      document.getElementById("bkRestoreBtn").addEventListener("click", function(){
+        var val = sel.value;
+        if (!val) { alert("请选择备份"); return; }
+        var idx = parseInt(val.split("-")[1]);
+        // 自定义确认（WebView 的 confirm 不可靠，用模态二次确认）
+        var doRestore = function(content) {
+          var json = null;
+          var mm = content.match(/\{[\s\S]*\}/);
+          if (mm) { try { json = JSON.parse(mm[0]); } catch(e) {} }
+          if (!json || !json.steps) { alert("备份内容无法解析"); return; }
+          procApplyRestore(json);
+          m.remove();
+        };
+        var procApplying = false;
+        var procApplyRestore = function(json) {
+          procFlow = json;
+          procExpanded = {};
+          for (var i = 0; i < json.steps.length; i++) {
+            if ((json.steps[i].children || []).length) { procExpanded[String(i)] = true; break; }
+          }
+          procRenderFlow();
+          procSaveFlowDoc();
+          procAddSys("已恢复备份");
+        };
+        // 先确认（自定义确认模态），确认后再读取恢复
+        var cm = document.createElement("div");
+        cm.className = "proc-modal";
+        cm.innerHTML =
+          '<div class="pm-box pm-box-sm">' +
+          '<div class="pm-head"><span>确认恢复</span></div>' +
+          '<div class="pm-body"><div style="font-size:13px;color:var(--ink900);padding:8px 0">确认恢复该备份？将覆盖当前编辑版本。</div></div>' +
+          '<div class="pm-foot"><button class="btn btn-secondary" id="cfNo">取消</button>' +
+          '<button class="btn btn-primary" id="cfYes">确认恢复</button></div>' +
+          '</div>';
+        document.body.appendChild(cm);
+        document.getElementById("cfNo").addEventListener("click", function(){ cm.remove(); });
+        document.getElementById("cfYes").addEventListener("click", function(){
+          cm.remove();
+          if (curType === "auto") {
+            window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+              var ws = "";
+              try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+              if (!ws) { alert("未设工作路径"); return; }
+              window.__TAURI__.core.invoke("process_auto_load", {
+                prjName: currentProject.prjName,
+                workspace: ws,
+                ts: autoList[idx]
+              }).then(doRestore).catch(function(e){ alert("读取失败：" + e); });
+            }).catch(function(e){ alert("读取配置失败：" + e); });
+          } else {
+            var parts = snapList[idx].split("|");
+            window.__TAURI__.core.invoke("flow_backup_load", { id: parseInt(parts[0]) })
+              .then(doRestore).catch(function(e){ alert("读取失败：" + e); });
+          }
+        });
+      });
+      loadAuto();
+    }
+
+    // ===== 节点拖拽移动 =====
+    // 返回 {parent: 数组, index: 索引} 定位节点
+    function procLocate(root, path) {
+      var parts = path.split(".");
+      var arr = root.steps;
+      for (var i = 0; i < parts.length; i++) {
+        var idx = parseInt(parts[i]);
+        if (idx >= arr.length) return null;
+        if (i === parts.length - 1) return { parent: arr, index: idx };
+        var node = arr[idx];
+        arr = node.children || [];
+      }
+      return null;
+    }
+
+    function procMoveNode(srcPath, dstKey, mode) {
+      if (!procFlow) return;
+      // 不能移动到自己内部
+      if (dstKey === srcPath) return;
+      if (dstKey.indexOf(srcPath + ".") === 0) return; // 目标在自己子树内，禁止
+      var srcLoc = procLocate(procFlow, srcPath);
+      if (!srcLoc) return;
+      // 提取节点（含子树）
+      var node = srcLoc.parent[srcLoc.index];
+      srcLoc.parent.splice(srcLoc.index, 1);
+
+      var ok = false;
+      if (mode === "child") {
+        // 拖到节点上：成为该节点子节点
+        var dstLoc = procLocate(procFlow, dstKey);
+        if (dstLoc) {
+          var dnode = dstLoc.parent[dstLoc.index];
+          if (!dnode.children) dnode.children = [];
+          dnode.children.push(node);
+          ok = true;
+        }
+      } else if (mode === "before") {
+        // 拖到槽位：插入到指定节点之前（任意层级，路径定位）
+        var dstLoc = procLocate(procFlow, dstKey);
+        if (dstLoc) {
+          dstLoc.parent.splice(dstLoc.index, 0, node);
+          ok = true;
+        }
+      }
+      if (!ok) {
+        // 失败回退：放回原位置
+        srcLoc.parent.splice(Math.min(srcLoc.index, srcLoc.parent.length), 0, node);
+        return;
+      }
+      // 迁移被移动节点的展开状态到新路径（其他节点展开状态保持不变）
+      var newPath = "";
+      if (mode === "child") {
+        var dl = procLocate(procFlow, dstKey);
+        if (dl) newPath = dstKey + "." + (dl.parent[dl.index].children.length - 1);
+        if (newPath) procMigrateExpanded(srcPath, newPath);
+      } else {
+        // before：目标节点及其后兄弟路径 +1，源迁移到目标位置
+        var dstLoc2 = procLocate(procFlow, dstKey);
+        if (dstLoc2) {
+          var parentArr = dstLoc2.parent;
+          var isRoot = parentArr === procFlow.steps;
+          var prefix = isRoot ? "" : procPathOfParent(procFlow, dstLoc2);
+          procShiftExpanded(prefix, dstLoc2.index, 1);
+        }
+        newPath = dstKey;
+        procMigrateExpanded(srcPath, newPath);
+      }
+      // 重新编号（渲染按路径自动生成）+ 保存
+      procRenderFlow();
+      procSaveFlowDoc();
+      procAddSys("已移动节点：" + (node.name || srcPath) + " → " + dstKey);
+    }
+
+    // ===== 流程节点属性编辑 =====
+    var procFormList = [];   // 项目已有的表单名
+    var procFieldList = [];  // 项目已有的索引字段
+
+    function procFindNodeByPath(root, path) {
+      var parts = path.split(".");
+      var cur = root;
+      for (var i = 0; i < parts.length; i++) {
+        if (!cur) return null;
+        var idx = parseInt(parts[i]);
+        var kids = cur.children || [];
+        if (i === 0) {
+          if (idx >= cur.steps.length) return null;
+          cur = cur.steps[idx];
+        } else {
+          if (idx >= kids.length) return null;
+          cur = kids[idx];
+        }
+      }
+      return cur;
+    }
+
+    function procCollectForms() {
+      // 遍历流程所有节点收集表单名/索引字段
+      procFormList = [];
+      procFieldList = [];
+      if (!procFlow) return;
+      (function walk(nodes, isRoot) {
+        var arr = isRoot ? nodes : (nodes.children || []);
+        arr.forEach(function(n){
+          if (n.props) {
+            if (n.props.formName && procFormList.indexOf(n.props.formName) < 0) procFormList.push(n.props.formName);
+            if (n.props.indexField && procFieldList.indexOf(n.props.indexField) < 0) procFieldList.push(n.props.indexField);
+          }
+          if (n.children) walk(n, false);
+        });
+      })(procFlow.steps, true);
+    }
+
+    function procEditProps(path) {
+      if (!procFlow) return;
+      var node = procFindNodeByPath(procFlow, path);
+      if (!node) { procAddSys("节点不存在"); return; }
+      procCollectForms();
+      var p = node.props || {};
+      var m = document.createElement("div");
+      m.className = "proc-modal";
+      m.innerHTML =
+        '<div class="pm-box">' +
+        '<div class="pm-head"><span>节点属性编辑：' + escHtml(node.name) + '（' + path + '）</span>' +
+        '<button class="pm-close" onclick="this.parentNode.parentNode.parentNode.remove()">×</button></div>' +
+        '<div class="pm-body">' +
+          '<div class="pm-row">' +
+            '<div class="pm-field pm-hor"><label>节点名称</label><input id="pmNodeName" placeholder="节点名称" /></div>' +
+            '<div class="pm-field pm-hor"><label>输入内容</label><textarea id="pmInput" class="pm-ta pm-ta-sm pm-hor-ta" placeholder="输入内容描述"></textarea></div>' +
+          '</div>' +
+          '<div class="pm-row">' +
+            '<div class="pm-field pm-hor"><label>表单名称</label>' +
+              '<input id="pmForm" list="pmFormList" placeholder="输入或选择表单名" />' +
+              '<datalist id="pmFormList"></datalist></div>' +
+            '<div class="pm-field pm-hor"><label>索引字段</label>' +
+              '<input id="pmField" list="pmFieldList" placeholder="输入或选择索引字段" />' +
+              '<datalist id="pmFieldList"></datalist></div>' +
+          '</div>' +
+          '<div class="pm-field"><label>业务逻辑描述</label><textarea id="pmLogic" class="pm-ta pm-ta-lg" placeholder="业务逻辑描述"></textarea></div>' +
+          '<div class="pm-field"><label>输出内容</label><textarea id="pmOutput" class="pm-ta pm-ta-sm" placeholder="输出内容描述"></textarea></div>' +
+        '</div>' +
+        '<div class="pm-foot"><span class="pm-hint">保存后自动写入流程文档</span><button class="btn btn-primary" id="pmSaveBtn">保存属性</button></div>' +
+        '</div>';
+      document.body.appendChild(m);
+      // 填充当前值
+      document.getElementById("pmNodeName").value = node.name || "";
+      document.getElementById("pmForm").value = p.formName || "";
+      document.getElementById("pmField").value = p.indexField || "";
+      document.getElementById("pmInput").value = p.input || "";
+      document.getElementById("pmLogic").value = p.logic || "";
+      document.getElementById("pmOutput").value = p.output || "";
+      // 填充下拉列表
+      var dlF = document.getElementById("pmFormList");
+      procFormList.forEach(function(f){ var o = document.createElement("option"); o.value = f; dlF.appendChild(o); });
+      var dlI = document.getElementById("pmFieldList");
+      procFieldList.forEach(function(f){ var o = document.createElement("option"); o.value = f; dlI.appendChild(o); });
+      // 点击窗口外自动关闭
+      setTimeout(function(){
+        document.addEventListener("mousedown", function(e){
+          if (!document.body.contains(m)) return;
+          if (!m.contains(e.target)) m.remove();
+        });
+      }, 50);
+      // 保存
+      document.getElementById("pmSaveBtn").addEventListener("click", function(){
+        var formName = document.getElementById("pmForm").value.trim();
+        var indexField = document.getElementById("pmField").value.trim();
+        var input = document.getElementById("pmInput").value;
+        var logic = document.getElementById("pmLogic").value;
+        var output = document.getElementById("pmOutput").value;
+        // 新表单/新字段自动加入列表（下次下拉可选）
+        if (formName && procFormList.indexOf(formName) < 0) procFormList.push(formName);
+        if (indexField && procFieldList.indexOf(indexField) < 0) procFieldList.push(indexField);
+        var newName = document.getElementById("pmNodeName").value.trim();
+        if (newName) node.name = newName;
+        node.props = { formName: formName, indexField: indexField, input: input, logic: logic, output: output };
+        // 移除弹窗 + 局部 DOM 更新（不重建流程图，保持展开状态，无刷新感）
+        m.remove();
+        var row = document.querySelector('[data-path="' + path + '"]');
+        if (row) {
+          var nameEl = row.querySelector(".proc-node-name");
+          if (nameEl) nameEl.textContent = node.name;
+          var hasProps2 = node.props && (node.props.formName || node.props.indexField || node.props.input || node.props.logic || node.props.output);
+          row.classList.toggle("has-props", hasProps2);
+          var flag = row.querySelector(".proc-node-flag");
+          if (flag) {
+            flag.textContent = hasProps2 ? "●" : "○";
+            flag.title = hasProps2 ? "已配置属性" : "";
+          }
+        }
+        procSaveFlowDoc();
+        procAddSys("节点属性已保存：" + node.name);
+      });
+    }
+
+    function procSaveFlowDoc() {
+      // 保存当前流程（含属性）到 doc 目录
+      if (!procFlow || !currentProject) return;
+      if (!window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+        if (!ws) return;
+        var fileName = currentProject.prjName + "_flow.json";
+        window.__TAURI__.core.invoke("process_save", {
+          prjName: currentProject.prjName,
+          workspace: ws,
+          fileName: fileName,
+          content: JSON.stringify(procFlow, null, 2)
+        }).then(function(){
+          // 内部保存：更新监测基线（签名=当前文件状态），避免自身保存触发重载
+          window.__TAURI__.core.invoke("process_list", {
+            prjName: currentProject.prjName,
+            workspace: ws
+          }).then(function(files){
+            procLastFiles = (files && files.length) ? files.join(",") : null;
+          }).catch(function(){});
+        }).catch(function(e){ procAddSys("保存失败：" + e); });
+      });
+    }
+
+    function procSaveRaw(rawText) {
+      if (!currentProject) return;
+      if (!window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+        if (!ws) return;
+        window.__TAURI__.core.invoke("process_save", {
+          prjName: currentProject.prjName,
+          workspace: ws,
+          fileName: "流程描述.md",
+          content: "# 业务流程描述" + String.fromCharCode(10) + String.fromCharCode(10) + rawText
+        }).then(function(r){
+          procAddSys("原始描述已保存：" + r);
+        }).catch(function(e){
+          procAddSys("保存失败：" + e);
+        });
+      });
+    }
+
+    function procSave() {
+      if (!procFlow || !currentProject) return;
+      if (!window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+        if (!ws) return;
+        var docName = (procFlow.flow_name || "业务流程") + ".json";
+        window.__TAURI__.core.invoke("process_save", {
+          prjName: currentProject.prjName,
+          workspace: ws,
+          fileName: docName,
+          content: JSON.stringify(procFlow, null, 2)
+        }).then(function(r){
+          procAddSys("已保存：" + r);
+        }).catch(function(e){
+          procAddSys("保存失败：" + e);
+        });
+      });
+    }
+
+    function procRestore() {
+      if (!currentProject || !window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+        if (!ws) return;
+        window.__TAURI__.core.invoke("process_list", {
+          prjName: currentProject.prjName,
+          workspace: ws
+        }).then(function(files){
+          if (files && files.length) {
+            var fnames = files.map(function(f){ return f.split("|")[0]; });
+            procAddSys("发现已有流程文档：" + fnames.join("、") + "（重新生成将覆盖）");
+            // 加载第一个流程 JSON 并渲染
+            window.__TAURI__.core.invoke("process_load", {
+              prjName: currentProject.prjName,
+              workspace: ws,
+              fileName: fnames[0]
+            }).then(function(content){
+              var json = null;
+              var m = content.match(/\{[\s\S]*\}/);
+              if (m) { try { json = JSON.parse(m[0]); } catch(e) {} }
+              if (json && json.steps) {
+                procFlow = json;
+                procExpanded = {};
+                for (var i = 0; i < json.steps.length; i++) {
+                  if (json.steps[i].children && json.steps[i].children.length) {
+                    procExpanded[i] = true;
+                    break;
+                  }
+                }
+                procRenderFlow();
+                procAddSys("已加载：" + (json.flow_name || (files[0] || "").split("|")[0]));
+              }
+            }).catch(function(){});
+          }
+        }).catch(function(){});
+      });
+    }
+
+    // 动态页分发
+    function renderDynamic(idx, kind) {
+      if (kind === "workspace") renderWorkspace();
+      else if (kind === "models") renderModels();
+      else if (kind === "agents") renderAgents();
+      else if (kind === "constraints") renderConstraints();
+      else if (kind === "theme") renderTheme();
+      else if (kind === "process") renderProcess();
+      else if (kind === "chat") renderChat();
+    }
+
+    function render(idx) {
+      // 清理页面级 class（防残留导致布局问题）
+      content.classList.remove("chat-page", "theme-page", "constr-page");
+      current = idx;
+      var m = MODULES[idx];
+      var body = m.body.map(function(t){ return "<p>" + t + "</p>"; }).join("");
+      var extra = (idx === 5) ? dbBox() : '';
+      if (idx === 0) { renderInfoPanel(); items.forEach(function(el){ el.classList.toggle("active", el.dataset.m == idx); }); return; }
+      if (m.dynamic) { renderDynamic(idx, m.dynamic); items.forEach(function(el){ el.classList.toggle("active", el.dataset.m == idx); }); return; }
+      content.innerHTML =
+        '<div class="page-title">' + m.t + '</div>' +
+        '<div class="page-sub">' + m.s + '</div>' +
+        '<div class="panel"><h4>' + m.t + '</h4>' + body +
+        '<div class="ph short"></div><div class="ph"></div><div class="ph xs"></div></div>' + extra;
+      items.forEach(function(el){ el.classList.toggle("active", el.dataset.m == idx); });
+    }
+
+    // 初始化本地 SQLite：调用 Rust 命令 db_init（后端 rusqlite 建库 + 建表）
+    async function initDb() {
+      try {
+        if (!window.__TAURI__ || !window.__TAURI__.core) { dbState.msg = "Tauri 不可用（未连接）"; render(current); return; }
+        dbState.msg = await window.__TAURI__.core.invoke("db_init");
+        dbState.ready = true;
+      } catch(e) { dbState.msg = "数据库初始化失败：" + e; }
+      render(current);
+    }
+
+    items.forEach(function(el){
+      el.addEventListener("click", function(){ render(+el.dataset.m); });
+    });
+
+    // ===== 项目下拉框 + 新增项目 =====
+    function loadProjects() {
+      if (!window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("project_list").then(function(list){
+        var sel = document.getElementById("projSel");
+        sel.innerHTML = "";
+        var opt0 = document.createElement("option");
+        opt0.value = ""; opt0.textContent = "未选择项目";
+        sel.appendChild(opt0);
+        (list || []).forEach(function(p){
+          var o = document.createElement("option");
+          o.value = p.prjGUID;
+          o.textContent = p.prjName + " · " + p.prjType;
+          sel.appendChild(o);
+        });
+      }).catch(function(e){ console.error("loadProjects:", e); });
+    }
+
+    function showProjectModal(){ document.getElementById("projModal").classList.add("show"); }
+    function hideProjectModal(){ document.getElementById("projModal").classList.remove("show"); }
+
+    // ===== 新增项目：分步进度显示（不阻塞 UI） =====
+    function showProgressBox(title) {
+      var box = document.getElementById("projProgress");
+      if (!box) {
+        box = document.createElement("div");
+        box.id = "projProgress";
+        box.className = "proj-progress";
+        document.body.appendChild(box);
+      }
+      box.innerHTML = '<div class="prog-title">' + title + '</div><div class="prog-list"></div>';
+      box.classList.add("show");
+      return box;
+    }
+    function addProgressStep(box, label) {
+      var list = box.querySelector(".prog-list");
+      var row = document.createElement("div");
+      row.className = "prog-step";
+      row.innerHTML = '<span class="prog-dot"></span><span class="prog-text">' + label + '</span>';
+      list.appendChild(row);
+      return row;
+    }
+    function setStepState(row, ok, msg) {
+      row.className = "prog-step " + (ok ? "ok" : "fail");
+      row.querySelector(".prog-text").textContent += (msg ? " — " + msg : "");
+      if (ok) row.querySelector(".prog-dot").textContent = "✓";
+      else row.querySelector(".prog-dot").textContent = "✗";
+    }
+
+    async function saveProject() {
+      var name = document.getElementById("pjName").value.trim();
+      var type = document.getElementById("pjType").value;
+      var desc = document.getElementById("pjDesc").value.trim();
+      if (!name) { alert("请输入项目名称"); return; }
+
+      // 显示进度框（界面不假死：invoke 是异步 Promise）
+      var box = showProgressBox("正在创建项目：<b>" + name + "</b>");
+      var stepDb = addProgressStep(box, "写入数据库");
+      var stepDir = addProgressStep(box, "创建项目目录");
+      var stepTpl = addProgressStep(box, "复制开发模板");
+      var stepDoc = addProgressStep(box, "生成项目说明");
+      setStepState(stepDb, true, "开始");
+
+      try {
+        var res = await window.__TAURI__.core.invoke("project_create", {
+          prjName: name, prjType: type, prjDescription: desc
+        });
+        // 根据返回的 steps 更新进度
+        if (res && res.steps) {
+          res.steps.forEach(function(s){
+            if (s.step === "数据库") setStepState(stepDb, s.ok, s.msg);
+            else if (s.step === "目录") setStepState(stepDir, s.ok, s.msg);
+            else if (s.step === "模板") setStepState(stepTpl, s.ok, s.msg);
+            else if (s.step === "说明") setStepState(stepDoc, s.ok, s.msg);
+          });
+        }
+        if (res && res.error) {
+          setTimeout(function(){ alert("部分步骤失败：" + res.error); }, 100);
+        }
+        var guid = res && res.guid ? res.guid : null;
+        // 成功提示 + 关闭弹窗
+        setTimeout(function(){
+          box.classList.remove("show");
+          hideProjectModal();
+          loadProjects();
+          if (guid) {
+            var sel = document.getElementById("projSel");
+            sel.value = guid;
+          }
+          document.getElementById("statusText").textContent = "已保存项目：" + name;
+        }, 1200);
+      } catch(e) {
+        setStepState(stepDb, false, String(e));
+        setStepState(stepDir, false, "已跳过");
+        setStepState(stepTpl, false, "已跳过");
+        setStepState(stepDoc, false, "已跳过");
+        setTimeout(function(){ box.classList.remove("show"); alert("保存失败：" + e); }, 100);
+      }
+    }
+
+    document.getElementById("projAdd").addEventListener("click", showProjectModal);
+    document.getElementById("pjCancel").addEventListener("click", hideProjectModal);
+    document.getElementById("pjSave").addEventListener("click", saveProject);
+
+    // IPC 状态
+    if (window.__TAURI__ && window.__TAURI__.core) {
+      document.getElementById("ipcState").textContent = "已连接 Tauri";
+      document.getElementById("statusText").textContent = "IPC 就绪";
+    }
+
+    bindProjSel();
+    render(0);
+    initDb();
+    loadProjects();
+  </script>
+</body>
+</html>

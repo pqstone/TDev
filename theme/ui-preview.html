@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TDev UI 预览 · 北极冰山深邃蓝</title>
+  <style>
+    :root {
+      /* tokens（对应 theme/tokens.json） */
+      --p900:#072B4E; --p700:#0A4D8C; --p500:#1A6CB3; --p300:#5C9FD6; --p100:#C9E2F5; --p050:#E8F3FB;
+      --ink900:#102A43; --ink700:#334E68; --ink500:#627D98; --ink300:#9FB3C8; --line300:#D2E0EC;
+      --bg:#F4F8FC; --surface:#FFFFFF; --sunken:#EAF2FA;
+      --success:#2E9E6B; --warning:#D9822B; --danger:#D64545;
+      --r-sm:4px; --r-md:6px; --r-lg:8px; --r-xl:12px;
+      --sh-sm:0 1px 2px rgba(7,43,78,.08); --sh-md:0 2px 8px rgba(7,43,78,.10); --sh-lg:0 8px 24px rgba(7,43,78,.16);
+      --ease:cubic-bezier(.2,.8,.2,1);
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; background:var(--bg); color:var(--ink900); }
+    /* 顶部栏 */
+    .topbar { position:sticky; top:0; height:56px; background:var(--surface); border-bottom:1px solid var(--line300); display:flex; align-items:center; padding:0 24px; gap:16px; z-index:10; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:600; font-size:16px; color:var(--p700); }
+    .brand .dot { width:12px; height:12px; border-radius:3px; background:linear-gradient(135deg,var(--p700),var(--p300)); }
+    .topbar nav { display:flex; gap:4px; margin-left:24px; }
+    .navitem { padding:6px 12px; border-radius:var(--r-md); font-size:14px; color:var(--ink700); cursor:pointer; transition:background .15s var(--ease),color .15s var(--ease); }
+    .navitem:hover { background:var(--p050); }
+    .navitem.active { background:var(--p050); color:var(--p700); font-weight:600; }
+    .wrap { display:flex; max-width:1080px; margin:24px auto; padding:0 24px; gap:24px; }
+    /* 侧栏 */
+    .sidebar { width:240px; flex:none; }
+    .sitem { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:var(--r-md); font-size:14px; color:var(--ink700); cursor:pointer; transition:background .15s var(--ease); position:relative; }
+    .sitem:hover { background:var(--p050); }
+    .sitem.active { background:var(--p050); color:var(--p700); font-weight:600; }
+    .sitem.active::before { content:""; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:2px; background:var(--p700); }
+    .sitem .ico { width:20px; height:20px; border-radius:4px; background:var(--p100); flex:none; }
+    /* 主区 */
+    .main { flex:1; min-width:0; }
+    .page-title { font-size:24px; font-weight:600; color:var(--ink900); margin-bottom:4px; }
+    .page-sub { font-size:14px; color:var(--ink500); margin-bottom:24px; }
+    .card { background:var(--surface); border:1px solid var(--line300); border-radius:var(--r-lg); box-shadow:var(--sh-sm); padding:20px; margin-bottom:24px; }
+    .card h3 { font-size:20px; font-weight:600; color:var(--ink900); margin-bottom:16px; }
+    .row { display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
+    .label { font-size:12px; color:var(--ink500); margin-bottom:6px; }
+    /* 按钮 */
+    .btn { border:none; border-radius:var(--r-md); font-size:14px; cursor:pointer; transition:all .15s var(--ease); padding:0 16px; height:32px; }
+    .btn-lg { height:40px; padding:0 20px; font-size:15px; }
+    .btn-sm { height:24px; padding:0 12px; font-size:12px; }
+    .btn-primary { background:var(--p700); color:#fff; }
+    .btn-primary:hover { background:var(--p900); }
+    .btn-primary:focus-visible { outline:2px solid var(--p500); outline-offset:2px; }
+    .btn-secondary { background:var(--surface); color:var(--ink900); border:1px solid var(--line300); }
+    .btn-secondary:hover { border-color:var(--p500); color:var(--p500); }
+    .btn-text { background:transparent; color:var(--p500); }
+    .btn-text:hover { text-decoration:underline; }
+    .btn-danger { background:var(--danger); color:#fff; }
+    .btn-danger:hover { background:#b23a3a; }
+    .btn:disabled { background:var(--bg); color:var(--ink300); border:1px solid var(--line300); cursor:not-allowed; }
+    /* 输入 */
+    .field { margin-bottom:16px; }
+    .input { width:100%; max-width:360px; height:32px; padding:0 12px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:14px; font-family:inherit; color:var(--ink900); transition:border .15s var(--ease),box-shadow .15s var(--ease); }
+    .input::placeholder { color:var(--ink500); }
+    .input:focus { outline:none; border-color:var(--p500); box-shadow:0 0 0 2px rgba(26,108,179,.25); }
+    .input.error { border-color:var(--danger); box-shadow:0 0 0 2px rgba(214,69,69,.15); }
+    .input:disabled { background:var(--bg); color:var(--ink300); }
+    .err-msg { font-size:12px; color:var(--danger); margin-top:4px; }
+    /* 表格 */
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    thead th { background:var(--p050); color:var(--ink700); font-weight:600; text-align:left; padding:0 16px; height:40px; }
+    tbody td { padding:0 16px; height:40px; border-top:1px solid var(--line300); color:var(--ink700); }
+    tbody tr:hover td { background:var(--p050); }
+    tbody tr.selected td { background:var(--p100); }
+    td.num, th.num { text-align:right; }
+    /* 标签 */
+    .tag { display:inline-flex; align-items:center; gap:6px; padding:2px 10px; border-radius:var(--r-sm); font-size:12px; font-weight:600; }
+    .tag-success { background:rgba(46,158,107,.12); color:#1e7a52; }
+    .tag-warning { background:rgba(217,130,43,.14); color:#b06a1e; }
+    .tag-danger { background:rgba(214,69,69,.12); color:#b23a3a; }
+    .tag-info { background:rgba(26,108,179,.12); color:var(--p500); }
+    /* 模态框示例 */
+    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(16,42,67,.45); z-index:50; }
+    .modal.show { display:flex; }
+    .modal-box { width:420px; background:var(--surface); border-radius:var(--r-xl); box-shadow:var(--sh-lg); padding:24px; }
+    .modal-box h4 { font-size:20px; font-weight:600; margin-bottom:12px; }
+    .modal-box p { font-size:14px; color:var(--ink700); margin-bottom:20px; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:12px; }
+    /* 色板 */
+    .swatches { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
+    .swatch { border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--sh-sm); }
+    .swatch .color { height:64px; }
+    .swatch .meta { background:var(--surface); padding:8px 10px; font-size:12px; color:var(--ink700); }
+    .swatch .meta code { display:block; color:var(--ink500); font-family:Consolas,monospace; }
+    .copy { font-size:12px; color:var(--ink500); margin-top:8px; }
+  </style>
+</head>
+<body>
+  <!-- 顶部栏 -->
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span>TDev · 北极冰山</div>
+    <nav>
+      <span class="navitem active">概览</span>
+      <span class="navitem">业务</span>
+      <span class="navitem">设置</span>
+    </nav>
+  </header>
+
+  <div class="wrap">
+    <!-- 侧栏 -->
+    <aside class="sidebar">
+      <div class="sitem active"><span class="ico"></span>仪表盘</div>
+      <div class="sitem"><span class="ico"></span>数据管理</div>
+      <div class="sitem"><span class="ico"></span>报表中心</div>
+      <div class="sitem"><span class="ico"></span>系统设置</div>
+    </aside>
+
+    <!-- 主内容 -->
+    <main class="main">
+      <div class="page-title">北极冰山 · 深邃蓝</div>
+      <div class="page-sub">TDev 官方 UI 主题预览 — 冷静、澄澈、克制</div>
+
+      <!-- 色板 -->
+      <section class="card">
+        <h3>主色板（Color）</h3>
+        <div class="swatches">
+          <div class="swatch"><div class="color" style="background:#072B4E"></div><div class="meta">primary-900<code>#072B4E</code></div></div>
+          <div class="swatch"><div class="color" style="background:#0A4D8C"></div><div class="meta">primary-700 ★主蓝<code>#0A4D8C</code></div></div>
+          <div class="swatch"><div class="color" style="background:#1A6CB3"></div><div class="meta">primary-500<code>#1A6CB3</code></div></div>
+          <div class="swatch"><div class="color" style="background:#5C9FD6"></div><div class="meta">primary-300<code>#5C9FD6</code></div></div>
+          <div class="swatch"><div class="color" style="background:#C9E2F5"></div><div class="meta">primary-100<code>#C9E2F5</code></div></div>
+          <div class="swatch"><div class="color" style="background:#E8F3FB"></div><div class="meta">primary-050<code>#E8F3FB</code></div></div>
+        </div>
+        <div class="copy">主色基准 <code>#0A4D8C</code> · 主色占比 ≤ 15% · 禁止自造主蓝</div>
+      </section>
+
+      <!-- 按钮 -->
+      <section class="card">
+        <h3>按钮（Button）</h3>
+        <div class="row">
+          <button class="btn btn-primary">主要按钮</button>
+          <button class="btn btn-secondary">次要按钮</button>
+          <button class="btn btn-text">文字按钮</button>
+          <button class="btn btn-danger">危险</button>
+          <button class="btn btn-primary btn-sm">小</button>
+          <button class="btn btn-primary btn-lg">大</button>
+          <button class="btn btn-secondary" disabled>禁用</button>
+        </div>
+      </section>
+
+      <!-- 输入 -->
+      <section class="card">
+        <h3>输入框（Input）</h3>
+        <div class="field">
+          <div class="label">正常</div>
+          <input class="input" type="text" placeholder="请输入..." />
+        </div>
+        <div class="field">
+          <div class="label">错误校验</div>
+          <input class="input error" type="text" value="非法值" />
+          <div class="err-msg">该字段格式不正确</div>
+        </div>
+        <div class="field">
+          <div class="label">禁用</div>
+          <input class="input" type="text" value="不可编辑" disabled />
+        </div>
+      </section>
+
+      <!-- 表格 -->
+      <section class="card">
+        <h3>表格（Table）</h3>
+        <table>
+          <thead><tr><th>SKU</th><th>名称</th><th>状态</th><th class="num">库存</th></tr></thead>
+          <tbody>
+            <tr class="selected"><td>SKU-001</td><td>冰川纯净水</td><td><span class="tag tag-success">在库</span></td><td class="num">120</td></tr>
+            <tr><td>SKU-002</td><td>极地功能饮</td><td><span class="tag tag-warning">待补</span></td><td class="num">8</td></tr>
+            <tr><td>SKU-003</td><td>深海矿物质</td><td><span class="tag tag-info">在途</span></td><td class="num">—</td></tr>
+            <tr><td>SKU-004</td><td>冰源碳酸</td><td><span class="tag tag-danger">冻结</span></td><td class="num">0</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 卡片与模态框触发 -->
+      <section class="card">
+        <h3>卡片 / 模态框（Card / Modal）</h3>
+        <div class="row">
+          <button class="btn btn-primary" id="openModal">打开模态框</button>
+          <span class="copy">卡片使用 <code>surface</code> 底 + <code>radius-lg</code> + <code>shadow-sm</code>，圆角统一</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 模态框示例 -->
+  <div class="modal" id="modal">
+    <div class="modal-box">
+      <h4>确认操作</h4>
+      <p>此操作会删除该条数据且不可恢复，是否继续？</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancelModal">取消</button>
+        <button class="btn btn-danger">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var modal = document.getElementById("modal");
+    document.getElementById("openModal").addEventListener("click", function(){ modal.classList.add("show"); });
+    document.getElementById("cancelModal").addEventListener("click", function(){ modal.classList.remove("show"); });
+    modal.addEventListener("click", function(e){ if(e.target === modal) modal.classList.remove("show"); });
+  </script>
+</body>
+</html>

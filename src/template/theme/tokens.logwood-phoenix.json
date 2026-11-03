@@ -1,0 +1,132 @@
+{
+  "// 说明": "原木凤（Logwood Phoenix）主题设计变量（Design Tokens）。木材材质风格参考硬质松树（Hard Pine）。作为开发 Agent 的唯一数据源，前端可直接 import 或转成 CSS 变量使用。所有值以 4px 为基准间距。",
+  "meta": {
+    "name": "logwood-phoenix-tokens",
+    "version": "1.0.0",
+    "theme": "Logwood Phoenix / Hard Pine Wood",
+    "spacingBasis": 4
+  },
+  "color": {
+    "light": {
+      "background": "#F4F6F1",
+      "surface": "#FFFFFF",
+      "surfaceSubtle": "#F4F6F1",
+      "surfaceHover": "#EFF2EA",
+      "textPrimary": "#1C241C",
+      "textSecondary": "#55605A",
+      "textTertiary": "#8C948D",
+      "textOnAccent": "#FFFFFF",
+      "accent": "#1BC026",
+      "accentHover": "#17A921",
+      "accentPressed": "#128A1B",
+      "border": "#D9DED2",
+      "borderStrong": "#C4CBBF",
+      "selection": "#D5F2D8",
+      "success": "#168A21",
+      "warning": "#9D5D00",
+      "error": "#C42B1C",
+      "errorBg": "#FDE7E9",
+      "info": "#1BC026",
+      "focusRing": "#1BC026"
+    },
+    "dark": {
+      "background": "#171B17",
+      "surface": "#20241F",
+      "surfaceSubtle": "#2A2F29",
+      "surfaceHover": "#252A24",
+      "textPrimary": "#F2F5F1",
+      "textSecondary": "#B4BCB3",
+      "textTertiary": "#7E887D",
+      "textOnAccent": "#062B09",
+      "accent": "#3AD945",
+      "accentHover": "#60DC68",
+      "accentPressed": "#22CE2D",
+      "border": "#3A423A",
+      "borderStrong": "#4E584D",
+      "selection": "#1E3D21",
+      "success": "#6CCB5F",
+      "warning": "#FCE100",
+      "error": "#FF6B6B",
+      "errorBg": "#4C1D24",
+      "info": "#3AD945",
+      "focusRing": "#3AD945"
+    }
+  },
+  "palette": {
+    "// 说明": "主题色卡：以 accent 为主色衍生 10 阶（50 最浅 → 900 最深），供图表/背景层次/图标区分等使用。",
+    "accent": "#1BC026",
+    "accent-50": "#EDF8EE",
+    "accent-100": "#D9F2DB",
+    "accent-200": "#B8EABC",
+    "accent-300": "#8DE292",
+    "accent-400": "#60DC68",
+    "accent-500": "#3AD945",
+    "accent-600": "#22CE2D",
+    "accent-700": "#1BC026",
+    "accent-800": "#199A22",
+    "accent-900": "#14711A"
+  },
+  "font": {
+    "family": "\"Segoe UI Variable Text\", \"Segoe UI\", system-ui, -apple-system, sans-serif",
+    "familyCode": "\"Cascadia Code\", Consolas, \"Courier New\", monospace",
+    "size": {
+      "caption": 12,
+      "body": 14,
+      "bodyLarge": 16,
+      "subtitle": 20,
+      "title": 24,
+      "display": 32
+    },
+    "weight": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "lineHeight": {
+      "tight": 1.25,
+      "normal": 1.5
+    }
+  },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "xxl": 32,
+    "xxxl": 48
+  },
+  "radius": {
+    "control": 4,
+    "card": 8,
+    "pill": 999
+  },
+  "shadow": {
+    "light": {
+      "card": "0 1px 3px rgba(0, 0, 0, 0.08)",
+      "overlay": "0 8px 24px rgba(0, 0, 0, 0.16)"
+    },
+    "dark": {
+      "card": "0 1px 3px rgba(0, 0, 0, 0.5)",
+      "overlay": "0 8px 24px rgba(0, 0, 0, 0.6)"
+    }
+  },
+  "control": {
+    "height": 32,
+    "heightLarge": 40,
+    "paddingX": 12,
+    "borderWidth": 1
+  },
+  "motion": {
+    "durationFast": 100,
+    "durationMedium": 200,
+    "easing": "cubic-bezier(0.1, 0.9, 0.2, 1)"
+  },
+  "breakpoint": {
+    "sm": 640,
+    "md": 768,
+    "lg": 1024,
+    "xl": 1280
+  }
+}

@@ -1,0 +1,42 @@
+# 提交钩子：提交前自动格式化 + 检查，不通过不允许提交
+# 使用前：pip install pre-commit && pre-commit install
+
+repos:
+  - repo: local
+    hooks:
+      # Java 代码格式化（Google Java Format / Spotless）
+      - id: spotless-check
+        name: spotless check (Java)
+        entry: mvn -q spotless:check
+        language: system
+        files: \.java$
+        pass_filenames: false
+
+      # Java 静态检查（Checkstyle 规则集，含命名/行长/空捕获等）
+      - id: checkstyle
+        name: checkstyle
+        entry: mvn -q checkstyle:check
+        language: system
+        files: \.java$
+        pass_filenames: false
+
+      # SQL 检查（禁止 select *，非贪婪取列红线）
+      - id: no-select-star
+        name: forbid SELECT * in SQL
+        entry: python tools/sql_guard.py
+        language: python
+        files: \.(java|sql)$
+
+      # 前端 JS 格式化（原生 JS 用 prettier）
+      - id: prettier-js
+        name: prettier (js/html/css)
+        entry: prettier --write
+        language: node
+        files: \.(js|html|css)$
+
+  # 后端基础质量门（可选，生产建议开启）
+  # - repo: https://github.com/pre-commit/pre-commit-hooks
+  #   rev: v4.6.0
+  #   hooks:
+  #     - id: end-of-file-fixer
+  #     - id: trailing-whitespace

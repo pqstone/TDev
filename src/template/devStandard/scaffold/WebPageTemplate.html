@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>页面模板 · 纯 HTML + 原生 JS</title>
+<style>
+  /* 样式遵循 STYLE-GUIDE / tokens 规范（如有）；此处仅示例 */
+  body { font-family: "Segoe UI Variable", "Segoe UI", sans-serif; margin: 0; padding: 16px; }
+  .card { border: 1px solid #d6d6d6; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  pre { background: #f3f3f3; padding: 8px; border-radius: 4px; overflow: auto; }
+</style>
+</head>
+<body>
+<h1>页面模板</h1>
+<div class="card">
+  <button id="btnLoad">加载数据（XHR）</button>
+  <pre id="xhrOut">—</pre>
+</div>
+<div class="card">
+  <div>WebSocket 状态：<span id="wsStatus">未连接</span></div>
+  <pre id="wsOut">—</pre>
+</div>
+
+<script>
+/* ============ 统一 API 封装（原生 XHR，禁止裸写） ============ */
+const Api = (function () {
+  function request(method, url, data, timeout) {
+    return new Promise(function (resolve, reject) {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, url, true);
+      xhr.timeout = timeout || 15000;
+      xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState !== 4) return;
+        try {
+          const obj = JSON.parse(xhr.responseText);
+          if (obj.code === 0) resolve(obj.data);
+          else reject(new Error(obj.message || '业务错误'));
+        } catch (e) { reject(new Error('响应解析失败')); }
+      };
+      xhr.onerror = function () { reject(new Error('网络错误')); };
+      xhr.ontimeout = function () { reject(new Error('请求超时')); };
+      xhr.send(data ? JSON.stringify(data) : null);
+    });
+  }
+  return {
+    get: (url) => request('GET', url),
+    post: (url, data) => request('POST', url, data)
+  };
+})();
+
+/* ============ WebSocket 统一封装（断线自动重连·指数退避） ============ */
+const Ws = (function () {
+  let socket = null, retry = 0, timer = null;
+  const listeners = {};
+
+  function connect(url) {
+    clearTimeout(timer);
+    socket = new WebSocket(url);
+    socket.onopen = function () {
+      retry = 0;
+      setStatus('已连接');
+      (listeners.open || []).forEach(fn => fn());
+    };
+    socket.onmessage = function (ev) {
+      try { (listeners.message || []).forEach(fn => fn(JSON.parse(ev.data))); }
+      catch (e) { /* 忽略非 JSON 消息 */ }
+    };
+    socket.onclose = function () {
+      setStatus('已断开，重连中…');
+      const delay = Math.min(30000, 1000 * Math.pow(2, retry)); // 指数退避
+      retry += 1;
+      timer = setTimeout(function () { connect(url); }, delay);
+    };
+    socket.onerror = function () { socket.close(); };
+  }
+  function setStatus(text) {
+    const el = document.getElementById('wsStatus');
+    if (el) el.textContent = text;
+  }
+  return {
+    connect: connect,
+    on: function (type, fn) { (listeners[type] = listeners[type] || []).push(fn); },
+    send: function (obj) { if (socket && socket.readyState === 1) socket.send(JSON.stringify(obj)); }
+  };
+})();
+
+/* ============ 页面逻辑（DOMContentLoaded 后再操作 DOM） ============ */
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('btnLoad').addEventListener('click', async function () {
+    const out = document.getElementById('xhrOut');
+    try {
+      const data = await Api.get('/api/order/list?userId=1&page=1&size=10');
+      out.textContent = JSON.stringify(data, null, 2);
+    } catch (e) { out.textContent = '错误: ' + e.message; }
+  });
+
+  Ws.on('message', function (msg) {
+    document.getElementById('wsOut').textContent = JSON.stringify(msg, null, 2);
+  });
+  Ws.connect('ws://' + location.host + '/ws/notify');
+});
+</script>
+</body>
+</html>
