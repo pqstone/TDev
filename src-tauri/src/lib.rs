@@ -775,8 +775,11 @@ fn template_palette_value(step: &str) -> &'static str {
 
 /// 从生成的 tokens.json 提取完整 palette（优先 Agent 生成的，缺则 None）
 fn extract_palette(json_text: &str) -> Option<std::collections::HashMap<String, String>> {
-    let v: serde_json::Value = serde_json::from_str(json_text).ok()?;
-    let p = v.get("palette")?;
+    // 剥离非 JSON 前缀
+    let start = json_text.find('{')?;
+    let v: serde_json::Value = serde_json::from_str(&json_text[start..]).ok()?;
+    // palette 可能在顶层或 color.palette 嵌套
+    let p = v.get("palette").or_else(|| v.get("color").and_then(|c| c.get("palette")))?;
     let mut map = std::collections::HashMap::new();
     for step in ["50", "100", "200", "300", "400", "500", "600", "700", "800", "900"] {
         if let Some(c) = p.get(format!("accent-{step}")).and_then(|x| x.as_str()) {
@@ -809,8 +812,9 @@ fn extract_color_map(json_text: &str) -> std::collections::HashMap<String, Strin
 
 /// 从 tokens.json 文本中提取 accent 主色
 fn extract_accent(json_text: &str) -> Option<String> {
-    // 尝试解析 JSON
-    let v: serde_json::Value = serde_json::from_str(json_text).ok()?;
+    // 先剥离非 JSON 前缀（Agent 回复可能带说明文字），找第一个 {
+    let start = json_text.find('{')?;
+    let v: serde_json::Value = serde_json::from_str(&json_text[start..]).ok()?;
     // Win11 风格: color.light.accent
     if let Some(a) = v["color"]["light"]["accent"].as_str() { return Some(a.to_string()); }
     // 北极冰山风格: colors.primary.default

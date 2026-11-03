@@ -47,6 +47,8 @@
     .menu .mi.active { background:var(--p050); color:var(--p700); font-weight:600; }
     .menu .mi.active::before { content:""; position:absolute; left:0; top:9px; bottom:9px; width:3px; border-radius:2px; background:var(--p700); }
     .menu .mi svg { width:20px; height:20px; flex:none; stroke-width:1.5; }
+    .mi-dot { width:8px; height:8px; border-radius:50%; background:transparent; flex:none; margin-left:auto; transition:background .2s; }
+    .mi-dot.on { background:#2e9e6b; box-shadow:0 0 4px rgba(46,158,107,.6); }
     /* 右侧功能展示、操作区 */
     .content { flex:1; overflow-y:auto; padding:24px; }
     .content.chat-page { overflow:hidden; padding-bottom:12px; }
@@ -200,6 +202,41 @@
     .cm-head { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; background:var(--bg); border-bottom:1px solid var(--line300); font-weight:600; color:var(--ink900); }
     .cm-close { background:none; border:none; font-size:24px; color:var(--ink500); cursor:pointer; }
     .cm-body { flex:1; overflow:auto; padding:20px; font-family:"Cascadia Code",Consolas,monospace; font-size:12px; color:var(--ink900); white-space:pre-wrap; }
+    /* ===== 高保真UI页 ===== */
+    .ui-layout { display:flex; gap:16px; height:calc(100vh - 190px); min-height:440px; }
+    .ui-chat { flex:1 1 37.5%; min-width:0; display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--line300); border-radius:var(--r-lg); overflow:hidden; }
+    .ui-chat-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line300); font-weight:600; color:var(--ink900); }
+    .ui-badge { font-size:11px; font-weight:400; color:var(--ink500); background:var(--bg); border:1px solid var(--line300); border-radius:12px; padding:2px 10px; }
+    .ui-chat-body { flex:1; overflow-y:auto; padding:16px; display:flex; align-items:center; justify-content:center; }
+    .ui-canvas { flex:1 1 62.5%; min-width:0; display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--line300); border-radius:var(--r-lg); overflow:hidden; }
+    .ui-canvas-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line300); font-weight:600; color:var(--ink900); }
+    .ui-canvas-body { flex:1; overflow:auto; padding:16px; display:flex; align-items:center; justify-content:center; }
+    .ui-empty { text-align:center; color:var(--ink700); }
+    .ui-empty-icon { font-size:48px; margin-bottom:12px; }
+    .ui-empty p { margin:4px 0; font-size:14px; }
+    .ui-empty-sub { font-size:12px !important; color:var(--ink500) !important; }
+    .ui-chat-input { display:flex; gap:8px; padding:12px; border-top:1px solid var(--line300); }
+    .ui-chat-input input { flex:1; padding:8px 12px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:13px; background:var(--bg); }
+    .ui-chat-input button { padding:8px 20px; border:none; border-radius:var(--r-md); background:var(--p500); color:#fff; cursor:pointer; font-size:13px; }
+    .ui-chat-input button:disabled { opacity:.5; cursor:not-allowed; }
+
+    .ui-plan { width:100%; max-width:640px; }
+    .ui-plan-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .ui-plan-title { font-size:16px; font-weight:600; color:var(--ink900); }
+    .ui-plan-progress { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--ink500); }
+    .ui-plan-bar { width:120px; height:6px; background:var(--bg); border-radius:3px; overflow:hidden; }
+    .ui-plan-fill { height:100%; background:var(--p500); border-radius:3px; transition:width .3s; }
+    .ui-plan-steps { border:1px solid var(--line300); border-radius:var(--r-lg); overflow:hidden; }
+    .ui-plan-step { display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line300); background:var(--surface); }
+    .ui-plan-step:last-child { border-bottom:none; }
+    .ui-plan-step:hover { background:var(--bg); }
+    .ui-step-state { font-size:16px; flex:none; }
+    .ui-step-name { flex:1; font-size:14px; color:var(--ink900); }
+    .ui-step-status { font-size:12px; color:var(--ink500); flex:none; }
+    .ui-step-todo .ui-step-status { color:var(--ink400); }
+    .ui-step-done .ui-step-status { color:#2e9e6b; }
+    .ui-step-doing .ui-step-status { color:var(--p600); }
+
     /* ===== 业务流程页 ===== */
     .proc-layout { display:flex; gap:16px; height:calc(100vh - 190px); min-height:440px; }
     .proc-chat { flex:1 1 37.5%; min-width:0; display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--line300); border-radius:var(--r-lg); overflow:hidden; }
@@ -323,11 +360,11 @@
         <button id="projAdd" class="proj-add" title="新增项目">＋</button>
       </div>
       <div class="menu-title">项目工作</div>
-      <div class="mi active" data-m="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11v5"/></svg>基础信息</div>
-      <div class="mi" data-m="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 0 0 0 18h1.5a2 2 0 0 0 1.6-3.2A2 2 0 0 1 14 15.6H19a2 2 0 0 0 2-2A9 9 0 0 0 12 3z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg>主题风格</div>
-      <div class="mi" data-m="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9.5 12l2 2 3.5-3.5"/></svg>项目约束</div>
-      <div class="mi" data-m="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="5" rx="1"/><rect x="14" y="15" width="7" height="5" rx="1"/><path d="M6.5 9v3a3 3 0 0 0 3 3h4.5"/></svg>业务流程</div>
-      <div class="mi" data-m="4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>部署发布</div>
+      <div class="mi active" data-m="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11v5"/></svg>基础信息<span class="mi-dot"></span></div>
+      <div class="mi" data-m="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 0 0 0 18h1.5a2 2 0 0 0 1.6-3.2A2 2 0 0 1 14 15.6H19a2 2 0 0 0 2-2A9 9 0 0 0 12 3z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg>主题风格<span class="mi-dot"></span></div>
+      <div class="mi" data-m="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9.5 12l2 2 3.5-3.5"/></svg>项目约束<span class="mi-dot"></span></div>
+      <div class="mi" data-m="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="5" rx="1"/><rect x="14" y="15" width="7" height="5" rx="1"/><path d="M6.5 9v3a3 3 0 0 0 3 3h4.5"/></svg>业务流程<span class="mi-dot"></span></div>      <div class="mi" data-m="9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>AI编码<span class="mi-dot"></span></div>
+      <div class="mi" data-m="4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>部署发布<span class="mi-dot"></span></div>
       <div class="menu-title" style="margin-top:24px">工具设置</div>
       <div class="mi" data-m="5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 12h18"/></svg>项目空间</div>
       <div class="mi" data-m="6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M6 6l1.8 1.8M16.2 16.2L18 18M18 6l-1.8 1.8M7.8 16.2L6 18"/></svg>模型配置</div>
@@ -373,6 +410,7 @@
       1: { t: "主题风格", s: "AI 生成主题交互定义（基于模板）", body: [], dynamic: "theme" },
       2: { t: "项目约束", s: "开发规范与红线约束（模板：devStandard）", body: [], dynamic: "constraints" },
       3: { t: "业务流程", s: "AI 梳理业务流程，生成可交互流程图", body: [], dynamic: "process" },
+      9: { t: "AI编码", s: "AI 按开发计划生成项目代码", body: [], dynamic: "ui" },
       4: { t: "部署发布", s: "构建、打包与发布", body: [
             "构建：cargo build --manifest-path src-tauri/Cargo.toml",
             "发布：cargo build --release（无黑窗），产物 target/release/tdev.exe",
@@ -449,6 +487,7 @@
       var sel = document.getElementById("projSel");
       if (!sel) return;
       sel.addEventListener("change", function() {
+        updateMenuDots();
         var guid = sel.value;
         if (!guid) {
           currentProject = null;
@@ -982,6 +1021,26 @@ function doConnect(baseUrl, token) {
         }).then(function(saved){
           if (saved && saved.trim()) {
             thResultJson = saved;
+            // 恢复主题描述 / 主题色（优先 localStorage 的最新输入，项目目录文件兜底）
+            try {
+              var d = document.getElementById("thDesc");
+              var c = document.getElementById("thColor");
+              var lsDesc = localStorage.getItem("theme_desc_" + currentProject.prjGUID);
+              var lsColor = localStorage.getItem("theme_color_" + currentProject.prjGUID);
+              if (d) d.value = lsDesc || d.value;
+              if (c && lsColor) c.value = lsColor;
+              // 若 tokens.json 里有色值信息且 localStorage 无，尝试从中提取 accent
+              if (c && !lsColor) {
+                try {
+                  var tj = JSON.parse(saved);
+                  var accent = tj && tj.color && (tj.color.accent || tj.color.primary);
+                  if (accent) {
+                    var m = String(accent).match(/#[0-9a-fA-F]{6}/);
+                    if (m) c.value = m[0];
+                  }
+                } catch(e) {}
+              }
+            } catch(e) {}
             var st = document.getElementById("thStatus");
             st.textContent = "已从项目目录加载";
             st.className = "chat-status on";
@@ -1039,11 +1098,17 @@ function doConnect(baseUrl, token) {
       var prompt = "请为项目 " + currentProject.prjName + " 生成完整的主题风格交互定义（Design Tokens），严格遵循模板文件结构。" +
         "结构参考模板目录：E:\88.project\TDev\src\template\theme\（内含 tokens.json / theme.md / ui-preview.html，遵循其中定义的结构与命名规范，可自行发挥配色方案）。" +
         "用户需求：" + desc + "。主题主色（accent）：" + accent +
-        "。请基于主色生成完整主题（含浅色/深色色系与 10 阶色卡），只输出完整可用的 tokens.json JSON，不要多余文字。";
+        "。请基于主色生成完整主题（含浅色/深色色系），并在 color.palette 下生成 10 阶色卡（accent-50~accent-900，以主色为 accent-700，向白/黑衍生），只输出完整可用的 tokens.json JSON，不要多余文字，不要代码块标记。";
       window.__TAURI__.core.invoke("agent_ask", { question: prompt, sessionId: currentProject.prjGUID })
         .then(function(reply) {
-          thResultJson = reply;
-          try { localStorage.setItem("theme_json_" + currentProject.prjGUID, reply); } catch(e) {}
+          // 剥离 Agent 回复的非 JSON 前缀（可能带说明文字）
+          var cleanReply = reply;
+          var jStart = reply.indexOf("{");
+          if (jStart > 0) cleanReply = reply.slice(jStart);
+          var jEnd = cleanReply.lastIndexOf("}");
+          if (jEnd > 0) cleanReply = cleanReply.slice(0, jEnd + 1);
+          thResultJson = cleanReply;
+          try { localStorage.setItem("theme_json_" + currentProject.prjGUID, cleanReply); } catch(e) {}
           st.textContent = "生成完成，正在保存...";
           st.className = "chat-status pending";
           document.getElementById("thSaveBtn").style.display = "";
@@ -1340,6 +1405,48 @@ function doConnect(baseUrl, token) {
     var procFlow = null;
     var procExpanded = {};
     var procSid = "";
+
+    // ===== 高保真UI页（空界面，参考业务流程布局）=====
+    function renderUi() {
+      content.classList.remove("chat-page", "theme-page", "constr-page");
+      content.innerHTML =
+        '<div class="page-title">AI编码</div>' +
+        '<div class="page-sub">AI 按开发计划逐步骤生成项目代码（待实现）</div>' +
+        '<div class="ui-layout">' +
+          '<div class="ui-chat">' +
+            '<div class="ui-chat-head"><span>💬 AI 编码对话</span><span class="ui-badge">待实现</span></div>' +
+            '<div class="ui-chat-body" id="uiChatBody">' +
+              '<div class="ui-empty">' +
+                '<div class="ui-empty-icon">🤖</div>' +
+                '<p>AI 编码功能即将上线</p>' +
+                '<p class="ui-empty-sub">将基于开发计划，AI 自动生成项目代码</p>' +
+              '</div>' +
+            '</div>' +
+            '<div class="ui-chat-input">' +
+              '<input id="uiInput" placeholder="描述编码需求..." disabled />' +
+              '<button id="uiSendBtn" disabled>发送</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="ui-canvas">' +
+            '<div class="ui-canvas-head"><span id="uiTitle">📋 开发计划</span><span class="ui-badge">步骤状态</span></div>' +
+            '<div class="ui-canvas-body" id="uiCanvasBody">' +
+              '<div class="ui-plan">' +
+                '<div class="ui-plan-head">' +
+                  '<div class="ui-plan-title">项目开发计划</div>' +
+                  '<div class="ui-plan-progress"><span>0/5 完成</span><div class="ui-plan-bar"><div class="ui-plan-fill" style="width:0%"></div></div></div>' +
+                '</div>' +
+                '<div class="ui-plan-steps" id="uiPlanSteps">' +
+                  '<div class="ui-plan-step"><span class="ui-step-state ui-step-todo">⏳</span><span class="ui-step-name">环境准备与项目初始化</span><span class="ui-step-status">待开始</span></div>' +
+                  '<div class="ui-plan-step"><span class="ui-step-state ui-step-todo">⏳</span><span class="ui-step-name">核心模块开发</span><span class="ui-step-status">待开始</span></div>' +
+                  '<div class="ui-plan-step"><span class="ui-step-state ui-step-todo">⏳</span><span class="ui-step-name">业务流程实现</span><span class="ui-step-status">待开始</span></div>' +
+                  '<div class="ui-plan-step"><span class="ui-step-state ui-step-todo">⏳</span><span class="ui-step-name">界面与交互完善</span><span class="ui-step-status">待开始</span></div>' +
+                  '<div class="ui-plan-step"><span class="ui-step-state ui-step-todo">⏳</span><span class="ui-step-name">测试与部署</span><span class="ui-step-status">待开始</span></div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    }
 
     function renderProcess() {
       content.classList.add("process-page");
@@ -2426,6 +2533,43 @@ function doConnect(baseUrl, token) {
       });
     }
 
+    // ===== 菜单状态灯：项目工作分类各模块信息填写状态 =====
+    function updateMenuDots() {
+      var d0 = document.querySelector('.mi[data-m="0"] .mi-dot');
+      var d1 = document.querySelector('.mi[data-m="1"] .mi-dot');
+      var d2 = document.querySelector('.mi[data-m="2"] .mi-dot');
+      var d3 = document.querySelector('.mi[data-m="3"] .mi-dot');
+      var d9 = document.querySelector('.mi[data-m="9"] .mi-dot');
+      var d4 = document.querySelector('.mi[data-m="4"] .mi-dot');
+      function setDot(d, on) { if (d) d.classList.toggle("on", !!on); }
+      if (!currentProject) {
+        setDot(d0,false); setDot(d1,false); setDot(d2,false);
+        setDot(d3,false); setDot(d9,false); setDot(d4,false);
+        return;
+      }
+      setDot(d0, true);              // 基础信息：项目存在
+      setDot(d2, true);              // 项目约束：模板已填入
+      var themeSaved = false;
+      try { themeSaved = !!localStorage.getItem("theme_json_" + currentProject.prjGUID); } catch(e) {}
+      setDot(d1, themeSaved);        // 主题风格
+      setDot(d3, false);             // 业务流程：异步检测
+      setDot(d9, false);             // AI编码：暂无
+      setDot(d4, false);             // 部署发布：暂无
+      // 异步检测 doc 目录是否有流程 JSON
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
+        if (!ws || !currentProject) return;
+        window.__TAURI__.core.invoke("process_list", {
+          prjName: currentProject.prjName,
+          workspace: ws
+        }).then(function(files){
+          var has = (files || []).some(function(f){ return f.indexOf("_flow.json") >= 0 || f.indexOf("flow.json") >= 0; });
+          setDot(d3, has);
+        }).catch(function(){});
+      }).catch(function(){});
+    }
+
     // 动态页分发
     function renderDynamic(idx, kind) {
       if (kind === "workspace") renderWorkspace();
@@ -2434,12 +2578,14 @@ function doConnect(baseUrl, token) {
       else if (kind === "constraints") renderConstraints();
       else if (kind === "theme") renderTheme();
       else if (kind === "process") renderProcess();
+      else if (kind === "ui") renderUi();
       else if (kind === "chat") renderChat();
     }
 
     function render(idx) {
       // 清理页面级 class（防残留导致布局问题）
       content.classList.remove("chat-page", "theme-page", "constr-page");
+      updateMenuDots();
       current = idx;
       var m = MODULES[idx];
       var body = m.body.map(function(t){ return "<p>" + t + "</p>"; }).join("");
