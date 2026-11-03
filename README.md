@@ -1,7 +1,7 @@
-# TDev — Tauri v2 桌面应用
+# TDev — Tauri v2 桌面应用 / Tauri v2 Desktop Application
 
 > **开放项目定位**：这是一个追求 **AI 规范化开发、工程化应用** 的开放项目。
-> 项目以 AGENTS.md 为最高开发规范，驱动 AI Agent 按统一标准参与开发；
+> 项目以 `AGENTS.md` 为最高开发规范，驱动 AI Agent 按统一标准参与开发；
 > 通过 devStandard 模板 + 业务流程建模 + 主题令牌体系，实现从需求到代码的**工程化落地**。
 > 欢迎开放协作，共同探索 AI 驱动软件工程的最佳实践。
 
@@ -112,3 +112,41 @@ TDev/
 | `theme/tokens.json` | 机器可读设计令牌，色值一律由此引用 |
 | `theme/ui-preview.html` | 全组件视觉示意页 |
 | `docs/ARCHITECTURE.md` | 架构决策说明 |
+
+---
+
+# TDev - Tauri v2 Desktop Application (English Overview)
+
+> Open Project Statement: TDev is an open project devoted to AI-driven standardized
+> development and engineering-grade application practices. The project treats
+> " + bt + "AGENTS.md" + bt + " as its authoritative development contract, guiding AI Agents
+> to contribute under one unified standard. Through the devStandard templates,
+> business-process modeling, and a theme-token system, it turns requirements into code
+> in an engineering-first way. Open collaboration is welcome.
+
+TDev is a Tauri v2 desktop application designed as an AI-collaborative engineering workspace:
+
+- AI-Native Workflow: Agents (via Hermes API Server) generate themes, business-process flows, and project constraints from natural-language requirements.
+- Standardized Development: " + bt + "AGENTS.md" + bt + " + devStandard templates enforce architecture, code style, and red lines for every AI contribution.
+- Process Modeling: interactive flowcharts with unlimited nesting, node property editing, drag-and-drop restructuring, and snapshot backup/restore (SQLite).
+- Tooling: workspace management, LLM model configuration, and Agent connection settings.
+- Tech Stack: Pure static frontend (no framework) | Rust + Tauri v2 | SQLite (rusqlite).
+
+### Modules
+
+| Module | Function |
+|---|---|
+| Basic Info | Project info display + delete |
+| Theme Studio | AI-generated theme tokens (palette / preview / save) |
+| Project Constraints | devStandard templates, editable with auto-save |
+| Business Process | AI flow modeling + infinite-level flowchart + node properties + drag-drop + backup |
+| Tool Settings | Workspace / Model config / Agent config |
+| Agent Chat | Hermes API Server chat with per-project session isolation |
+
+### Milestones
+
+- v0.1.0 - Skeleton + basic info + project management
+- v0.2.0 - Tool settings (workspace / models / agents)
+- v0.3.0 - Agent integration (CLI to API Server, session isolation)
+- v0.4.0 - Business-process module (AI + infinite flowchart + properties + drag)
+- v0.4.1 - Backup system (auto versions capped at 100 + snapshot backup/restore)
