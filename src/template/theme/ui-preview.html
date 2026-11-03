@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Win11 样式组件画廊 · ui-preview</title>
+<style>
+/* ============ Design Tokens（对应 tokens.json） ============ */
+:root, [data-theme="light"] {
+  --color-background: #F3F3F3;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F3F3F3;
+  --color-surface-hover: #F0F0F0;
+  --color-text-primary: #1B1B1B;
+  --color-text-secondary: #5F5F5F;
+  --color-text-tertiary: #A0A0A0;
+  --color-text-on-accent: #FFFFFF;
+  --color-accent: #0067C0;
+  --color-accent-hover: #005FB8;
+  --color-accent-pressed: #005299;
+  --color-border: #D6D6D6;
+  --color-border-strong: #C8C8C8;
+  --color-selection: #CCE4F7;
+  --color-success: #0F7B0F;
+  --color-warning: #9D5D00;
+  --color-error: #C42B1C;
+  --color-error-bg: #FDE7E9;
+  --color-info: #0067C0;
+  --color-focus-ring: #0067C0;
+  --color-accent-50: #E3F2FC;
+  --color-accent-100: #BBDEFB;
+  --color-accent-200: #90CAF9;
+  --color-accent-300: #64B5F6;
+  --color-accent-400: #42A5F5;
+  --color-accent-500: #2196F3;
+  --color-accent-600: #1E88E5;
+  --color-accent-700: #0067C0;
+  --color-accent-800: #00529B;
+  --color-accent-900: #003F77;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-overlay: 0 8px 24px rgba(0,0,0,0.16);
+}
+[data-theme="dark"] {
+  --color-background: #202020;
+  --color-surface: #2B2B2B;
+  --color-surface-subtle: #3A3A3A;
+  --color-surface-hover: #363636;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #C0C0C0;
+  --color-text-tertiary: #858585;
+  --color-text-on-accent: #003B70;
+  --color-accent: #60CDFF;
+  --color-accent-hover: #4CC2FF;
+  --color-accent-pressed: #1E9CE6;
+  --color-border: #454545;
+  --color-border-strong: #5A5A5A;
+  --color-selection: #1A3E5C;
+  --color-success: #6CCB5F;
+  --color-warning: #FCE100;
+  --color-error: #FF6B6B;
+  --color-error-bg: #4C1D24;
+  --color-info: #60CDFF;
+  --color-focus-ring: #60CDFF;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow-overlay: 0 8px 24px rgba(0,0,0,0.6);
+  --color-accent-50: #EAF9FF;
+  --color-accent-100: #C9EEFF;
+  --color-accent-200: #9FDFFF;
+  --color-accent-300: #7FD4FF;
+  --color-accent-400: #60CDFF;
+  --color-accent-500: #45B8F0;
+  --color-accent-600: #2FA3DB;
+  --color-accent-700: #1E8CC4;
+  --color-accent-800: #146FA5;
+  --color-accent-900: #0C5485;
+}
+/* ============ Base ============ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  transition: background .2s cubic-bezier(.1,.9,.2,1), color .2s cubic-bezier(.1,.9,.2,1);
+}
+/* ============ 主题色卡 ============ */
+.palette-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+.swatch { border-radius:6px; padding:10px 8px; color:#1B1B1B; display:flex; flex-direction:column; gap:4px; border:1px solid rgba(0,0,0,.08); }
+.swatch span { font-size:12px; font-weight:600; }
+.swatch em { font-size:10px; font-style:normal; opacity:.75; word-break:break-all; }
+.swatch-main { outline:2px solid var(--color-accent); outline-offset:1px; }
+.palette-note { margin-top:8px; font-size:12px; color:var(--color-text-secondary); }
+
+/* ============ Layout ============ */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  height: 48px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; background: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+.brand .logo { width: 22px; height: 22px; border-radius: 6px; background: var(--color-accent); }
+.layout { display: flex; max-width: 1280px; margin: 0 auto; }
+.sidebar {
+  width: 240px; padding: 16px 12px; flex-shrink: 0;
+  border-right: 1px solid var(--color-border);
+}
+.sidebar .nav-item {
+  display: flex; align-items: center; gap: 10px; height: 36px;
+  padding: 0 12px; border-radius: 4px; font-size: 14px; cursor: pointer;
+  color: var(--color-text-primary); margin-bottom: 2px;
+  transition: background .1s cubic-bezier(.1,.9,.2,1);
+}
+.sidebar .nav-item:hover { background: var(--color-surface-hover); }
+.sidebar .nav-item.active { background: var(--color-selection); font-weight: 600; }
+.sidebar .nav-group { font-size: 12px; color: var(--color-text-tertiary); padding: 12px 12px 6px; }
+main { flex: 1; padding: 20px 24px 48px; min-width: 0; }
+h1 { font-size: 24px; font-weight: 600; margin-bottom: 4px; line-height: 1.25; }
+.sub { color: var(--color-text-secondary); margin-bottom: 24px; }
+h2 {
+  font-size: 20px; font-weight: 600; margin: 32px 0 12px; line-height: 1.25;
+  padding-bottom: 8px; border-bottom: 1px solid var(--color-border);
+}
+.section { display: grid; gap: 16px; }
+/* 规格说明条 */
+.spec { font-size: 12px; color: var(--color-text-secondary); background: var(--color-surface-subtle); border-radius: 6px; padding: 8px 12px; }
+/* ============ Card ============ */
+.card {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 8px; padding: 16px; box-shadow: var(--shadow-card);
+}
+.card-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.card-body { color: var(--color-text-secondary); font-size: 14px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.row.wrap-stack { align-items: flex-start; }
+/* ============ Typography ============ */
+.typo { display: grid; gap: 8px; }
+.typo .disp { font-size: 32px; font-weight: 600; line-height: 1.25; }
+.typo .title { font-size: 24px; font-weight: 600; }
+.typo .subtitle { font-size: 20px; font-weight: 600; }
+.typo .body-lg { font-size: 16px; }
+.typo .body { font-size: 14px; }
+.typo .caption { font-size: 12px; color: var(--color-text-secondary); }
+.typo .t-secondary { color: var(--color-text-secondary); }
+.typo .t-tertiary { color: var(--color-text-tertiary); }
+/* ============ Buttons ============ */
+.btn {
+  height: 32px; padding: 0 12px; border: none; border-radius: 4px;
+  font-family: inherit; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  transition: background .1s cubic-bezier(.1,.9,.2,1), border-color .1s cubic-bezier(.1,.9,.2,1), color .1s;
+}
+.btn:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
+.btn-primary { background: var(--color-accent); color: var(--color-text-on-accent); }
+.btn-primary:hover { background: var(--color-accent-hover); }
+.btn-primary:active { background: var(--color-accent-pressed); }
+.btn-secondary { background: var(--color-surface); color: var(--color-text-primary); border: 1px solid var(--color-border); }
+.btn-secondary:hover { background: var(--color-surface-hover); }
+.btn-secondary:active { background: var(--color-surface-subtle); }
+.btn-text { background: transparent; color: var(--color-accent); padding: 0 8px; }
+.btn-text:hover { background: var(--color-surface-hover); }
+.btn-danger { background: var(--color-error); color: #fff; }
+.btn-danger:hover { filter: brightness(1.08); }
+.btn:disabled, .btn.disabled { background: var(--color-surface-subtle); color: var(--color-text-tertiary); border-color: transparent; cursor: not-allowed; }
+.btn-large { height: 40px; padding: 0 16px; font-size: 14px; }
+/* ============ Inputs ============ */
+.input, .select, .textarea {
+  font-family: inherit; font-size: 14px; color: var(--color-text-primary);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 4px; padding: 0 12px; height: 32px;
+  transition: border-color .1s cubic-bezier(.1,.9,.2,1);
+}
+.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--color-accent); }
+.input:disabled, .select:disabled { background: var(--color-surface-subtle); color: var(--color-text-tertiary); }
+.input.error { border-color: var(--color-error); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 13px; }
+.field .hint { font-size: 12px; color: var(--color-text-tertiary); }
+.field .hint.error { color: var(--color-error); }
+.textarea { height: auto; min-height: 80px; padding: 8px 12px; resize: vertical; }
+/* ============ Check / Radio / Switch ============ */
+.check, .radio { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+.check input, .radio input { width: 16px; height: 16px; accent-color: var(--color-accent); cursor: pointer; }
+.switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch .track {
+  position: absolute; inset: 0; border-radius: 999px; background: var(--color-border-strong);
+  transition: background .2s cubic-bezier(.1,.9,.2,1);
+}
+.switch .track::before {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+  border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  transition: transform .2s cubic-bezier(.1,.9,.2,1);
+}
+.switch input:checked + .track { background: var(--color-accent); }
+.switch input:checked + .track::before { transform: translateX(20px); }
+.switch-row { display: flex; align-items: center; gap: 8px; }
+/* ============ Badge ============ */
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+.badge-success { background: rgba(15,123,15,.12); color: var(--color-success); }
+.badge-info { background: rgba(0,103,192,.12); color: var(--color-info); }
+.badge-warning { background: rgba(157,93,0,.14); color: var(--color-warning); }
+.badge-error { background: rgba(196,43,28,.12); color: var(--color-error); }
+/* ============ Table ============ */
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th { text-align: left; background: var(--color-surface-subtle); color: var(--color-text-secondary); font-weight: 600; padding: 12px; border-bottom: 1px solid var(--color-border); }
+.table td { padding: 12px; border-bottom: 1px solid var(--color-border); }
+.table tbody tr:hover { background: var(--color-surface-hover); }
+/* ============ Progress / Slider ============ */
+.progress { height: 6px; border-radius: 999px; background: var(--color-surface-subtle); overflow: hidden; }
+.progress .fill { height: 100%; border-radius: 999px; background: var(--color-accent); }
+.slider { width: 200px; accent-color: var(--color-accent); }
+/* ============ Dialog / Toast（示意） ============ */
+.toast {
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px;
+  border-radius: 4px; background: var(--color-surface); box-shadow: var(--shadow-overlay);
+  border: 1px solid var(--color-border); font-size: 14px;
+}
+.demo-dialog {
+  display: flex; flex-direction: column; max-width: 360px; border-radius: 8px;
+  background: var(--color-surface); box-shadow: var(--shadow-overlay); border: 1px solid var(--color-border); overflow: hidden;
+}
+.demo-dialog .d-head { padding: 16px 16px 0; font-size: 16px; font-weight: 600; }
+.demo-dialog .d-body { padding: 8px 16px; color: var(--color-text-secondary); }
+.demo-dialog .d-foot { padding: 12px 16px; display: flex; justify-content: flex-end; gap: 8px; }
+/* theme toggle */
+.theme-toggle {
+  height: 32px; padding: 0 12px; border-radius: 4px; border: 1px solid var(--color-border);
+  background: var(--color-surface); color: var(--color-text-primary); font-size: 14px; cursor: pointer;
+}
+.theme-toggle:hover { background: var(--color-surface-hover); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (max-width: 768px) { .sidebar { display: none; } main { padding: 16px; } .btn { height: 40px; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><div class="logo"></div>Win11 样式组件画廊</div>
+  <button class="theme-toggle" id="themeToggle" aria-label="切换浅色/深色主题">主题：浅色</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-group">示例导航</div>
+    <div class="nav-item active">◧ 概览</div>
+    <div class="nav-item">◨ 组件</div>
+    <div class="nav-item">◇ 布局</div>
+    <div class="nav-item">◇ 数据</div>
+    <div class="nav-group">设置</div>
+    <div class="nav-item">⚙ 偏好</div>
+    <div class="nav-item">? 帮助</div>
+  </aside>
+
+  <main>
+    <h1>组件画廊</h1>
+    <div class="sub">对应 tokens.json 与 STYLE-GUIDE.md，可直接复用的 Win11 风格示例。</div>
+
+    <h2>主题色卡 Color Palette</h2>
+    <section class="section"><div class="card">
+      <div class="palette-grid">
+        <div class="swatch" style="background:var(--color-accent-50)"><span>50</span><em>#E3F2FC</em></div>
+        <div class="swatch" style="background:var(--color-accent-100)"><span>100</span><em>#BBDEFB</em></div>
+        <div class="swatch" style="background:var(--color-accent-200)"><span>200</span><em>#90CAF9</em></div>
+        <div class="swatch" style="background:var(--color-accent-300)"><span>300</span><em>#64B5F6</em></div>
+        <div class="swatch" style="background:var(--color-accent-400)"><span>400</span><em>#42A5F5</em></div>
+        <div class="swatch" style="background:var(--color-accent-500)"><span>500</span><em>#2196F3</em></div>
+        <div class="swatch" style="background:var(--color-accent-600)"><span>600</span><em>#1E88E5</em></div>
+        <div class="swatch swatch-main" style="background:var(--color-accent-700)"><span>700</span><em>#0067C0</em></div>
+        <div class="swatch" style="background:var(--color-accent-800)"><span>800</span><em>#00529B</em></div>
+        <div class="swatch" style="background:var(--color-accent-900)"><span>900</span><em>#003F77</em></div>
+      </div>
+      <div class="palette-note">以 accent（#0067C0）为主色衍生的 10 阶色卡，用于图表层次、背景层次、图标区分等。700 = 主色。</div>
+    </div></section>
+
+    <h2>排版 Typography</h2>
+    <section class="section"><div class="card">
+      <div class="typo">
+        <div class="disp">Display 32 · 大标题</div>
+        <div class="title">Title 24 · 页面主标题</div>
+        <div class="subtitle">Subtitle 20 · 区块标题</div>
+        <div class="body-lg">Body Large 16 · 强调正文</div>
+        <div class="body">Body 14 · 默认正文，行高 1.5。</div>
+        <div class="caption">Caption 12 · 辅助说明</div>
+        <div class="t-secondary">次要文字 Secondary #5F5F5F</div>
+        <div class="t-tertiary">占位/禁用 Tertiary #A0A0A0</div>
+      </div>
+    </div></section>
+
+    <h2>按钮 Buttons</h2>
+    <section class="section"><div class="card">
+      <div class="row">
+        <button class="btn btn-primary">主按钮</button>
+        <button class="btn btn-secondary">次按钮</button>
+        <button class="btn btn-text">文字按钮</button>
+        <button class="btn btn-danger">危险按钮</button>
+        <button class="btn btn-primary btn-large">大按钮 40px</button>
+        <button class="btn btn-primary" disabled>禁用</button>
+      </div>
+      <div class="spec">状态含 hover / active / focus-visible / disabled；聚焦环为 2px accent 描边。</div>
+    </div></section>
+
+    <h2>输入控件 Inputs</h2>
+    <section class="section"><div class="card">
+      <div class="row wrap-stack">
+        <div class="field">
+          <label for="f1">输入框</label>
+          <input class="input" id="f1" placeholder="请输入内容" style="width:220px">
+          <span class="hint">辅助说明文字</span>
+        </div>
+        <div class="field">
+          <label for="f2">错误态</label>
+          <input class="input error" id="f2" value="错误内容" style="width:220px">
+          <span class="hint error">该字段填写有误</span>
+        </div>
+        <div class="field">
+          <label for="f3">禁用</label>
+          <input class="input" id="f3" value="不可编辑" disabled style="width:220px">
+        </div>
+        <div class="field">
+          <label for="f4">下拉</label>
+          <select class="select" id="f4" style="width:220px">
+            <option>选项一</option><option>选项二</option><option>选项三</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f5">文本域</label>
+          <textarea class="textarea" id="f5" placeholder="多行文本…" style="width:260px"></textarea>
+        </div>
+      </div>
+    </div></section>
+
+    <h2>选择控件 Check / Radio / Switch</h2>
+    <section class="section"><div class="card">
+      <div class="row">
+        <label class="check"><input type="checkbox" checked> 复选框</label>
+        <label class="check"><input type="checkbox"> 未选中</label>
+        <label class="radio"><input type="radio" name="r" checked> 单选 A</label>
+        <label class="radio"><input type="radio" name="r"> 单选 B</label>
+        <div class="switch-row"><label class="switch"><input type="checkbox" checked><span class="track"></span></label><span>开启</span></div>
+        <div class="switch-row"><label class="switch"><input type="checkbox"><span class="track"></span></label><span>关闭</span></div>
+      </div>
+    </div></section>
+
+    <h2>卡片 Cards</h2>
+    <section class="section"><div class="row">
+      <div class="card" style="flex:1;min-width:220px">
+        <div class="card-title">卡片标题</div>
+        <div class="card-body">圆角 8px、边框 1px、轻阴影，内边距 16px。适合信息展示与内容分组。</div>
+      </div>
+      <div class="card" style="flex:1;min-width:220px">
+        <div class="card-title">第二个卡片</div>
+        <div class="card-body">卡片间距建议 12–16px，桌面端按 12 列栅格分配宽度。</div>
+      </div>
+    </div></section>
+
+    <h2>表格 Table</h2>
+    <section class="section"><div class="card" style="padding:0;overflow:hidden">
+      <table class="table">
+        <thead><tr><th>名称</th><th>类型</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody>
+          <tr><td>主按钮</td><td>组件</td><td><span class="badge badge-success">可用</span></td><td><button class="btn btn-text">编辑</button></td></tr>
+          <tr><td>危险按钮</td><td>组件</td><td><span class="badge badge-warning">需谨慎</span></td><td><button class="btn btn-text">编辑</button></td></tr>
+          <tr><td>输入框</td><td>表单</td><td><span class="badge badge-error">有错误</span></td><td><button class="btn btn-text">编辑</button></td></tr>
+          <tr><td>开关</td><td>交互</td><td><span class="badge badge-info">信息</span></td><td><button class="btn btn-text">编辑</button></td></tr>
+        </tbody>
+      </table>
+    </div></section>
+
+    <h2>标签 / 徽章 Badges</h2>
+    <section class="section"><div class="card">
+      <div class="row">
+        <span class="badge badge-success">成功</span>
+        <span class="badge badge-info">信息</span>
+        <span class="badge badge-warning">警告</span>
+        <span class="badge badge-error">错误</span>
+      </div>
+    </div></section>
+
+    <h2>进度条 / 滑块 Progress &amp; Slider</h2>
+    <section class="section"><div class="card">
+      <div class="row" style="flex-direction:column;align-items:stretch;gap:16px">
+        <div>
+          <div style="margin-bottom:6px;font-size:13px">任务进度 60%</div>
+          <div class="progress"><div class="fill" style="width:60%"></div></div>
+        </div>
+        <div class="row">
+          <span style="font-size:13px;width:40px">音量</span>
+          <input type="range" class="slider" min="0" max="100" value="70" aria-label="音量">
+        </div>
+      </div>
+    </div></section>
+
+    <h2>弹窗 / 提示 Dialog &amp; Toast</h2>
+    <section class="section"><div class="row wrap-stack">
+      <div class="demo-dialog">
+        <div class="d-head">确认操作</div>
+        <div class="d-body">此操作不可撤销，是否继续？遮罩为 rgba(0,0,0,.4)。</div>
+        <div class="d-foot"><button class="btn btn-text">取消</button><button class="btn btn-primary">确认</button></div>
+      </div>
+      <div class="toast">✓ 保存成功</div>
+      <div class="toast">⚠ 内容有误</div>
+    </div></section>
+  </main>
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var btn = document.getElementById('themeToggle');
+  var stored = null;
+  try { stored = localStorage.getItem('ui-theme'); } catch (e) {}
+
+  function apply(theme) {
+    root.setAttribute('data-theme', theme);
+    btn.textContent = theme === 'dark' ? '主题：深色' : '主题：浅色';
+    try { localStorage.setItem('ui-theme', theme); } catch (e) {}
+  }
+  // 默认跟随系统，用户手动切换后持久化
+  function init() {
+    var t = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    apply(t);
+  }
+  btn.addEventListener('click', function () {
+    apply(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+  init();
+})();
+</script>
+</body>
+</html>

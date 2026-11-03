@@ -1,0 +1,21 @@
+/* ============================================================
+   TDev 前端样式（模块化参考，对应 dist 成品页的样式）
+   风格：Windows 11 浅色，原则见根目录 AGENTS.md「样式规范」
+   ============================================================ */
+
+:root {
+  --bg: #f3f3f3;
+  --card: #ffffff;
+  --text: #1f1f1f;
+  --accent: #0067c0;
+  --accent-hover: #005a9e;
+  --border: #e0e0e0;
+  --muted: #6f6f6f;
+  --radius: 8px;
+}
+
+body {
+  font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}

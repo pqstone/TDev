@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_DATABASE: app
+          MYSQL_USER: app
+          MYSQL_PASSWORD: app123
+          MYSQL_ROOT_PASSWORD: root
+        ports: [ "3306:3306" ]
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+      redis:
+        image: redis:7
+        ports: [ "6379:6379" ]
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # 1. 格式化检查（不通过即失败）
+      - name: Spotless check
+        run: mvn -q -B spotless:check
+
+      # 2. 静态检查
+      - name: Checkstyle
+        run: mvn -q -B checkstyle:check
+
+      # 3. 全量编译 + 测试（含 SQL 守卫脚本）
+      - name: Build & Test
+        run: |
+          python3 tools/sql_guard.py
+          mvn -q -B clean verify
+
+      # 4. 打包 WAR
+      - name: Package WAR
+        run: mvn -q -B package -DskipTests
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-war
+          path: target/*.war
