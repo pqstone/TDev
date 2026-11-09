@@ -157,9 +157,20 @@
     .chat-bubble { max-width:70%; padding:9px 14px; border-radius:12px; font-size:14px; line-height:1.5; word-break:break-word; }
     .chat-row.me .chat-bubble { background:var(--p700); color:#fff; border-bottom-right-radius:4px; }
     .chat-row.agent .chat-bubble { background:var(--surface); color:var(--ink900); border:1px solid var(--line300); border-bottom-left-radius:4px; }
+    .chat-bubble-wrap { max-width:78%; display:flex; flex-direction:column; gap:4px; }
+    .chat-thinking-box { background:var(--bg); border:1px dashed var(--line300); border-radius:8px; padding:8px 12px; font-size:12px; color:var(--ink500); max-height:160px; overflow-y:auto; }
+    .chat-think-label { font-size:11px; color:var(--p500); font-weight:600; margin-bottom:4px; }
+    .chat-think-text { white-space:pre-wrap; word-break:break-word; line-height:1.5; color:var(--ink600); }
+    .chat-reply { white-space:pre-wrap; }
     .chat-sys { text-align:center; font-size:12px; color:var(--ink500); padding:4px 0; }
+    .chat-msg { display:flex; }
+    .chat-msg.me { justify-content:flex-end; }
+    .chat-msg.bot { justify-content:flex-start; }
+    .chat-msg .chat-bubble { background:var(--surface); color:var(--ink900); border:1px solid var(--line300); border-bottom-left-radius:4px; max-width:78%; }
+    .chat-msg.me .chat-bubble { background:var(--p700); color:#fff; border:1px solid transparent; border-bottom-right-radius:4px; }
     .chat-input-row { display:flex; gap:10px; padding:12px 16px; background:var(--surface); border-top:1px solid var(--line300); }
-    .chat-input { flex:1; height:36px; padding:0 14px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:14px; font-family:inherit; color:var(--ink900); background:var(--surface); }
+    .chat-input { flex:1; min-height:36px; padding:0 14px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:14px; font-family:inherit; color:var(--ink900); background:var(--surface); }
+    textarea.chat-input { padding:8px 14px; line-height:1.5; resize:none; max-height:120px; overflow-y:auto; }
     .chat-input:focus { outline:none; border-color:var(--p500); box-shadow:0 0 0 2px rgba(26,108,179,.25); }
     /* ===== 主题风格页 ===== */
     .theme-panel { display:flex; flex-direction:column; gap:16px; max-width:1204px; height:calc(100vh - 190px); min-height:440px; background:var(--surface); border:1px solid var(--line300); border-radius:var(--r-lg); padding:24px; overflow:hidden; }
@@ -216,7 +227,8 @@
     .ui-empty p { margin:4px 0; font-size:14px; }
     .ui-empty-sub { font-size:12px !important; color:var(--ink500) !important; }
     .ui-chat-input { display:flex; gap:8px; padding:12px; border-top:1px solid var(--line300); }
-    .ui-chat-input input { flex:1; padding:8px 12px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:13px; background:var(--bg); }
+    .ui-chat-input textarea { flex:1; min-height:36px; max-height:120px; padding:8px 12px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:13px; background:var(--bg); font-family:inherit; line-height:1.5; resize:none; overflow-y:auto; }
+    .ui-chat-input textarea:focus { outline:none; border-color:var(--p500); box-shadow:0 0 0 2px rgba(26,108,179,.18); }
     .ui-chat-input button { padding:8px 20px; border:none; border-radius:var(--r-md); background:var(--p500); color:#fff; cursor:pointer; font-size:13px; }
     .ui-chat-input button:disabled { opacity:.5; cursor:not-allowed; }
 
@@ -236,6 +248,63 @@
     .ui-step-todo .ui-step-status { color:var(--ink400); }
     .ui-step-done .ui-step-status { color:#2e9e6b; }
     .ui-step-doing .ui-step-status { color:var(--p600); }
+    .ui-canvas-body.ui-canvas-pad { display:block; align-items:flex-start; justify-content:flex-start; padding:18px; }
+    .ui-plan-note { font-size:12.5px; color:var(--ink500); line-height:1.9; background:var(--bg); border:1px solid var(--line300); border-radius:var(--r-lg); padding:12px 14px; margin-bottom:14px; }
+    .ui-plan-warn { font-size:12.5px; color:#a8631a; background:#fff8ec; border:1px solid #f0dcbb; border-radius:var(--r-lg); padding:10px 14px; margin-bottom:14px; }
+    .ui-plan-empty { text-align:center; color:var(--ink500); font-size:13px; padding:48px 20px; line-height:1.8; }
+    .ui-plan-actions { display:flex; gap:10px; align-items:center; margin-top:16px; flex-wrap:wrap; }
+    .ui-plan-hint { font-size:12px; color:var(--ink500); }
+    .btn[disabled], .btn:disabled { opacity:.45; cursor:not-allowed; pointer-events:none; }
+    .chat-think-done { font-size:12px; color:var(--ink500); white-space:pre-wrap; margin-top:4px; line-height:1.6; }
+    /* 公共服务 / 关键信息阻塞式询问：不再混在聊天流里被刷走 */
+    .ai-ask-mask { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:9999; }
+    .ai-ask-card { background:#fff; border-radius:10px; width:540px; max-width:calc(100vw - 48px); padding:22px 24px; box-shadow:0 12px 40px rgba(0,0,0,.28); max-height:calc(100vh - 80px); overflow:auto; }
+    .ai-ask-title { font-size:17px; font-weight:600; margin-bottom:10px; }
+    .ai-ask-body { font-size:13px; line-height:1.7; color:#333; white-space:pre-wrap; margin-bottom:14px; }
+    .ai-ask-opts { display:flex; flex-direction:column; gap:9px; margin-bottom:14px; }
+    .ai-ask-opt { display:flex; align-items:center; gap:8px; font-size:14px; padding:9px 12px; border:1px solid #DADCE0; border-radius:6px; cursor:pointer; }
+    .ai-ask-opt:hover { border-color:#C2BB00; }
+    .ai-ask-field { margin-bottom:14px; }
+    .ai-ask-field label { display:block; font-size:13px; margin-bottom:6px; font-weight:500; }
+    .ai-ask-field input { width:100%; height:36px; padding:0 12px; border:1px solid #DADCE0; border-radius:6px; font-size:14px; box-sizing:border-box; }
+    .ai-ask-actions { display:flex; gap:10px; }
+    .ai-ask-hint { font-size:12px; color:#777; margin-top:10px; line-height:1.6; }
+    /* 执行过程面板：工具调用 / 思考 / 耗时，独立于聊天气泡，自动滚到最新一条 */
+    .ai-tool-panel { border-top:1px solid #E4E4E4; background:#FAFAFA; flex:0 0 auto; }
+    .ai-tool-head { display:flex; align-items:center; gap:10px; padding:6px 12px; font-size:12px; color:#555; cursor:pointer; user-select:none; }
+    .ai-tool-title { font-weight:600; white-space:nowrap; }
+    .ai-tool-state { flex:1; text-align:center; color:#888; }
+    .ai-tool-state.on { color:#1A7F37; }
+    .ai-tool-state.bad { color:#C62828; }
+    /* 警告（可能卡住 / 无响应）—— 黄色，不是错误。错误才用 .bad 红。 */
+    .ai-tool-state.warn { color:#B06000; }
+    .ai-tool-toggle { color:#999; }
+    .ai-tool-body { max-height:120px; overflow-y:auto; padding:0 12px 8px; font-size:12px; line-height:1.65; font-family:Cascadia Code,Consolas,monospace; }
+    .ai-tool-panel.collapsed .ai-tool-body { display:none; }
+    .ai-tool-row { color:#4A4A4A; white-space:pre-wrap; word-break:break-all; }
+    .ai-tool-row.dim { color:#8A8A8A; }
+    .ai-tool-row.run { color:#8A6D00; }
+    .ai-tool-row.ok { color:#1A7F37; }
+    .ai-tool-row.err { color:#C62828; }
+    .ai-tool-row.warn { color:#B06000; }
+    .ai-tool-row.run::after { content:" ▍"; animation:aiBlink 1s steps(2,end) infinite; }
+    @keyframes aiBlink { 0%,50%{opacity:1} 50.1%,100%{opacity:.15} }
+    .ui-step-main { flex:1; min-width:0; }
+    .ui-step-desc { font-size:12px; color:var(--ink500); margin-top:3px; line-height:1.6; }
+    .ui-step-note { font-size:12px; color:var(--p600); margin-top:3px; line-height:1.6; }
+    .ui-step-look { font-size:11px; flex:none; padding:3px 9px; border:1px solid var(--line300); background:transparent; color:var(--p600); border-radius:4px; cursor:pointer; }
+    .ui-step-look:hover { background:var(--bg); }
+    .ui-step-btn { font-size:11px; flex:none; padding:3px 9px; border:1px solid var(--line300); background:transparent; color:var(--t600); border-radius:4px; cursor:pointer; }
+    .ui-step-btn:hover { background:var(--bg); }
+    .ui-step-btn-go { border-color:var(--p600); color:var(--p600); font-weight:500; }
+    .ui-step-btn-go:hover { background:var(--p50); }
+    .ui-step-btn-warn { border-color:var(--warn600, #B26A00); color:var(--warn600, #B26A00); }
+    .ui-step-btn[disabled] { opacity:.45; cursor:not-allowed; pointer-events:none; }
+    .ui-step-doing .ui-step-state { animation:uiPulse 1.3s ease-in-out infinite; }
+    .ui-step-error .ui-step-status { color:#c2452d; }
+    @keyframes uiPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .ui-choices { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+
 
     /* ===== 业务流程页 ===== */
     .proc-layout { display:flex; gap:16px; height:calc(100vh - 190px); min-height:440px; }
@@ -339,6 +408,13 @@
     .cm-save-status.ok { background:rgba(46,158,107,.15); color:#1e7a52; }
     .cm-save-status.dirty { background:rgba(217,130,43,.15); color:#a4651a; }
     .cm-save-status.err { background:rgba(214,69,69,.12); color:#b03a3a; }
+      /* 计划按业务阶段分组：先看阶段进度，再看阶段下的具体步骤 */
+      .ui-plan-group { margin: 0 0 14px; }
+      .ui-plan-ghead { display: flex; align-items: center; gap: 8px; padding: 7px 10px; margin-bottom: 6px;
+        background: #f4f6f8; border-radius: 6px; border-left: 3px solid #cbd5e1; }
+      .ui-plan-ghead.g-done { border-left-color: #16a34a; background: #f0fdf4; }
+      .ui-plan-gname { font-weight: 600; font-size: 13px; color: #1e293b; }
+      .ui-plan-gcount { margin-left: auto; font-size: 11px; color: #64748b; font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
@@ -363,7 +439,7 @@
       <div class="mi active" data-m="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11v5"/></svg>基础信息<span class="mi-dot"></span></div>
       <div class="mi" data-m="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 0 0 0 18h1.5a2 2 0 0 0 1.6-3.2A2 2 0 0 1 14 15.6H19a2 2 0 0 0 2-2A9 9 0 0 0 12 3z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg>主题风格<span class="mi-dot"></span></div>
       <div class="mi" data-m="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9.5 12l2 2 3.5-3.5"/></svg>项目约束<span class="mi-dot"></span></div>
-      <div class="mi" data-m="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="5" rx="1"/><rect x="14" y="15" width="7" height="5" rx="1"/><path d="M6.5 9v3a3 3 0 0 0 3 3h4.5"/></svg>业务流程<span class="mi-dot"></span></div>      <div class="mi" data-m="9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>AI编码<span class="mi-dot"></span></div>
+      <div class="mi" data-m="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="5" rx="1"/><rect x="14" y="15" width="7" height="5" rx="1"/><path d="M6.5 9v3a3 3 0 0 0 3 3h4.5"/></svg>业务流程<span class="mi-dot"></span></div>      <div class="mi" data-m="9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>AI开发<span class="mi-dot"></span></div>
       <div class="mi" data-m="4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>部署发布<span class="mi-dot"></span></div>
       <div class="menu-title" style="margin-top:24px">工具设置</div>
       <div class="mi" data-m="5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 12h18"/></svg>项目空间</div>
@@ -410,8 +486,10 @@
       1: { t: "主题风格", s: "AI 生成主题交互定义（基于模板）", body: [], dynamic: "theme" },
       2: { t: "项目约束", s: "开发规范与红线约束（模板：devStandard）", body: [], dynamic: "constraints" },
       3: { t: "业务流程", s: "AI 梳理业务流程，生成可交互流程图", body: [], dynamic: "process" },
-      9: { t: "AI编码", s: "AI 按开发计划生成项目代码", body: [], dynamic: "ui" },
-      4: { t: "部署发布", s: "构建、打包与发布", body: [
+      9: { t: "AI开发", s: "AI 按开发计划生成项目代码", body: [], dynamic: "ui" },
+      // ⚠️ 部署发布：当前是静态说明、无任何功能。后续接功能时必须跟随项目切换：
+//    构建/发布记录按 prjKey("deploy") 存取，并在 PRJ_REFRESH 登记表里补 4: renderDeploy。
+4: { t: "部署发布", s: "构建、打包与发布", body: [
             "构建：cargo build --manifest-path src-tauri/Cargo.toml",
             "发布：cargo build --release（无黑窗），产物 target/release/tdev.exe",
             "打包安装器：cargo tauri build（NSIS/MSI）。"
@@ -436,6 +514,10 @@
 
     // ===== 基础信息页：渲染所选项目信息 + 删除项目 =====
     var currentProject = null; // 当前选中项目对象
+    // A+ 常驻约束缓存：{ ironlaws, paths }；切项目时失效
+    var AGENT_CONST = null;
+    var AGENT_THEME = null;   // 项目主题色摘要（A2），随约束一起预热
+    var AGENT_CONST_LOADING = null;
 
     function escHtml(s) {
       return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -471,7 +553,7 @@
         .then(function(ok) {
           if (ok) {
             document.getElementById("statusText").textContent = "已删除项目：" + currentProject.prjName;
-            currentProject = null;
+            currentProject = null; AGENT_CONST = null; AGENT_THEME = null;
             document.getElementById("projSel").value = "";
             loadProjects();
             renderInfoPanel();
@@ -483,30 +565,44 @@
     }
 
     // 项目下拉框选中联动：记录 currentProject 并在基础信息页刷新
+    // ===== 项目工作分组：切换项目必须重建的页面登记表 =====
+    // 原则：「项目工作」下的每一个页面，内容都必须跟随项目切换，不能残留上一个项目的内容。
+    // 新增页面时在这里登记一行；登记为 null 表示"该页还未实现"——缺口一眼可见。
+    // 未登记 = 切项目后不刷新 = 内容串项目，这是硬性红线。
+    var PRJ_REFRESH = {
+      0: function () { renderInfoPanel(); },                    // 基础信息
+      1: function () { thUpdateStatus(); thRestore(); },        // 主题风格
+      2: function () { renderConstraints(); },                  // 项目约束
+      3: function () { renderProcess(); },                      // 业务流程
+      9: function () { renderUi(); },                           // AI开发
+      4: null                                                   // 部署发布：待实现，实现后填 renderDeploy
+    };
+    // 当前页若属于项目工作分组，按新项目重建
+    function prjRefreshCurrent() {
+      var f = PRJ_REFRESH[current];
+      if (typeof f !== "function") return;
+      try { f(); } catch (e) { console.warn("项目切换后重建失败: " + current, e); }
+    }
+
     function bindProjSel() {
       var sel = document.getElementById("projSel");
       if (!sel) return;
       sel.addEventListener("change", function() {
-        updateMenuDots();
         var guid = sel.value;
         if (!guid) {
-          currentProject = null;
-          if (current === 0) renderInfoPanel();
-          if (current === 1) { thUpdateStatus(); thRestore(); }  // 主题页：刷新状态 + 加载该项目主题
-          if (current === 2) renderConstraints();  // 约束页：加载该项目 devStandard
-          if (current === 3) renderProcess();  // 流程页：加载该项目业务流程
+          currentProject = null; AGENT_CONST = null; AGENT_THEME = null;
+          updateMenuDots();  // 此时 currentProject 已为 null → 全灭
           if (current === 8) renderChat();  // 聊天页：切到默认会话（无项目）
+          prjRefreshCurrent();              // 项目工作分组：全部按"无项目"重建
           return;
         }
         window.__TAURI__.core.invoke("project_list").then(function(list) {
           var found = null;
           (list || []).forEach(function(p){ if (p.prjGUID === guid) found = p; });
-          currentProject = found;
-          if (current === 0) renderInfoPanel();
-          if (current === 1) { thUpdateStatus(); thRestore(); }  // 主题页：刷新状态 + 加载该项目主题
-          if (current === 2) renderConstraints();  // 约束页：加载该项目 devStandard
-          if (current === 3) renderProcess();  // 流程页：加载该项目业务流程
+          currentProject = found; AGENT_CONST = null; AGENT_THEME = null;
+          updateMenuDots();  // 此时 currentProject 已为新项目 → 读新状态
           if (current === 8) renderChat();  // 聊天页：切换会话 + 加载该项目历史
+          prjRefreshCurrent();              // 项目工作分组：全部按新项目重建
         });
       });
     }
@@ -913,23 +1009,760 @@ function doConnect(baseUrl, token) {
       if (!window.__TAURI__ || !window.__TAURI__.core) { chatAddSystem("Tauri 不可用"); return; }
       chatAddMsg(text, true);
       input.value = "";
+      draftClear("chat");
+      taGrow(input);
       chatSetPending(true);
       chatShowThinking();
-      var sid = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "tdev-chat";
-      window.__TAURI__.core.invoke("agent_ask", { question: text, sessionId: sid })
-        .then(function(reply) {
-          chatSetPending(false);
-          var think2 = document.getElementById("chatThinking");
-          if (think2) think2.remove();
-          if (reply && reply.trim()) chatAddMsg(reply.trim(), false);
-          else chatAddSystem("Agent 无回复");
-        })
-        .catch(function(e) {
-          chatSetPending(false);
-          var think3 = document.getElementById("chatThinking");
-          if (think3) think3.remove();
-          chatAddSystem("调用失败：" + e);
+      function clearThinking() {
+        chatSetPending(false);
+        var think = document.getElementById("chatThinking");
+        if (think) think.remove();
+      }
+      // 统一组件：场景 chat（通用助手）
+      agentRun("chat", text, {
+        onDone: clearThinking,
+        onError: function (msg) { clearThinking(); chatAddSystem("Agent 错误：" + msg); }
+      }).catch(function () {});
+    }
+
+    // 创建聊天气泡容器（流式填充）
+    // ==================== Agent 聊天组件（场景化复用） ====================
+    // 一套流式 UI/逻辑，多场景挂载。每个场景：
+    //   1) 独立会话 ID（module:<scene>:<prjGUID>）—— 语境不串台
+    //   2) 职责边界 instructions 随请求下发 —— 禁止跨模块写操作（越权拦截）
+    //   3) freshSession=true 时每次开新会话（避免旧上下文干扰）
+    var AGENT_SCENES = {
+      chat: {
+        title: "Agent 连接测试",
+        listId: "chatMsgList",
+        inputId: "chatInput",
+        btnId: "chatSendBtn",
+        sessionPrefix: "chat",
+        scope: "通用开发助手：回答技术问题、读写当前项目 workspace 下的文件。",
+        forbid: []
+      },
+      process: {
+        title: "Agent 流程梳理",
+        listId: "procMsgList",
+        inputId: "procInput",
+        btnId: "procSendBtn",
+        sessionPrefix: "module:process",
+        freshSession: true,
+        scope: "业务流程梳理：分析需求、整理步骤、生成或更新流程 JSON（doc/<项目>_flow.json）。",
+        forbid: [
+          "禁止修改 workspace/<项目>/src/ 下的项目源码",
+          "禁止修改 theme/tokens.json 主题文件",
+          "禁止执行构建、打包、部署命令"
+        ]
+      },
+      aiCode: {
+        title: "AI 开发",
+        listId: "aiMsgList",
+        inputId: "aiInput",
+        btnId: "aiSendBtn",
+        sessionPrefix: "module:ai-code",
+        scope: "按业务流程生成项目源码（workspace/<项目>/src/）。验证方式：后端编译重启后用命令核对接口返回，前端只做代码级核对（不启浏览器）；界面效果由用户验收。",
+        forbid: [
+          "禁止做「生产环境部署上线」类操作，如：发布到线上地址、改生产环境配置；但是本地开发环境无此限制",
+          "禁止启动浏览器验证页面渲染效果（browser_navigate / browser_click / browser_console / 截图等一律不用）—— 界面效果由用户人工验收；前端只在代码层面核对逻辑与设计是否一致"
+        ]
+      }
+    };
+
+    function agentScene(sceneId) { return AGENT_SCENES[sceneId] || null; }
+
+    // ===== 聊天输入框统一处理（2026-11-06 卢Sir 要求）=====
+    // ① 切出页面后切回来，已输入未发送的内容不能丢：切换会 renderXxx() 重建 innerHTML，
+    //    输入框连同内容一起被销毁 —— 所以按「场景 + 项目」存 localStorage，重建后自动填回。
+    // ② 必须支持多行：单行 input 写不下稍长一点的修改描述。
+    function draftKeyOf(scene) {
+      var g = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "noproject";
+      return "draft_" + scene + "_" + g;
+    }
+    function draftSave(scene, el) {
+      if (!el) return;
+      try {
+        var v = String(el.value || "");
+        if (v) localStorage.setItem(draftKeyOf(scene), v);
+        else localStorage.removeItem(draftKeyOf(scene));
+      } catch (e) {}
+    }
+    function draftRestore(scene, el) {
+      if (!el) return;
+      try {
+        var v = localStorage.getItem(draftKeyOf(scene));
+        if (v) { el.value = v; taGrow(el); }
+      } catch (e) {}
+    }
+    function draftClear(scene) {
+      try { localStorage.removeItem(draftKeyOf(scene)); } catch (e) {}
+    }
+    // 多行输入框随内容自动增高（最高 120px，超出滚动），发送后回落
+    function taGrow(el) {
+      if (!el || el.tagName !== "TEXTAREA") return;
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 120) + "px";
+    }
+    // 统一绑定：草稿恢复 + 输入保存 + 自动增高 + Enter 发送 / Shift+Enter 换行
+    function bindComposer(el, scene, send) {
+      if (!el) return;
+      draftRestore(scene, el);
+      el.addEventListener("input", function () { draftSave(scene, el); taGrow(el); });
+      el.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" || e.shiftKey) return;
+        // 中文输入法选字时按 Enter 是「上屏」，不是发送 —— 不判 isComposing 会误发半截话
+        if (e.isComposing || e.keyCode === 229) return;
+        e.preventDefault();
+        if (typeof send === "function") send();
+      });
+    }
+
+    // ===== 项目级状态命名空间 =====
+    // 约定：key = <kind>_<prjGUID>。凡是"切项目要跟着换"的本地状态，一律走这里，
+    // 禁止用模块级全局变量或裸 key 存跨项目数据（否则切换项目会串内容）。
+    // 已接入：aiPlan（开发计划/进度）、agentHist（聊天历史）
+    // 待接入：deploy（部署发布）—— 该模块当前为空，后续接功能时状态必须走 prjKey("deploy")
+    function prjKey(kind) {
+      var g = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "noproject";
+      return kind + "_" + g;
+    }
+
+    var AGENT_RUN_SEQ = 0;
+    function agentSid(sceneId, opts) {
+      var s = agentScene(sceneId);
+      var prefix = s ? s.sessionPrefix : String(sceneId);
+      var tag = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "noproject";
+      var sid = prefix + ":" + tag;
+      // freshSession（场景级固定）或 opts.fresh（单次级）→ 开一次性会话，不继承历史上下文
+      var fresh = !!(s && s.freshSession) || !!(opts && opts.fresh);
+      // 加自增序号：同一毫秒内连续开两次也能拿到不同会话（只靠 Date.now() 会撞车）
+      if (fresh) { AGENT_RUN_SEQ++; sid += ":run-" + Date.now() + "-" + AGENT_RUN_SEQ; }
+      return sid;
+    }
+
+    // ===== 聊天历史持久化（按 场景 + 项目 隔离，localStorage）=====
+    // 兼容旧 key：chat_hist_<guid> / proc_hist_<guid>；新场景 aiCode 用 ai_hist_<guid>
+    function agentHistKey(sceneId) {
+      var guid = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "";
+      if (sceneId === "chat") return "chat_hist_" + (guid || "tdev-chat");
+      if (sceneId === "process") return "proc_hist_" + (guid || "tdev-proc");
+      return "ai_hist_" + (guid || "tdev-ai");
+    }
+    function agentHistLoad(sceneId) {
+      var raw;
+      try { raw = JSON.parse(localStorage.getItem(agentHistKey(sceneId)) || "[]"); }
+      catch (e) { return []; }
+      if (!raw.length) return raw;
+      // 去重：监听器泄漏时期，同一个 done 会被 push 好几遍，历史里躺着 N 份一模一样的回复。
+      // 只折叠「相邻且内容完全相同」的条目 —— 用户真的连发两句同样的话也会被折叠，但那种极少见，
+      // 相比每次打开页面看到四条重复回复，这个取舍值得。
+      var out = [];
+      for (var i = 0; i < raw.length; i++) {
+        var cur = raw[i];
+        var prev = out[out.length - 1];
+        if (prev && prev.t === cur.t && !!prev.me === !!cur.me) continue;
+        out.push(cur);
+      }
+      if (out.length !== raw.length) {
+        try { localStorage.setItem(agentHistKey(sceneId), JSON.stringify(out)); } catch (e) {}
+      }
+      return out;
+    }
+    function agentHistPush(sceneId, text, me) {
+      if (!text) return;
+      try {
+        var hh = agentHistLoad(sceneId);
+        hh.push({ t: String(text), me: !!me, ts: Date.now() });
+        localStorage.setItem(agentHistKey(sceneId), JSON.stringify(hh.slice(-200)));
+      } catch (e) {}
+    }
+    function agentHistRender(sceneId) {
+      var s = agentScene(sceneId);
+      var list = s ? document.getElementById(s.listId) : null;
+      if (!list) return 0;
+      var hist = agentHistLoad(sceneId);
+      if (!hist.length) return 0;
+      var empty = document.getElementById("aiEmpty");
+      if (empty && s.listId === "aiMsgList") empty.remove();
+      hist.forEach(function (m) {
+        var row = document.createElement("div");
+        row.className = "chat-msg " + (m.me ? "me" : "bot");
+        row.innerHTML = '<div class="chat-bubble">' + escHtml(m.t) + '</div>';
+        list.appendChild(row);
+      });
+      list.scrollTop = list.scrollHeight;
+      return hist.length;
+    }
+
+    // 主题色摘要（A2）：从项目 tokens.json 提炼主色与色阶，供提示词常驻取用
+    function agentThemeParse(raw) {
+      // 把 theme/tokens.json 压成一份全量摘要：风格 / 色板 / 语义色 / 字体 / 字号 / 字重 / 行高 / 间距 / 圆角 / 控件 / 动效
+      try {
+        var a = raw.indexOf("{"), b = raw.lastIndexOf("}");
+        if (a < 0 || b <= a) return "";
+        var j = JSON.parse(raw.slice(a, b + 1));
+        if (!j) return "";
+        var NL = String.fromCharCode(10), L = [];
+        var kv = function (obj, unit) {
+          if (!obj || typeof obj !== "object") return "";
+          var ks = Object.keys(obj), vs = [];
+          for (var i = 0; i < ks.length; i++) {
+            if (ks[i].indexOf("//") === 0) continue;
+            var v = obj[ks[i]];
+            if (v === null || typeof v === "object") continue;
+            vs.push(ks[i] + " " + v + (unit || ""));
+          }
+          return vs.join(" / ");
+        };
+        var meta = j.meta || {};
+        if (meta.theme) L.push("风格：" + meta.theme + (meta.spacingBasis ? "（间距基准 " + meta.spacingBasis + "px）" : ""));
+        // 主色 + 10 阶色卡
+        var pal = j.palette || {}, pv = [], pk = Object.keys(pal);
+        for (var p = 0; p < pk.length; p++) {
+          if (pk[p].indexOf("//") === 0 || pk[p] === "accent") continue;
+          pv.push(pk[p] + " " + pal[pk[p]]);
+        }
+        if (pal.accent) L.push("主色：accent " + pal.accent + (pv.length ? "；色阶：" + pv.slice(0, 10).join("、") : ""));
+        // 语义色（浅色模式，深色模式让 Agent 自己开文件查）
+        var cl = (j.color && j.color.light) ? j.color.light : (j.color || {});
+        var zh = { background: "背景", surface: "卡片", surfaceSubtle: "次级面", textPrimary: "正文", textSecondary: "次要字", textTertiary: "辅助字", border: "边框", borderStrong: "强边框", accent: "强调", accentHover: "强调悬停", accentPressed: "强调按下", success: "成功", warning: "警告", error: "错误", info: "信息", focusRing: "聚焦环" };
+        var sem = [];
+        for (var sk2 in zh) {
+          if (!Object.prototype.hasOwnProperty.call(zh, sk2)) continue;
+          if (cl[sk2]) sem.push(zh[sk2] + " " + cl[sk2]);
+        }
+        if (sem.length) L.push("语义色（浅色）：" + sem.join("、"));
+        // 字体 / 字号 / 字重 / 行高
+        var f = j.font || {};
+        if (f.family) L.push("界面字体：" + f.family);
+        if (f.familyCode) L.push("代码字体：" + f.familyCode);
+        var fsTxt = kv(f.size), fwTxt = kv(f.weight), lhTxt = kv(f.lineHeight);
+        if (fsTxt) L.push("字号（px）：" + fsTxt);
+        if (fwTxt) L.push("字重：" + fwTxt);
+        if (lhTxt) L.push("行高：" + lhTxt);
+        // 间距 / 圆角 / 控件 / 动效
+        var spTxt = kv(j.spacing, "px");
+        if (spTxt) L.push("间距：" + spTxt);
+        var rdTxt = kv(j.radius || j.borderRadius, "px");
+        if (rdTxt) L.push("圆角：" + rdTxt);
+        var ctTxt = kv(j.control, "px");
+        if (ctTxt) L.push("控件：" + ctTxt);
+        var mo = j.motion || {}, mv = [];
+        if (mo.durationFast) mv.push("快 " + mo.durationFast + "ms");
+        if (mo.durationMedium) mv.push("中 " + mo.durationMedium + "ms");
+        if (mo.easing) mv.push("缓动 " + mo.easing);
+        if (mv.length) L.push("动效：" + mv.join(" / "));
+        var bpTxt = kv(j.breakpoint, "px");
+        if (bpTxt) L.push("断点：" + bpTxt);
+        return L.join(NL);
+      } catch (e) { return ""; }
+    }
+
+    // A1：读取全部流程文件的节点树（结构化），供执行时按节点注入业务细节
+    function aiFlowNodes(cb) {
+      var ws = aiDetect.ws || "";
+      if (!ws || !currentProject) { cb([]); return; }
+      window.__TAURI__.core.invoke("process_list", { prjName: currentProject.prjName, workspace: ws }).then(function (files) {
+        if (!files || !files.length) { cb([]); return; }
+        var names = [];
+        for (var i = 0; i < files.length; i++) names.push(String(files[i]).split("|")[0]);
+        var jobs = [];
+        var mk = function (fn) {
+          jobs.push(window.__TAURI__.core.invoke("process_load", { prjName: currentProject.prjName, workspace: ws, fileName: fn })
+            .then(function (c) { return String(c || ""); }).catch(function () { return ""; }));
+        };
+        for (var k = 0; k < names.length; k++) mk(names[k]);
+        return Promise.all(jobs).then(function (res) {
+          var trees = [];
+          for (var r = 0; r < res.length; r++) {
+            var raw = res[r];
+            if (!raw) continue;
+            var a = raw.indexOf("{"), b = raw.lastIndexOf("}");
+            if (a < 0 || b <= a) continue;
+            var jj = null;
+            try { jj = JSON.parse(raw.slice(a, b + 1)); } catch (e) { continue; }
+            if (jj && jj.steps) trees.push(jj.steps);
+          }
+          cb(trees);
         });
+      }).catch(function () { cb([]); });
+    }
+
+    // A1：按「主阶段/二级节点」定位节点，把它和下面所有末级动作 + 属性拼成执行期的业务细节
+    function aiStepDetail(trees, nodePath) {
+      var want = String(nodePath || "").split(/[\/>·]/);
+      var target = String(want[want.length - 1] || "").trim();
+      if (!target) return "";
+      var hit = null;
+      var walk = function (arr, trail) {
+        if (!arr || hit) return;
+        for (var i = 0; i < arr.length; i++) {
+          var nd = arr[i] || {};
+          var nm = String(nd.name || "").trim();
+          var tr = trail.concat([nm]);
+          if (!hit && nm && (nm === target || nm.indexOf(target) >= 0 || (target.length >= 3 && target.indexOf(nm) >= 0))) {
+            hit = { node: nd, trail: tr };
+            return;
+          }
+          walk(nd.children, tr);
+          if (hit) return;
+        }
+      };
+      for (var t = 0; t < trees.length && !hit; t++) walk(trees[t], []);
+      if (!hit) return "";
+      var out = [];
+      var propLine = function (pr, pad) {
+        if (!pr) return;
+        var pf = [];
+        if (pr.formName) pf.push("表单：" + pr.formName);
+        if (pr.indexField) pf.push("索引字段：" + pr.indexField);
+        if (pr.input) pf.push("输入：" + pr.input);
+        if (pr.logic) pf.push("处理逻辑：" + pr.logic);
+        if (pr.output) pf.push("产出：" + pr.output);
+        if (pf.length) out.push(pad + "· " + pf.join("；"));
+      };
+      out.push("节点：" + hit.trail.join(" / "));
+      propLine(hit.node.props, "  ");
+      var kids = hit.node.children || [];
+      for (var c = 0; c < kids.length; c++) {
+        var kn = kids[c] || {};
+        out.push("- " + String(kn.name || ""));
+        propLine(kn.props, "  ");
+      }
+      return out.slice(0, 60).join(String.fromCharCode(10));
+    }
+
+    // 加载 A+ 常驻约束：铁律（ARCHITECTURE 第10章）+ 三个规范文件实际路径，全局缓存一次
+    function agentConstEnsure() {
+      if (AGENT_CONST) return Promise.resolve(AGENT_CONST);
+      if (AGENT_CONST_LOADING) return AGENT_CONST_LOADING;
+      if (!window.__TAURI__ || !window.__TAURI__.core || !currentProject) return Promise.resolve(null);
+      var prjName = currentProject.prjName;
+      var NL = String.fromCharCode(10);
+      var _wsPrewarm = "";
+      var p = window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function (v) {
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch (e) {}
+        _wsPrewarm = ws;
+        return window.__TAURI__.core.invoke("constr_context", { prjName: prjName, workspace: ws });
+      }).then(function (ctx) {
+        AGENT_CONST_LOADING = null;
+        if (!currentProject || currentProject.prjName !== prjName) return null; // 项目已切换，丢弃
+        AGENT_CONST = ctx || null;
+        // A2：主题色摘要随约束一起预热，供同步的 agentInstructions 直接取用
+        if (_wsPrewarm) {
+          window.__TAURI__.core.invoke("theme_read_project", { prjName: prjName, workspace: _wsPrewarm, file: "tokens.json" })
+            .then(function (raw) {
+              if (currentProject && currentProject.prjName === prjName) AGENT_THEME = agentThemeParse(String(raw || ""));
+            }).catch(function () {});
+        }
+        return AGENT_CONST;
+      }).catch(function (e) {
+        AGENT_CONST_LOADING = null;
+        console.warn("约束上下文加载失败（不影响对话）", e);
+        return null;
+      });
+      AGENT_CONST_LOADING = p;
+      return p;
+    }
+
+    // 场景边界指令：约束 Agent 职责与禁止事项（防越权修改其他模块数据）
+    // 基础信息快照：只记录「上次真正发给 Agent 的那一份」，变了才重发，避免每轮重复占上下文
+    function agentPrjInfoCur() {
+      if (!currentProject) return null;
+      return {
+        name: String(currentProject.prjName || ""),
+        type: String(currentProject.prjType || ""),
+        desc: String(currentProject.prjDescription || ""),
+        guid: String(currentProject.prjGUID || ""),
+        created: String(currentProject.created_at || "")
+      };
+    }
+    // 返回要追加的行数组；无变化返回空数组
+    function agentPrjInfoDelta() {
+      var cur = agentPrjInfoCur();
+      if (!cur) return [];
+      var key = "tdev_prjinfo_" + cur.guid;
+      var curJson = JSON.stringify(cur);
+      var last = null;
+      try { last = window.sessionStorage.getItem(key); } catch (e) { last = null; }
+      if (last === curJson) return [];
+      try { window.sessionStorage.setItem(key, curJson); } catch (e) {}
+      var out = ["【项目基础信息 — 以此为准，请记住】",
+        "名称：" + (cur.name || "-"),
+        "类型：" + (cur.type || "-"),
+        "说明：" + (cur.desc || "-"),
+        "项目标识：" + (cur.guid || "-"),
+        "创建时间：" + (cur.created || "-")];
+      if (last) {
+        out.push("（以上是更新后的值。你之前记下的旧值全部作废，后面一律按这份执行。）");
+      } else {
+        out.push("（首次提供。之后只在它发生变化时我才再告诉你。）");
+      }
+      out.push("");
+      return out;
+    }
+    // 主题摘要省 token 版：全量只发一次（换项目 / tokens 内容变了才重发），之后每轮只留一行核对提醒。
+    // 简化：宁可少发也不要发错——提醒行始终带约定文件绝对路径，Agent 随时能自己打开核对。
+    function agentThemeDelta() {
+      if (!currentProject || !AGENT_THEME) return [];
+      var _tdir = aiProjectDir();
+      var _tsep = (_tdir.indexOf("\\") >= 0) ? "\\" : "/";
+      var _tfile = _tdir + _tsep + "theme" + _tsep + "tokens.json";
+      var _tfileW = (typeof toWslPath === "function") ? toWslPath(_tfile) : _tfile;
+      var _remind = "【主题核对】改任何界面前，先打开 " + _tfile + "（WSL 写法 " + _tfileW + "）对照颜色 / 字号 / 间距 / 圆角，不许自己另定一套、不许写死色值。";
+      var key = "tdev_theme_" + String(currentProject.prjGUID || "");
+      var last = null;
+      try { last = window.sessionStorage.getItem(key); } catch (e) { last = null; }
+      if (last === AGENT_THEME) { return [_remind]; }
+      try { window.sessionStorage.setItem(key, AGENT_THEME); } catch (e) {}
+      var L = [];
+      L.push("【项目主题风格（唯一数据源，UI 相关改动动手前必须核对）】");
+      L.push("约定文件：" + _tfile + "　　WSL 写法：" + _tfileW);
+      L.push(AGENT_THEME);
+      L.push("颜色 / 字号 / 间距 / 圆角一律用上面的值转成 CSS 变量，不许自己另定一套、不许在样式里写死色值。");
+      L.push("以上是完整摘要（本次只发一次）。要精确值（深色模式、阴影、控件细节）打开约定文件查；改任何界面前先核对一遍再动手。");
+      L.push("");
+      return L;
+    }
+
+    function agentInstructions(sceneId) {
+      var s = agentScene(sceneId);
+      if (!s) return "";
+      var L = [];
+      L.push("【场景隔离】当前场景：" + s.title + "（scene=" + sceneId + "）");
+      L.push("【职责范围】" + s.scope);
+      if (currentProject) {
+        L.push("【当前项目】" + currentProject.prjName + "（GUID " + currentProject.prjGUID + "）");
+        var _pd = agentPrjInfoDelta();
+        for (var _pi = 0; _pi < _pd.length; _pi++) L.push(_pd[_pi]);
+        var _wsDir = (aiDetect && aiDetect.ws) || "";
+        while (_wsDir.length > 1 && (_wsDir.charAt(_wsDir.length - 1) === "/" || _wsDir.charAt(_wsDir.length - 1) === "\\")) {
+          _wsDir = _wsDir.slice(0, -1);
+        }
+        var _sepPub = (_wsDir.indexOf("\\") >= 0) ? "\\" : "/";
+        var _prjDir = aiProjectDir();
+        var _pubDir = _wsDir ? (_wsDir + _sepPub + "Public") : "";
+        L.push("【项目工作目录（绝对路径）】" + (_prjDir || ("workspace/" + currentProject.prjName)));
+        if (_prjDir) {
+          L.push("　　终端写法（两种不通用，先跑 uname -s 判断用哪种）：");
+          L.push("　　　· 输出含 MINGW / MSYS → Git Bash，用：" + toMsysPath(_prjDir));
+          L.push("　　　· 输出 Linux → WSL，用：" + toWslPath(_prjDir));
+        }
+        if (_pubDir) {
+          L.push("【公共目录（绝对路径）】" + _pubDir + "（多个项目共用的运行时、依赖缓存放这里，只装一份）");
+          L.push("　　终端写法：Git Bash 用 " + toMsysPath(_pubDir) + "；WSL 用 " + toWslPath(_pubDir));
+        }
+        L.push("【落盘硬性规则（违反即返工）】");
+        L.push("1. 新建、修改、删除任何文件，路径必须写全（从盘符开始）。禁止用 ./ ../ 或任何相对路径，禁止依赖当前工作目录——当前工作目录不在项目里。");
+        L.push("2. 本项目自己的代码、脚本、配置、SQL，全部只写进上面的项目工作目录，不许写到项目目录之外。");
+        L.push("3. 多个项目能共用的东西（数据库程序、JDK、Web 服务、依赖缓存）装进公共目录，只装一份。");
+        L.push("4. 运行期数据、上传文件放项目下的 data，日志放 logs，构建产物放 build。");
+        L.push("5. 项目配置文件里不许写死盘符绝对路径，用相对路径或配置项，换台机器也能跑。");
+        L.push("6. terminal 里的路径要和 shell 类型匹配：先跑 uname -s —— 含 MINGW/MSYS 就是 Git Bash（/e/xxx），输出 Linux 就是 WSL（/mnt/e/xxx）。上面两种写法都给了，用通的那个，不要反复试。其他工具（execute_code / wf）直接用盘符路径 E:\\xxx。");
+        L.push("7. 读写文件的正确姿势（用错工具会假失败，白折腾）：");
+        L.push("   · 读：不要用 read_file（读 Windows 盘报 File not found）。用 execute_code 读，或 terminal 里 cat /mnt/e/...");
+        L.push("   · 写：不要用 write_file —— 本机它走 WSL 通道，wsl.exe 的代理警告会混进返回值，文件明明写成功了也报 Failed to write file，然后你以为失败去换路径重试，越搞越乱。");
+        L.push("   · 首选 execute_code（Python 直接写，参数走 JSON，最稳）；要命令行写就用 wf 工具：");
+        L.push("       wf write <路径>            ← 内容走 stdin，原子写 + 自动备份 .bak");
+        L.push("       wf replace <路径> <旧> <新> [--all]   ← 字面量替换，默认要求恰好命中 1 处");
+        L.push("       wf read <路径>  /  wf stat <路径>");
+        L.push("   · 路径写 E:\\... 或 /mnt/e/... 都行，wf 会自动转换。");
+        L.push("8. terminal 输出开头那段 wsl: 乱码是环境警告，不是命令失败，真实结果在它后面。不要因为它反复重跑同一条命令，也不要为查一个信息连续换五六种写法试探。");
+        L.push("9. 不许探测数据库 root 密码、不许翻软件自己的配置目录、不许访问项目工作目录和公共目录以外的任何路径。缺凭据就停下来问，不要猜。");
+        L.push('10. 需要我提供密码、密钥或做方案选择时，必须单独输出一行 [[ASK:{"title":"标题","body":"说明","options":[{"v":"值","label":"说明"}],"field":{"key":"键","label":"输入框标题","secret":true}}]]，界面会弹窗收集；不许只在正文里提问，更不许自己猜。');
+      } else {
+        L.push("【当前项目】未选择项目，无法写入任何项目文件");
+      }
+      if (s.forbid && s.forbid.length) {
+        L.push("【禁止事项（必须遵守）】");
+        for (var i = 0; i < s.forbid.length; i++) L.push((i + 1) + ". " + s.forbid[i]);
+        L.push("若用户要求执行上述被禁止的操作，必须拒绝，并说明该操作属于其他模块职责，请用户到对应模块处理。");
+      }
+      // A0 技术栈常驻：唯一来源 AGENTS.md 第 2 章表格（Rust 已解析为 stack / forbids，代码里不写第二份）
+      if (currentProject && AGENT_CONST && AGENT_CONST.stack) {
+        var ST = AGENT_CONST.stack, FB = AGENT_CONST.forbids || {};
+        var ROWS = [["前端", "frontend"], ["后端", "backend"], ["服务器", "server"], ["数据库", "database"], ["缓存", "cache"], ["构建", "build"]];
+        var _anyStack = false;
+        L.push("【技术栈（硬约束）】");
+        for (var _ri = 0; _ri < ROWS.length; _ri++) {
+          var _sv = ST[ROWS[_ri][1]];
+          if (!_sv) continue;
+          _anyStack = true;
+          var _sf = FB[ROWS[_ri][1]] || "";
+          L.push("- " + ROWS[_ri][0] + "：" + _sv + (_sf ? "　禁止：" + _sf : ""));
+        }
+        if (_anyStack) {
+          L.push("- 引入新的依赖前必须先确认");
+          L.push("");
+        } else {
+          L.pop();
+        }
+      }
+      // A2 主题：首次/变更时发全量摘要，其余轮次只发一行核对提醒（省 token）
+      if (currentProject) {
+        var _th = agentThemeDelta();
+        for (var _ti = 0; _ti < _th.length; _ti++) L.push(_th[_ti]);
+      }
+      // UI 布局三条硬标准：卢Sir 要求「每次新增或修改 UI 都要关注节约版面、秩序、审美」，
+      // 所以这段必须每轮常驻（不像主题摘要可以省成一行提醒）——
+      // 只写规范文件没用，Agent 不会主动去读；不常驻就必然写成一片散乱控件。
+      L.push("");
+      L.push("【界面布局四条硬标准】");
+      L.push("① 节约版面：短字段一行 3~4 个、中等 2 个、长文本整行独占；列表首屏至少能看到 10 行；弹窗按内容取 480/640/800 三档。");
+      L.push("② 整齐秩序：间距只用 --space-xs|sm|md|lg|xl|xxl（4/8/12/16/24/32），禁止随意像素值；同一表单 label 字号一致、输入框和按钮统一 var(--control-height)；主按钮在右下、新增在右上、删除类单独放；一屏只有一个实心主按钮。");
+      L.push("③ 审美：留白优先不许挤；层级靠字号+灰度+加粗+加色；主色只用于主操作和选中态；空状态/加载态/错误态三态必须画全，不许白屏。");
+      L.push("④ 菜单层级：功能菜单深度不超过 2 级 —— 不论左侧主导航，还是右侧功能页内的功能菜单/分组，最多「一级 + 二级」两层。需要第三层时重新归并到同级，或改成页内 tab/分区，不要做三级下拉、三级导航。");
+      L.push("动手前先读 css/app.css 和同类页面，已有类直接复用，禁止重新定义。细则见 CODING-STANDARDS.md 第 4.9 章。");
+      // A+ 常驻：项目铁律（唯一来源 ARCHITECTURE.md 第10章）+ 规范文件路径指引
+      if (currentProject && AGENT_CONST && AGENT_CONST.ironlaws) {
+        L.push("");
+        L.push("【项目铁律】");
+        L.push(AGENT_CONST.ironlaws);
+        L.push("");
+        L.push("【完整规范位置（需要细则时自读文件，不要凭记忆猜）】");
+        var P = AGENT_CONST.paths || {};
+        if (P["ARCHITECTURE.md"]) {
+          L.push("- 架构决策 " + P["ARCHITECTURE.md"] + "：分层边界(1-2章)、交付策略与YAGNI边界(7章)、四个接缝(8章)、认证预留(9章)、自检清单(11章)、后期改造地图(12章)");
+          L.push("　　WSL 写法：" + toWslPath(P["ARCHITECTURE.md"]));
+        }
+        if (P["CODING-STANDARDS.md"]) {
+          L.push("- 代码写法 " + P["CODING-STANDARDS.md"] + "：Java命名、异常、SQL、Redis、前端、交付自检清单");
+          L.push("　　WSL 写法：" + toWslPath(P["CODING-STANDARDS.md"]));
+        }
+        if (P["AGENTS.md"]) {
+          L.push("- 协作流程 " + P["AGENTS.md"] + "：目录落位、技术栈、开工流程");
+          L.push("　　WSL 写法：" + toWslPath(P["AGENTS.md"]));
+        }
+        L.push("【硬性要求】涉及表结构、新增模块、认证/权限的改动，动手前必须先读上述文件对应章节。读这些文件用 execute_code 或 terminal cat，别用 read_file。");
+      }
+      // 数据结构是「业务流程 → 代码」之间的桥，必须常驻一条，否则 Agent 每步各写一套表
+      if (currentProject) {
+        L.push("");
+        L.push("【数据结构唯一依据】项目目录下 doc/data-model.md。建表、写 DAO、加字段之前必须先读它；发现代码和它不一致，先改文档再改代码，不许两边各写一套。");
+      }
+      return L.join(String.fromCharCode(10));
+    }
+
+    // 场景流式气泡（统一 UI，复用聊天页 CSS）
+    function agentAddBubble(sceneId) {
+      var s = agentScene(sceneId);
+      var box = s ? document.getElementById(s.listId) : null;
+      var id = "agBubble_" + sceneId + "_" + Date.now();
+      if (!box) return id;
+      var div = document.createElement("div");
+      div.id = id;
+      div.className = "chat-msg bot";
+      div.innerHTML = '<div class="chat-bubble-wrap">' +
+        '<div class="chat-thinking-box" style="display:none"></div>' +
+        '<div class="chat-bubble chat-reply"></div>' +
+        '</div>';
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      return id;
+    }
+
+    // 统一流式发送：气泡 + 事件监听 + 三区渲染（思考链 / 工具 / 打字机）
+    // hooks: { beforeSend(text)->text, onStart(), onDone(text), onError(msg) }
+    // ===== agent_stream 全局单监听器（2026-11-06 卢Sir 报「重复执行/重复输出」的根因）=====
+    // 病根：原来每次 agentRun 都 event.listen 一个新的监听器，靠 cleanup 里的 unlisten 收尾。
+    // 一旦这一轮被中断 / 页面重渲染 / 异常跳出，unlisten 就丢了，监听器永久残留。
+    // 残留 N 个 → 同一条 SSE 事件被处理 N 遍 → 同一条回复弹出 N 个气泡、
+    // 同一个工具调用在过程面板里写 N 行（时间戳和耗时一模一样，看着像「重复执行」）。
+    // 现在只保留一个监听器，事件分发给「当前这一轮」的 handle。
+    var AGENT_STREAM_UNLISTEN = null;
+    var AGENT_CURRENT_HANDLE = null;
+    function ensureAgentStreamListener() {
+      if (AGENT_STREAM_UNLISTEN) return;
+      if (!window.__TAURI__ || !window.__TAURI__.event) return;
+      AGENT_STREAM_UNLISTEN = window.__TAURI__.event.listen("agent_stream", function (ev) {
+        var fn = AGENT_CURRENT_HANDLE;
+        if (fn) { try { fn(ev.payload); } catch (e) { console.warn("agent_stream 处理异常", e); } }
+      });
+    }
+
+    // ===== 前端异常兜底：别让 JS 报错无声无息地把流程卡死 =====
+    // 加这个的原因：单步执行点了以后界面停在「单步执行第 7 步」，请求没发出，
+    // 说明中间某处抛了异常，而异常在 onclick 里被吞了 —— 界面上完全看不到。
+    // 现在任何未捕获异常 / Promise 拒绝都会写进过程日志，肉眼可见。
+    window.addEventListener("error", function (e) {
+      try {
+        var where = String(e.filename || "").split(/[\\/]/).pop();
+        aiToolLog("err", "✗ 前端异常：" + (e.message || "未知错误") + "  @" + where + ":" + (e.lineno || "?"));
+        aiToolState("前端报错，这一步没发出去：" + String(e.message || "").slice(0, 60), "bad");
+      } catch (x) {}
+    });
+    window.addEventListener("unhandledrejection", function (e) {
+      try {
+        var r = e.reason || {};
+        aiToolLog("err", "✗ 未处理的 Promise 拒绝：" + (r.message || String(r)).slice(0, 200));
+      } catch (x) {}
+    });
+
+    // ===== 全局 Agent 互斥（前端第二道防线；后端 lib.rs 里还有一把硬锁）=====
+    // 病根：每个场景都能自己发 run，前端防重入只管得住计划按钮，
+    // 管不住 ASK 回答 / 「看看」/ 聊天提问这些旁路；多点几次就是多个 run 并发写同一个项目目录。
+    var AGENT_BUSY = null;   // { scene, tag, t0 }
+    function agentBusyCheck(where) {
+      if (!AGENT_BUSY) return true;
+      var secs = Math.round((Date.now() - AGENT_BUSY.t0) / 1000);
+      aiAddMsg("另一个 Agent 正在执行（" + (AGENT_BUSY.tag || AGENT_BUSY.scene) + "，已 " + secs + " 秒）。同一时间只允许一个 Agent，等它结束再来。", false);
+      return false;
+    }
+    function agentBusySet(sceneId, tag) { AGENT_BUSY = { scene: sceneId, tag: tag || "", t0: Date.now() }; }
+    function agentBusyClear() { AGENT_BUSY = null; }
+    function agentBusyInfo() {
+      if (!AGENT_BUSY) return "";
+      return (AGENT_BUSY.tag || AGENT_BUSY.scene) + " · 已 " + Math.round((Date.now() - AGENT_BUSY.t0) / 1000) + " 秒";
+    }
+
+    function agentRun(sceneId, text, hooks) {
+      hooks = hooks || {};
+      var s = agentScene(sceneId);
+      if (!s) { console.warn("未知场景: " + sceneId); return Promise.reject("unknown scene"); }
+      if (!window.__TAURI__ || !window.__TAURI__.core) return Promise.reject("Tauri 不可用");
+      // 第二道锁：前端就不让同一时刻发第二个 run（后端还会再拦一次）
+      if (!agentBusyCheck(sceneId)) return Promise.reject("busy");
+      agentBusySet(sceneId, hooks.tag || (s.title || sceneId));
+      var sid = agentSid(sceneId, hooks);
+      var bubbleId = agentAddBubble(sceneId);
+      var fullText = "";
+      var finished = false;
+      // 工具计时器：Hermes 一个工具跑几分钟是常态（装 Tomcat / 建库），
+      // 期间没有任何事件，界面数字不跳用户就以为死了。
+      var _toolName = "";
+      var _toolT0 = 0;
+      var _toolTimer = null;
+      var _thinkRow = null;   // 当前这段思考在过程面板里的那一行
+      var _toolRow = null;    // 当前这个工具调用在过程面板里的那一行
+      function _stopToolTick() {
+        if (_toolTimer) { clearInterval(_toolTimer); _toolTimer = null; }
+      }
+      function cleanup() {
+        agentBusyClear();   // 任何收尾路径都要放锁，否则后续所有 Agent 都被挡住
+        // 只交出自己这一轮的 handle：全局监听器本身不销毁，避免 create/destroy 泄漏
+        if (AGENT_CURRENT_HANDLE === handle) AGENT_CURRENT_HANDLE = null;
+        // 一轮结束：状态条回到空闲。计划自动跑下一步时会立刻再覆盖成「正在做第 N 步」，
+        // 所以这里不用判断，直接收尾；否则聊完天后状态条会一直停在「正在执行」骗人。
+        if (!aiPlan || aiPlan.status !== "running") aiToolState("空闲", "");
+        _thinkRow = null;
+        if (_toolRow && _toolRow.parentNode) {
+          _toolRow.className = "ai-tool-row dim";
+          _toolRow.textContent += "  …这一轮结束了，没收到完成事件";
+        }
+        _toolRow = null;
+      }
+      function scrollBottom() {
+        var box = document.getElementById(s.listId);
+        if (box) box.scrollTop = box.scrollHeight;
+      }
+      function handle(d) {
+        if (!d || !d.type) return;
+        var wrap = document.getElementById(bubbleId);
+        var replyEl = wrap ? wrap.querySelector(".chat-reply") : null;
+        var thinkEl = wrap ? wrap.querySelector(".chat-thinking-box") : null;
+        var _panel = !!document.getElementById("aiToolBody");
+        window.__aiLastEvt = Date.now();   // 心跳：任何事件都算「还活着」
+        if (d.type === "reasoning") {
+          if (_panel) {
+            if (!_thinkRow || !_thinkRow.parentNode) { _thinkRow = aiToolLog("dim", "💭 "); }
+            _thinkRow.textContent += (d.text || "");
+            var _bb = document.getElementById("aiToolBody");
+            if (_bb) _bb.scrollTop = _bb.scrollHeight;
+          } else if (thinkEl) {
+            thinkEl.style.display = "block";
+            var t = thinkEl.querySelector(".chat-think-text");
+            if (!t) {
+              thinkEl.innerHTML = '<div class="chat-think-label">🤔 思考中…</div><div class="chat-think-text"></div>';
+              t = thinkEl.querySelector(".chat-think-text");
+            }
+            t.textContent += (d.text || "");
+          }
+        } else if (d.type === "tool") {
+          // 不再每秒重绘读秒 —— 那玩意儿只会把有用的信息挤走。
+          // 进行中的那一行末尾由 CSS 闪烁光标表示「还在跑」，跑完才落耗时。
+          _stopToolTick();
+          _thinkRow = null;
+          _toolName = d.text || "执行工具";
+          _toolT0 = Date.now();
+          if (_panel) {
+            _toolRow = aiToolLog("run", "🔧 " + _toolName);
+            aiToolState("正在执行：" + _toolName, "on");
+          } else if (thinkEl) {
+            thinkEl.style.display = "block";
+            var tl = thinkEl.querySelector(".chat-think-label");
+            if (tl) tl.textContent = "🔧 " + _toolName;
+          }
+        } else if (d.type === "tool_done") {
+          _stopToolTick();
+          var secs2 = d.duration ? Number(d.duration).toFixed(1) : ((Date.now() - _toolT0) / 1000).toFixed(1);
+          if (_panel) {
+            if (_toolRow && _toolRow.parentNode) {
+              _toolRow.className = "ai-tool-row " + (d.error ? "err" : "ok");
+              _toolRow.textContent += "  " + (d.error ? "✗ 失败 " : "✓ ") + secs2 + "s";
+            }
+            _toolRow = null;
+            aiToolState("工具已完成，Agent 处理中…", "on");
+          } else if (thinkEl) {
+            thinkEl.style.display = "block";
+            var tl2 = thinkEl.querySelector(".chat-think-label");
+            if (tl2) tl2.textContent = "🔧 工具执行记录";
+            var tail = thinkEl.querySelector(".chat-think-done");
+            if (!tail) {
+              tail = document.createElement("div");
+              tail.className = "chat-think-done";
+              thinkEl.appendChild(tail);
+            }
+            tail.textContent += (d.error ? "❌ " : "✅ ") + (d.text || "工具") + " · " + secs2 + " 秒" + String.fromCharCode(10);
+          }
+        } else if (d.type === "delta") {
+          fullText += d.text || "";
+          if (replyEl) replyEl.textContent = fullText;
+          if (hooks.onDelta) { try { hooks.onDelta(fullText); } catch (e) { console.warn(e); } }
+        } else if (d.type === "done") {
+          finished = true;
+          _stopToolTick();
+          cleanup();
+          agentHistPush(sceneId, fullText, false);
+          if (hooks.onDone) hooks.onDone(fullText);
+        } else if (d.type === "error") {
+          finished = true;
+          _stopToolTick();
+          cleanup();
+          if (hooks.onError) hooks.onError(d.text || "");
+        }
+        scrollBottom();
+      }
+      ensureAgentStreamListener();   // 全局只 listen 一次
+      AGENT_CURRENT_HANDLE = handle; // 这一轮接管事件
+      var payload = text;
+      if (hooks.beforeSend) { try { payload = hooks.beforeSend(text) || text; } catch (e) { console.warn(e); } }
+      if (hooks.onStart) hooks.onStart();
+      // 先确保常驻约束就绪再发请求（首次多一次本地读文件，约 10ms）
+      return agentConstEnsure().then(function () {
+        return window.__TAURI__.core.invoke("agent_ask_stream", {
+          question: payload,
+          sessionId: sid,
+          instructions: agentInstructions(sceneId),
+          // 把工作目录钉在项目里：不传的话 Agent 跑在 Hermes 自己的目录（E:\HermesMinimal），
+          // 相对路径会生成到那儿，终端 pwd 也是错的。
+          cwd: aiProjectDir() || undefined
+        });
+      }).then(function (reply) {
+        if (!finished) {
+          cleanup();
+          var wrap = document.getElementById(bubbleId);
+          var replyEl = wrap ? wrap.querySelector(".chat-reply") : null;
+          if (replyEl) replyEl.textContent = (fullText || reply || "（无回复）");
+          agentHistPush(sceneId, fullText || reply, false);
+          if (hooks.onDone) hooks.onDone(fullText || reply || "");
+        }
+        return reply;
+      }).catch(function (e) {
+        cleanup();
+        if (hooks.onError) hooks.onError(String(e));
+        throw e;
+      });
     }
 
     function renderChat() {
@@ -946,14 +1779,12 @@ function doConnect(baseUrl, token) {
           '</div>' +
           '<div class="chat-msg-list" id="chatMsgList"></div>' +
           '<div class="chat-input-row">' +
-            '<input id="chatInput" class="chat-input" type="text" placeholder="输入消息，回车发送…" />' +
+            '<textarea id="chatInput" class="chat-input" rows="1" placeholder="输入消息，Enter 发送，Shift+Enter 换行…"></textarea>' +
             '<button class="btn btn-primary" id="chatSendBtn">发送</button>' +
           '</div>' +
         '</div>';
       document.getElementById("chatSendBtn").addEventListener("click", chatSend);
-      document.getElementById("chatInput").addEventListener("keydown", function(e){
-        if (e.key === "Enter") { e.preventDefault(); chatSend(); }
-      });
+      bindComposer(document.getElementById("chatInput"), "chat", chatSend);
       document.getElementById("chatReconnect").addEventListener("click", function(){
         if (chatWs) { try { chatWs.close(); } catch(e){} chatWs = null; }
         chatConnect();
@@ -1099,7 +1930,7 @@ function doConnect(baseUrl, token) {
         "结构参考模板目录：E:\88.project\TDev\src\template\theme\（内含 tokens.json / theme.md / ui-preview.html，遵循其中定义的结构与命名规范，可自行发挥配色方案）。" +
         "用户需求：" + desc + "。主题主色（accent）：" + accent +
         "。请基于主色生成完整主题（含浅色/深色色系），并在 color.palette 下生成 10 阶色卡（accent-50~accent-900，以主色为 accent-700，向白/黑衍生），只输出完整可用的 tokens.json JSON，不要多余文字，不要代码块标记。";
-      window.__TAURI__.core.invoke("agent_ask", { question: prompt, sessionId: currentProject.prjGUID })
+      window.__TAURI__.core.invoke("agent_ask", { question: prompt, sessionId: currentProject.prjGUID, cwd: aiProjectDir() || undefined })
         .then(function(reply) {
           // 剥离 Agent 回复的非 JSON 前缀（可能带说明文字）
           var cleanReply = reply;
@@ -1113,6 +1944,7 @@ function doConnect(baseUrl, token) {
           st.className = "chat-status pending";
           document.getElementById("thSaveBtn").style.display = "";
           thPreview();
+          modSet("theme", true);
           // 自动保存到项目 theme 目录（Agent 生成 → 直接落盘）
           window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
             var ws = "";
@@ -1225,7 +2057,7 @@ function doConnect(baseUrl, token) {
       // 提取技术栈表格（AGENTS.md §2）
       var stackRows = extractTable(agents, "技术栈");
       // 提取反模式（AGENTS.md §5）
-      var antiPatterns = extractList(agents, "反模式速查");
+      var antiPatterns = extractList(agents, "反模式");
       // 提取开工流程（AGENTS.md §6）
       var workflow = extractList(agents, "开工流程");
       // 提取自检清单（CODING-STANDARDS 末尾）
@@ -1236,7 +2068,7 @@ function doConnect(baseUrl, token) {
       // 1) 规范文件卡片
       html += '<h3 class="constr-sec">规范文件</h3>';
       html += '<div class="constr-files">';
-      html += '<div class="constr-card" data-view="agents"><div class="cc-icon">A</div><div class="cc-body"><div class="cc-name">AGENTS.md</div><div class="cc-desc">Agent 开工必读：技术栈硬约束 + 目录 + 反模式 + 流程</div></div><div class="cc-arrow">&#8250;</div></div>';
+      html += '<div class="constr-card" data-view="agents"><div class="cc-icon">A</div><div class="cc-body"><div class="cc-name">AGENTS.md</div><div class="cc-desc">Agent 开工必读：技术栈硬约束 + 目录落位 + 三条致命反模式 + 流程</div></div><div class="cc-arrow">&#8250;</div></div>';
       html += '<div class="constr-card" data-view="arch"><div class="cc-icon">B</div><div class="cc-body"><div class="cc-name">ARCHITECTURE.md</div><div class="cc-desc">分层边界、依赖方向、数据库/Redis 设计规范</div></div><div class="cc-arrow">&#8250;</div></div>';
       html += '<div class="constr-card" data-view="coding"><div class="cc-icon">C</div><div class="cc-body"><div class="cc-name">CODING-STANDARDS.md</div><div class="cc-desc">代码/SQL/前端规范 + 交付自检清单</div></div><div class="cc-arrow">&#8250;</div></div>';
       html += '</div>';
@@ -1384,18 +2216,20 @@ function doConnect(baseUrl, token) {
       var capture = false;
       for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
-        if (line.indexOf("##") === 0) {
+        var t = line.trim();
+        if (/^## /.test(line)) {          // 只认二级标题，### 子标题不重置采集
           capture = line.indexOf(sectionHint) >= 0;
           continue;
         }
-        if (capture && line.indexOf("- ") === 0) {
+        if (!capture) continue;
+        if (line.indexOf("- ") === 0) {
           items.push(line.slice(2).trim());
-        } else if (capture && line.indexOf("1.") === 0) {
-          items.push(line.slice(3).trim());
-        } else if (capture && line.trim() === "") {
-          continue;
-        } else if (capture && line.indexOf("-") !== 0 && line.indexOf("1.") !== 0 && line.trim() !== "") {
-          break;  // 遇到非列表内容结束
+        } else if (/^[0-9]+\./.test(line)) {
+          items.push(line.replace(/^[0-9]+\.\s*/, "").trim());
+        } else if (t === "" || t.indexOf(">") === 0 || t === "---" || /^\*\*.+\*\*$/.test(t) || /^###/.test(line)) {
+          continue;                       // 空行/引用/分隔线/加粗分组/子标题：跳过，不中断
+        } else {
+          break;                          // 正文段落：本节列表结束
         }
       }
       return items;
@@ -1407,45 +2241,1705 @@ function doConnect(baseUrl, token) {
     var procSid = "";
 
     // ===== 高保真UI页（空界面，参考业务流程布局）=====
+    // AI 开发场景消息
+    // ================= AI开发：开发计划状态机（none -> ready -> running -> done） =================
+    var aiPlan = null;
+    // 内存里的运行标记：只有本次页面生命周期内真正点过「开始吧」才会被赋值。
+    // 刷新/重启后它必然是 null —— 用来识别 localStorage 里卡死的 running 僵尸状态。
+    var aiPlanLiveId = null;
+    var aiBeatTimer = null;
+    var aiBeatIdx = 0;
+    var AI_BEATS = ["正在处理…", "还在处理，稍等一下…", "快好了…"];
+
+    function aiNL() { return String.fromCharCode(10); }
+
+    function aiPlanKey() {
+      var g = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "tdev-ai";
+      return "ai_plan_" + g;
+    }
+    function aiPlanSave() {
+      try { localStorage.setItem(aiPlanKey(), JSON.stringify(aiPlan || null)); } catch (e) {}
+    }
+    function aiPlanId(p) {
+      if (!p) return "";
+      return String(p.prj || "") + "|" + String(p.ts || p.flowSig || "") + "|" + String((p.steps || []).length);
+    }
+    function aiPlanLoad() {
+      // 僵尸复位唯一入口：进 AI开发页 / 切项目 / 刷新都会走到这里。
+      // 判据是「状态说 running 但进程内没有活体句柄」，页面重绘期间不判，避免打死刚启动的计划。
+      aiPlanHealRunning();
+      // 🔒 内存里有正在跑的计划时，绝不用 localStorage 覆盖它。
+      // 这是「第 6~9 步说完成了，突然又回到第 6 步执行中」的根因：
+      // 并发 run 各自 save，切页面触发 aiPlanLoad 拿回更早的快照（6-9 还是 todo），
+      // 下一个 run 又把它标成 doing → 一堆步骤同时「正在处理」。
+      if (aiPlan && aiPlan.status === "running" && aiPlanLiveId && aiPlanLiveId === aiPlanId(aiPlan)) {
+        return aiPlan;
+      }
+      var _prevSnap = aiPlan;
+      try { aiPlan = JSON.parse(localStorage.getItem(aiPlanKey()) || "null"); } catch (e) { aiPlan = null; }
+      // 兜底：计划是在「未选项目」状态下生成的，存在 ai_plan_tdev-ai 里；确认属于本项目就迁过来，
+      // 否则用户会以为计划丢了（生成时不选项目、之后再选，是很容易踩的顺序）。
+      if (!aiPlan && currentProject && currentProject.prjGUID) {
+        try {
+          var orphan = JSON.parse(localStorage.getItem("ai_plan_tdev-ai") || "null");
+          if (orphan && orphan.prj === currentProject.prjGUID && orphan.steps && orphan.steps.length) {
+            aiPlan = orphan;
+            aiPlanSave();
+            try { localStorage.removeItem("ai_plan_tdev-ai"); } catch (e2) {}
+          }
+        } catch (e3) {}
+      }
+      // 进度单调合并：done 只增不减。同一份计划的旧快照里已完成的步骤，
+      // 绝不能因为读到更早的 localStorage 记录又变回没做 —— 那等于把干过的活抹掉。
+      if (_prevSnap && aiPlan && aiPlan.steps && _prevSnap.steps && aiPlanId(_prevSnap) === aiPlanId(aiPlan)) {
+        aiPlan.steps.forEach(function (s, i) {
+          var old = _prevSnap.steps[i];
+          if (old && old.state === "done" && s.state !== "done") {
+            s.state = "done";
+            s.note = old.note || "已完成";
+          }
+        });
+      }
+      // 自愈：多个「正在处理」只可能是并发写坏的（单步状态机同一时刻只该有一个）。
+      // 只保留 cur 指向那一步，其余退回未开始。
+      if (aiPlan && aiPlan.steps) {
+        var _doing = aiPlan.steps.filter(function (s) { return s.state === "doing"; });
+        if (_doing.length > 1) {
+          var _keep = null;
+          for (var _qi = 0; _qi < _doing.length; _qi++) {
+            if (_doing[_qi].n === aiPlan.cur) { _keep = _doing[_qi]; break; }
+          }
+          if (!_keep) _keep = _doing[_doing.length - 1];
+          _doing.forEach(function (s) { if (s !== _keep) s.state = "todo"; });
+          console.log("[自愈] 收敛 " + _doing.length + " 个「正在处理」，只保留第 " + _keep.n + " 步");
+        }
+      }
+      // 僵尸状态恢复：status=running 但本次页面没在跑它（关过程序 / 上次没跑完 / 执行途中崩了），
+      // 否则按钮永远不出现，计划彻底锁死 —— 这是「计划末尾只剩一句正在推进」的根因。
+      if (aiPlan && aiPlan.status === "running" && aiPlanLiveId !== aiPlanId(aiPlan)) {
+        var _doneN = 0;
+        (aiPlan.steps || []).forEach(function (s) { if (s.state === "done") _doneN++; });
+        aiPlan.status = "ready";
+        aiPlan.interrupted = 1;
+        aiPlan.interruptedAt = _doneN;
+        aiPlanSave();
+      }
+      return aiPlan;
+    }
+    function aiFlowSig(files) {
+      if (!files || !files.length) return "";
+      return files.map(function (x) { return String(x).split("|")[0]; }).join(",");
+    }
+    function aiStepIcon(st) {
+      if (st === "done") return "✅";
+      if (st === "doing") return "🔄";
+      if (st === "error") return "⚠️";
+      return "⏳";
+    }
+    function aiStepText(st) {
+      if (st === "done") return "已完成";
+      if (st === "doing") return "正在处理…";
+      if (st === "error") return "出错了";
+      return "待开始";
+    }
+    function aiSetCanvas(html) {
+      var el = document.getElementById("uiCanvasBody");
+      if (el) el.innerHTML = html;
+    }
+
+    // ---- 右侧面板渲染 ----
+    // 僵尸 running 自愈：状态写着 running，但进程里根本没有活跃的 Agent。
+    // 判定依据是内存里的 AGENT_CURRENT_HANDLE，不是 localStorage 里的 status。
+    function aiPlanHealRunning() {
+      if (!aiPlan || aiPlan.status !== "running") return false;
+      if (typeof AGENT_CURRENT_HANDLE !== "undefined" && AGENT_CURRENT_HANDLE) return false;   // 真在跑，不动
+      aiPlan.status = "paused";
+      aiPlan.paused = 1;
+      aiPlanLiveId = null;
+      (aiPlan.steps || []).forEach(function (s) { if (s.state === "doing") s.state = "todo"; });
+      try { aiPlanSave(); } catch (e) {}
+      try { aiToolState("已自动复位：上一次执行没有正常结束（可以直接点「重新生成」或某一步的「执行」）", "warn"); } catch (e) {}
+      return true;
+    }
+
+    function aiRenderPlan(diag) {
+      // 僵尸复位已移到「入口」执行（aiPlanLoad：进页面 / 切项目 / 刷新各跑一次），
+      // 这里绝不能再调：重绘是高频动作，会把「刚点执行、请求还没发出」的计划误判成僵尸打死。
+      var el = document.getElementById("uiCanvasBody");
+      if (!el) return;
+      if (!aiPlan || !aiPlan.steps || !aiPlan.steps.length) { aiDetect(); return; }
+      var done = 0;
+      aiPlan.steps.forEach(function (s) { if (s.state === "done") done++; });
+      var pct = Math.round(done / aiPlan.steps.length * 100);
+      var L = [];
+      L.push('<div class="ui-plan">');
+      L.push('<div class="ui-plan-head"><div class="ui-plan-title">' + escHtml(aiPlan.title || "项目开发计划") + '</div>');
+      L.push('<div class="ui-plan-progress"><span>' + done + '/' + aiPlan.steps.length + ' 完成</span>');
+      L.push('<div class="ui-plan-bar"><div class="ui-plan-fill" style="width:' + pct + '%"></div></div></div></div>');
+      if (diag) L.push(diag);
+      L.push('<div class="ui-plan-steps" id="uiPlanSteps">');
+      // 按业务阶段分组：用户先看到几个阶段的整体进度（客户询盘 1/3），再往下看每步。
+      // 一层是 26 张卡片会淹没用户；分组后视觉上只有 7 组。
+      var _groups = [], _gmap = {};
+      aiPlan.steps.forEach(function (st) {
+        var ph = st.phase || (st.base ? "准备" : "业务功能");
+        if (!_gmap[ph]) { _gmap[ph] = { name: ph, items: [] }; _groups.push(_gmap[ph]); }
+        _gmap[ph].items.push(st);
+      });
+      var _stepRunning = (aiPlan.status === "running");
+      _groups.forEach(function (g) {
+        var gd = 0;
+        g.items.forEach(function (x) { if (x.state === "done") gd++; });
+        var gall = (gd === g.items.length);
+        L.push('<div class="ui-plan-group">');
+        L.push('<div class="ui-plan-ghead' + (gall ? ' g-done' : '') + '"><span class="ui-plan-gname">' + escHtml(g.name) + '</span>');
+        L.push('<span class="ui-plan-gcount">' + gd + '/' + g.items.length + (gall ? ' 完成' : '') + '</span></div>');
+        g.items.forEach(function (st) {
+          var state = st.state || "todo";
+          L.push('<div class="ui-plan-step ui-step-' + state + '" data-n="' + st.n + '">');
+          L.push('<span class="ui-step-state">' + aiStepIcon(state) + '</span>');
+          L.push('<div class="ui-step-main"><div class="ui-step-name">' + escHtml(st.name || ("第 " + st.n + " 步")) + '</div>');
+          if (st.desc) L.push('<div class="ui-step-desc">' + escHtml(st.desc) + '</div>');
+          if (st.note) L.push('<div class="ui-step-note">产出：' + escHtml(st.note) + '</div>');
+          L.push('</div>');
+          L.push('<span class="ui-step-status" data-role="status">' + aiStepText(state) + '</span>');
+          // 按钮下沉到每一步（卢Sir：开始/暂停/重试放步骤上，而不是只放在计划底部）
+          // 正在跑别的步骤时，其他步骤的「执行」不显示，避免看得到点得动却必然被拒。
+          if (state === "done") {
+            // 卢Sir 2026-11-09：去掉「看看」按钮（执行完不再需要对每步单独查看），只留「重做」。
+            if (!_stepRunning) L.push('<button class="ui-step-btn" data-run="' + st.n + '" title="重做这一步（会重跑一次）">重做</button>');
+          } else if (state === "doing") {
+            L.push('<button class="ui-step-btn ui-step-btn-warn" data-pause="1">暂停</button>');
+          } else if (!_stepRunning) {
+            var _runTxt = st.fix ? "重试" : "执行";
+            L.push('<button class="ui-step-btn ui-step-btn-go" data-run="' + st.n + '" title="只做这一步，做完停住">' + _runTxt + '</button>');
+            // 人工校正：磁盘上其实已经做完了、但状态被并发写坏成未完成的，点这个直接补回来
+            L.push('<button class="ui-step-btn" data-finish="' + st.n + '" title="这一步其实已经做完了？手动标为已完成">✓</button>');
+          }
+          L.push('</div>');
+        });
+        L.push('</div>');
+      });
+      L.push('</div>');
+      var _dn = 0;
+      (aiPlan.steps || []).forEach(function (s) { if (s.state === "done") _dn++; });
+      var _tn = (aiPlan.steps || []).length;
+      if (aiPlan.status === "running") {
+        var _live = (aiPlanLiveId === aiPlanId(aiPlan));
+        var _doing = aiPlan.cur || 0;
+        L.push('<div class="ui-plan-actions">');
+        if (_live) {
+          // 真在跑：只留「暂停」，其余全部禁用。连点也不会开出第二份执行。
+          L.push('<button class="btn btn-primary" disabled>执行中…</button>');
+          L.push('<button class="btn" id="aiPlanPause">暂停全部</button>');
+          L.push('<button class="btn" disabled>重新生成</button>');
+        } else {
+          L.push('<button class="btn btn-primary" id="aiPlanGo">继续执行</button>');
+          L.push('<button class="btn" id="aiPlanRegen">重新生成</button>');
+          L.push('<button class="btn" id="aiPlanReset">重置状态</button>');
+        }
+        L.push('</div>');
+        L.push('<div class="ui-plan-hint">' + (_live
+          ? ('正在做第 ' + _doing + '/' + _tn + ' 步，已完成 ' + _dn + ' 步。程序会自动接着做下一步，不用再点。')
+          : ('上次执行被中断（已完成 ' + _dn + '/' + _tn + ' 步）。点「继续执行」接着做，或点「重置状态」清掉这个标记。')) + '</div>');
+      } else if (aiPlan.status === "done") {
+        L.push('<div class="ui-plan-actions"><span class="ui-plan-hint">全部完成 🎉</span>');
+        L.push('<button class="btn" id="aiPlanRegen">重新生成计划</button></div>');
+      } else {
+        var _goTxt = (_dn > 0 || aiPlan.paused || aiPlan.interrupted) ? "一键跑完剩下的" : "开始吧（一键跑完）";
+        L.push('<div class="ui-plan-actions"><button class="btn btn-primary" id="aiPlanGo">' + _goTxt + '</button>');
+        L.push('<button class="btn" id="aiPlanRegen">重新生成</button></div>');
+        if (_dn > 0) {
+          L.push('<div class="ui-plan-hint">已完成 ' + _dn + '/' + _tn + ' 步' + (aiPlan.paused ? '，上次是暂停的' : '') +
+            '。点「继续执行」从下一未完成步骤接着做，做过的不会重做。</div>');
+        }
+      }
+      // 数据结构文档入口：任何状态都能打开看/改（业务流程与代码之间的桥，要能随时查）
+      L.push('<div class="ui-plan-actions" style="margin-top:10px">');
+      L.push('<button class="btn btn-sm" id="aiPlanDataModel" title="查看/编辑 doc/data-model.md">📐 数据结构文档</button>');
+      L.push('</div>');
+      el.innerHTML = L.join("");
+      var dmBtn = document.getElementById("aiPlanDataModel");
+      if (dmBtn) dmBtn.onclick = aiViewDataModel;
+      var go = document.getElementById("aiPlanGo");
+      if (go) go.onclick = aiPlanStart;
+      var pz = document.getElementById("aiPlanPause");
+      if (pz) pz.onclick = aiPlanPause;
+      var rs = document.getElementById("aiPlanReset");
+      if (rs) rs.onclick = function () {
+        var dn = 0;
+        if (aiPlan) {
+          (aiPlan.steps || []).forEach(function (s) { if (s.state === "done") dn++; });
+          aiPlan.status = "ready";
+          aiPlan.interrupted = 1;
+          aiPlan.interruptedAt = dn;
+          aiPlanLiveId = null;
+          aiPlanSave();
+        }
+        aiRenderPlan();
+      };
+      var rg = document.getElementById("aiPlanRegen");
+      if (rg) rg.onclick = aiAskRegen;   // 有进度时先弹确认，讲清保留规则
+      // 单步执行 / 单步暂停（按钮下沉后的入口）
+      Array.prototype.forEach.call(el.querySelectorAll("[data-run]"), function (b) {
+        b.onclick = function () { aiPlanRunStep(parseInt(b.getAttribute("data-run"), 10)); };
+      });
+      Array.prototype.forEach.call(el.querySelectorAll("[data-pause]"), function (b) {
+        b.onclick = function () { aiPlanPause(); };
+      });
+      Array.prototype.forEach.call(el.querySelectorAll("[data-finish]"), function (b) {
+        b.onclick = function () { aiPlanMarkDone(parseInt(b.getAttribute("data-finish"), 10)); };
+      });
+    }
+
+    // ---- 进页面检测：只读本地，不调用模型 ----
+    function aiDetect() {
+      var el = document.getElementById("uiCanvasBody");
+      if (!el) return;
+      // 竞态防护：只认最近一次检测，旧项目的结果晚到直接丢弃
+      var token = (currentProject && currentProject.prjGUID) || "";
+      aiDetect.token = token;
+      if (!currentProject) { aiSetCanvas('<div class="ui-plan-empty">请先在「基础信息」选择或新建项目</div>'); return; }
+      if (!window.__TAURI__ || !window.__TAURI__.core) { aiSetCanvas('<div class="ui-plan-empty">Tauri 不可用</div>'); return; }
+      aiSetCanvas('<div class="ui-plan-empty">正在检查项目状态…</div>');
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function (v) {
+        if (aiDetect.token !== token) return null;
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch (e) {}
+        if (!ws) { aiSetCanvas('<div class="ui-plan-empty">还没设置工作路径，请先到「项目空间」设置</div>'); return null; }
+        aiDetect.ws = ws;
+        var p1 = window.__TAURI__.core.invoke("process_list", { prjName: currentProject.prjName, workspace: ws });
+        var p2 = window.__TAURI__.core.invoke("constr_context", { prjName: currentProject.prjName, workspace: ws });
+        return Promise.all([p1, p2]).then(function (r) {
+          if (aiDetect.token !== token) return;
+          var files = r[0] || [];
+          var ctx = r[1] || {};
+          // 目录骨架先建好：公共运行时进 Public，项目内容全在项目目录里。Agent 只往里填，不自己找地方放。
+          // 不阻塞渲染 —— 建空目录是毫秒级的事。
+          try {
+            window.__TAURI__.core.invoke("project_ensure_dirs", { prjName: currentProject.prjName, workspace: aiDetect.ws })
+              .then(function (d) { aiDetect.dirs = d || null; })
+              .catch(function () {});
+          } catch (e) {}
+          var sig = aiFlowSig(files);
+          var hasFlow = !!(files && files.length);
+          var okRules = !!(ctx.ironlaws && ctx.ironlaws.length > 50);
+          aiPlanLoad();
+          var changed = !!(aiPlan && aiPlan.flowSig && sig && aiPlan.flowSig !== sig);
+          aiDetect.sig = sig;
+          // 前置条件概览：计划在不在都显示，用户一眼知道流程 / 约定是否到位
+          var diag = [];
+          diag.push('<div class="ui-plan-note">');
+          diag.push('项目：' + escHtml(currentProject.prjName) + '<br>');
+          diag.push('业务流程：' + (hasFlow ? '已就绪（' + escHtml(String(files[0]).split("|")[0]) + '）' : '还没梳理，建议先到「业务流程」梳理一遍'));
+          diag.push('<br>开发约定：' + (okRules ? '已就绪' : '未找到，将使用默认约定'));
+          diag.push('</div>');
+          if (changed) diag.push('<div class="ui-plan-warn">业务流程有更新，建议重新生成计划（已完成的步骤会按名称保留，名称变了的要重做）</div>');
+          // 关键修复：有计划就直接按计划渲染。切项目 / 刷新 / 重进页面都必须能看见上次生成的计划，
+          // 不能只画一个「开始吧」按钮把 26 步列表盖掉。
+          if (aiPlan && aiPlan.steps && aiPlan.steps.length) {
+            aiRenderPlan(diag.join(""));
+            return;
+          }
+          var L = [];
+          L.push('<div class="ui-plan">');
+          L.push('<div class="ui-plan-head"><div class="ui-plan-title">项目开发计划</div>');
+          L.push('<div class="ui-plan-progress"><span>尚未开始</span><div class="ui-plan-bar"><div class="ui-plan-fill" style="width:0%"></div></div></div></div>');
+          L.push(diag.join(""));
+          L.push('<div class="ui-plan-actions"><button class="btn btn-primary" id="aiPlanGen">生成开发计划</button></div>');
+          L.push('</div>');
+          el.innerHTML = L.join("");
+          var g1 = document.getElementById("aiPlanGen");
+          if (g1) g1.onclick = aiGenPlan;
+        });
+      }).catch(function (e) {
+        aiSetCanvas('<div class="ui-plan-empty">检查失败：' + escHtml(String(e)) + '</div>');
+      });
+    }
+
+    // ---- 读取业务流程摘要 ----
+    // ---- 读完整业务流程（生成计划专用：全局视野，不做摘要）----
+    // 生成计划是低频操作（一个项目通常只做几次），整份流程连属性一起交给 AI 更划算：
+    // 摘要只留骨架会丢细节，AI 只能按阶段猜，计划容易空泛、漏步骤。
+    // 实测：单个项目 83 节点 / 含属性 ≈ 3900 字符 ≈ 1950 tokens，可接受。
+    var AI_FLOW_LIMIT = 24000;  // 字符上限，防超大流程撑爆上下文
+    function aiFlowFull(cb) {
+      var ws = aiDetect.ws || "";
+      var NL = aiNL();
+      if (!ws || !currentProject) { cb(null); return; }
+      window.__TAURI__.core.invoke("process_list", { prjName: currentProject.prjName, workspace: ws }).then(function (files) {
+        if (!files || !files.length) { cb(null); return; }
+        var names = [];
+        for (var i = 0; i < files.length; i++) names.push(String(files[i]).split("|")[0]);
+        var jobs = [];
+        var mk = function (fn) {
+          jobs.push(window.__TAURI__.core.invoke("process_load", { prjName: currentProject.prjName, workspace: ws, fileName: fn })
+            .then(function (c) { return { fn: fn, raw: String(c || "") }; })
+            .catch(function () { return null; }));
+        };
+        for (var k = 0; k < names.length; k++) mk(names[k]);
+        return Promise.all(jobs).then(function (res) {
+          var blocks = [], nodes = 0, mains = 0;
+          for (var r = 0; r < res.length; r++) {
+            var it = res[r];
+            if (!it) continue;
+            var a = it.raw.indexOf("{"), b = it.raw.lastIndexOf("}");
+            if (a < 0 || b <= a) continue;
+            var jj = null;
+            try { jj = JSON.parse(it.raw.slice(a, b + 1)); } catch (e) { continue; }
+            if (!jj || !jj.steps) continue;
+            var lines = [];
+            if (jj.flow_name) lines.push("流程名称：" + jj.flow_name);
+            var walk = function (arr, depth) {
+              if (!arr) return;
+              for (var x = 0; x < arr.length; x++) {
+                var nd = arr[x];
+                var nm = (nd && nd.name) ? nd.name : String(nd || "");
+                var pad = "";
+                for (var q = 0; q < depth; q++) pad += "  ";
+                lines.push(pad + "- " + nm);
+                nodes++;
+                if (depth === 0) mains++;
+                var pr = (nd && nd.props) ? nd.props : {};
+                var pf = [];
+                if (pr.formName) pf.push("表单：" + pr.formName);
+                if (pr.indexField) pf.push("索引字段：" + pr.indexField);
+                if (pr.input) pf.push("输入：" + pr.input);
+                if (pr.logic) pf.push("处理逻辑：" + pr.logic);
+                if (pr.output) pf.push("产出：" + pr.output);
+                if (pf.length) lines.push(pad + "  · " + pf.join("；"));
+                walk(nd && nd.children, depth + 1);
+              }
+            };
+            walk(jj.steps, 0);
+            blocks.push((res.length > 1 ? "【文件：" + it.fn + "】" + NL : "") + lines.join(NL));
+          }
+          var text = blocks.join(NL + NL);
+          var cut = false;
+          if (text.length > AI_FLOW_LIMIT) { text = text.slice(0, AI_FLOW_LIMIT); cut = true; }
+          cb({ text: text, nodes: nodes, mains: mains, cut: cut });
+        });
+      }).catch(function () { cb(null); });
+    }
+
+    // 计划前 6 步固定：地基 + 骨架。**不交给模型生成** —— 模型每次都会漏掉环境搭建，
+    // 而装数据库/装服务恰恰最耗时，漏了用户在界面上看不到任何变化，会以为程序假死。
+    //
+    // **技术栈不写死**：文案由项目约束 AGENTS.md 第 2 章「技术栈（硬约束）」表格驱动
+    // （Rust 侧 constr_context 解析成 stack 字段）。换成 .NET + MS SQL 模板时只改 AGENTS.md，
+    // 这里自动变成装 SQL Server / IIS；取不到技术栈就退成通用说法，绝不硬编码某个产品。
+    function aiShortStack(v, fallback) {
+      if (!v) return fallback || "";
+      var t = String(v).split(/[，,（(]/)[0].trim();
+      if (t.length > 18) t = t.split(/\s+/).slice(0, 2).join(" ");
+      return t || (fallback || "");
+    }
+    function aiBuildBaseSteps() {
+      var st = (AGENT_CONST && AGENT_CONST.stack) || {};
+      var db = aiShortStack(st.database, "");
+      var srv = aiShortStack(st.server, "");
+      var be = aiShortStack(st.backend, "");
+      return [
+        { name: "准备数据库", desc: "装好 " + (db || "数据库") + "，建好业务库和账号。这步要几分钟，做完后程序就能存数据了。" },
+        { name: "准备运行环境", desc: "装好 " + (srv || "程序运行需要的服务") + "。这步也要几分钟，做完后程序就能启动。" },
+        { name: "检查地基是否稳", desc: "确认数据库连得上、服务起得来、目录都齐了。地基不稳，后面全白做。" },
+        { name: "搭好项目骨架", desc: "按 " + (be || "既定技术栈") + " 建好分层目录、启动入口和公共配置，程序先有个能跑起来的空架子。" },
+        { name: "做用户注册和登录", desc: "建用户表，做完能注册、能登录，登录状态能一直保持。" },
+        { name: "做权限校验", desc: "做完后不同角色能看到的菜单、能改的东西都不一样。" },
+        { name: "设计数据结构", desc: "站在业务流程全局，先把询盘单、SKU、目录册这些对象之间是什么关系、各自有哪些表哪些字段定清楚，落成 doc/data-model.md。做完能一眼看到整套数据怎么长、谁引用谁，后面所有建表和代码都照它来。" }
+      ];
+    }
+
+    // ---- 生成计划（用户点击才调用模型）----
+    function aiGenPlan(retry) {
+      if (!currentProject) { aiAddMsg("请先在「基础信息」选择项目", false); return; }
+      // 正在执行时不允许重新生成：新计划会立刻被正在跑的 Agent 打乱，而且那一轮还在烧 token
+      if (aiPlan && aiPlan.status === "running") {
+        aiAddMsg("现在正在执行第 " + (aiPlan.cur || "?") + " 步，等它结束或点「暂停全部」后再重新生成。", false);
+        return;
+      }
+      if (!window.__TAURI__ || !window.__TAURI__.core) { aiAddMsg("Tauri 不可用", false); return; }
+      if (!AGENT_CONST && !retry) {
+        // 地基 6 步的文案来自项目技术栈（AGENTS.md 第 2 章），先读出来再生成
+        agentConstEnsure().then(function () { aiGenPlan(true); }).catch(function () { aiGenPlan(true); });
+        return;
+      }
+      aiAddMsg("帮我生成开发计划", true);
+      aiSetCanvas('<div class="ui-plan-empty">正在读业务流程，稍等…</div>');
+      aiFlowFull(function (f) {
+        var L = [];
+        L.push("请为当前项目生成一份开发计划。");
+        L.push("");
+        L.push("【项目】" + currentProject.prjName);
+        L.push("");
+        if (f && f.text) {
+          L.push("【完整业务流程】共 " + f.nodes + " 个节点、" + f.mains + " 个主阶段" + (f.cut ? "（流程过长已截断）" : ""));
+          L.push(f.text);
+        } else {
+          L.push("【业务流程】（还没有流程文档，请按项目名称合理推断一个最小可用的业务闭环）");
+        }
+        L.push("");
+        L.push("【只要业务步骤 —— 前面的地基和骨架已经定好，不用你生成】");
+        var _B = aiBuildBaseSteps();   // 必须先声明再使用：放到 push 后面会因 _B 未定义抛 TypeError，
+                                       // 回调中断，界面永远停在「正在读业务流程」，请求根本发不出去
+        L.push("这份计划的第 1 到 " + _B.length + " 步是固定的：");
+        for (var _bi = 0; _bi < _B.length; _bi++) {
+          L.push("  " + (_bi + 1) + " " + _B[_bi].name + " —— " + _B[_bi].desc);
+        }
+        L.push("");
+        L.push("你只负责从第 " + (_B.length + 1) + " 步开始的业务步骤：按上面【完整业务流程】的主阶段排。");
+        L.push("");
+        L.push("【怎么拆步骤 —— 这段最重要】");
+        L.push("按每个主阶段下面的【二级节点】拆，一个二级节点 = 一步。不要按主阶段拆，主阶段只是分组名。");
+        L.push("例：主阶段「客户询盘」下面有「需求承接 / 制作产品目录册 / 交付目录册」3 个二级节点，这就是 3 步，不是 1 步。");
+        L.push("为什么这么拆：一步要做的事必须能在一两个小时内做完、做完能在界面上点开看到东西。");
+        L.push("按主阶段一步，等于把 3 个功能塞进一步，做半天看不到结果，用户会以为程序卡死了。");
+        L.push("");
+        L.push("【硬性要求】");
+        L.push("1. 业务步骤 6 到 20 步：绝大多数情况一个二级节点一步");
+        L.push("2. 同一主阶段下内容几乎一样的二级节点可以合并，但一步最多合并 2 个");
+        L.push("3. 某个主阶段下面没写二级节点，就按这个主阶段的核心功能给 1 到 2 步，不要漏掉这个主阶段");
+        L.push("4. phase 字段填这一步所属的主阶段原名，一个字都别改，用来分组");
+        L.push("5. name 不超过 12 个字，用业务人员的话说清这一步做什么");
+        L.push("6. desc 说清做完之后界面上能点什么、能看到什么，让人一听就知道能用了什么");
+        L.push("7. 不要写装数据库、装服务、搭骨架、登录、权限这类内容，前面已经做过了");
+        L.push("8. 不准出现这些词：编译、依赖、构建、接口、仓库、端口、部署、安装包");
+        L.push("9. 每一步必须带 node 字段：填这一步对应的二级节点，写成「主阶段名/二级节点名」，从上面的业务流程里原样抄，一个字都别改，也不许自己编。");
+        L.push("10. 严格只输出下面这个格式，前后不要加任何解释文字：");
+        L.push("[[PLAN]]");
+        L.push('[{"phase":"主阶段原名","name":"说清做什么","desc":"说清做完能看到什么","node":"主阶段名/二级节点名"}]');
+        L.push("[[/PLAN]]");
+        agentRun("aiCode", L.join(aiNL()), {
+          fresh: true,  // 一次性会话：流程全文只进这一次上下文，用完即弃，不撑大日常开发会话
+          onDone: function (full) { aiParsePlan(full); },
+          onError: function (msg) { aiSetCanvas('<div class="ui-plan-empty">生成计划失败：' + escHtml(String(msg).slice(0, 200)) + '</div>'); }
+        }).catch(function () {});
+      });
+    }
+
+    // ---- 解析计划 ----
+    // 重新生成计划时，把旧计划里已完成的步骤继承过来。
+    // 病根：aiParsePlan 直接把 aiPlan 换成一个全新的、所有步骤都是 todo 的对象，
+    // 而界面上还写着「已完成的进度不会清零」—— 承诺和实现不符，用户重新生成一次进度全没了。
+    // 匹配方式：步骤名归一化后精确比对（地基 6 步是固定文案，必然命中；
+    // 业务步骤名称没变就命中，变了就退回未开始，并在消息里说清楚）。
+    function aiPlanNormName(s) {
+      return String(s || "").replace(/[\s\u3000]/g, "").replace(/[，。、：:；;（）()【】\[\]·—\-]/g, "");
+    }
+    function aiPlanInheritDone(newSteps, oldSteps) {
+      var res = { kept: 0, total: 0 };
+      if (!newSteps || !newSteps.length || !oldSteps || !oldSteps.length) return res;
+      var oldDone = [];
+      for (var i = 0; i < oldSteps.length; i++) { if (oldSteps[i].state === "done") oldDone.push(oldSteps[i]); }
+      res.total = oldDone.length;
+      if (!oldDone.length) return res;
+
+      // 第一轮：精确匹配（归一化后完全相等）。地基 6 步文案固定，必然命中。
+      var leftover = [];
+      for (var a = 0; a < newSteps.length; a++) {
+        var nn = aiPlanNormName(newSteps[a].name);
+        var hit = -1;
+        if (nn) {
+          for (var b = 0; b < oldDone.length; b++) {
+            if (aiPlanNormName(oldDone[b].name) === nn) { hit = b; break; }
+          }
+        }
+        if (hit >= 0) {
+          newSteps[a].state = "done";
+          newSteps[a].note = oldDone[hit].note || "已完成";
+          res.kept++;
+          oldDone.splice(hit, 1);
+        } else {
+          leftover.push(newSteps[a]);
+        }
+      }
+
+      // 第二轮：包含匹配。模型重新生成时步骤名常微调（「建询盘单」→「建询盘单与状态流转」），
+      // 精确匹配就漏了。约束三条防误配：短名至少 4 字、长度差 ≤ 6、取差最小的那个。
+      for (var c = 0; c < leftover.length && oldDone.length; c++) {
+        var nc = aiPlanNormName(leftover[c].name);
+        if (nc.length < 4) continue;
+        var best = -1, bestDiff = 99;
+        for (var d = 0; d < oldDone.length; d++) {
+          var od = aiPlanNormName(oldDone[d].name);
+          if (od.length < 4) continue;
+          if (nc.indexOf(od) < 0 && od.indexOf(nc) < 0) continue;
+          var diff = Math.abs(nc.length - od.length);
+          if (diff <= 6 && diff < bestDiff) { best = d; bestDiff = diff; }
+        }
+        if (best >= 0) {
+          leftover[c].state = "done";
+          leftover[c].note = oldDone[best].note || "已完成";
+          res.kept++;
+          oldDone.splice(best, 1);
+        }
+      }
+      return res;
+    }
+
+    function aiParsePlan(full) {
+      var t = String(full || "");
+      var a = t.indexOf("[[PLAN]]");
+      var b = t.indexOf("[[/PLAN]]");
+      var body = "";
+      if (a >= 0) {
+        body = (b > a) ? t.slice(a + 8, b) : t.slice(a + 8);
+      } else {
+        var s1 = t.indexOf("[");
+        var s2 = t.lastIndexOf("]");
+        if (s1 >= 0 && s2 > s1) body = t.slice(s1, s2 + 1);
+      }
+      var arr = null;
+      try { arr = JSON.parse(body.trim()); } catch (e) { arr = null; }
+      if (!arr) {
+        aiSetCanvas('<div class="ui-plan-empty">计划格式没能看懂，请再点一次「生成开发计划」</div>');
+        return;
+      }
+      // 前 6 步固定（地基 + 骨架），模型只负责后面的业务步骤
+      var steps = [];
+      var BASE = aiBuildBaseSteps();
+      for (var i = 0; i < BASE.length; i++) {
+        steps.push({
+          n: i + 1,
+          name: BASE[i].name,
+          desc: BASE[i].desc,
+          phase: "准备",
+          state: "todo",
+          note: "",
+          base: true
+        });
+      }
+      var bizCount = 0;
+      var bizRefs = [];   // A1：留引用，稍后把该步对应的流程细节异步挂上去
+      // 业务步骤 = 流程里的二级节点，一个节点一步：一步一两个小时、做完界面上能看到东西。
+      // 上限 20：TestProject 这种 7 主阶段 / 20 二级节点的流程刚好放得下，再多就要模型合并。
+      for (var k = 0; k < arr.length && k < 20; k++) {
+        var o = arr[k] || {};
+        var _sp = {
+          n: steps.length + 1,
+          phase: String(o.phase || o.stage || "").trim() || "业务功能",
+          name: String(o.name || o.title || ("第 " + (k + 1) + " 个业务功能")),
+          desc: String(o.desc || o.description || ""),
+          node: String(o.node || o.flowNode || "").trim(),
+          detail: "",
+          state: "todo",
+          note: ""
+        };
+        steps.push(_sp);
+        bizRefs.push(_sp);
+        bizCount++;
+      }
+      // A1：按 node 从流程文件取出该步的业务细节，执行时随提示词下发，Agent 不用自己翻文件
+      if (bizRefs.length) {
+        aiFlowNodes(function (trees) {
+          var filled = 0;
+          for (var q = 0; q < bizRefs.length; q++) {
+            var sp = bizRefs[q];
+            if (!sp.node) continue;
+            var d = aiStepDetail(trees, sp.node);
+            if (d) { sp.detail = d; filled++; }
+          }
+          console.log("[A1] 业务细节挂载 " + filled + "/" + bizRefs.length + " 步");
+          if (filled && aiPlan) { aiPlanSave(); aiRenderPlan(); }
+        });
+      }
+      // 覆盖之前先把旧计划的完成状态继承过来（不继承的话重新生成 = 进度清零）
+      var _oldSteps = (aiPlan && aiPlan.steps) ? aiPlan.steps : [];
+
+      // 用户选了「保留已完成」：前 N 步直接沿用旧对象，名称/说明/进度一个字节都不改。
+      // 为什么按序号而不是按名称：计划是顺序执行的，做完的必然是前 N 步；
+      // 模型重排时步骤名常微调（「建询盘单」→「询盘单登记与状态流转」），按名称匹配会漏掉一半。
+      var _keptByUser = 0;
+      if (aiPlanKeepDone > 0) {
+        // 逐位判断，不找连续前缀。
+        // 卢Sir 的实际场景：1-6 已完成、7 没做、8/9/10 手工标了完成 ——
+        // 如果按「连续前缀」保留，第 7 步一断，8/9/10 就被丢掉了。
+        // 规则：该位置旧计划是 done 就用旧的（原样不动），否则用新生成的。
+        var _out = [];
+        var _maxN = Math.max(steps.length, _oldSteps.length);
+        for (var _k = 0; _k < _maxN; _k++) {
+          var _o = _oldSteps[_k];
+          var _nw = steps[_k];
+          if (_o && _o.state === "done") {
+            _out.push({
+              n: _out.length + 1, name: _o.name, desc: _o.desc || "",
+              phase: _o.phase || (_nw && _nw.phase) || "",
+              node: _o.node || "", detail: _o.detail || "",
+              state: "done", note: _o.note || "已完成", base: !!_o.base
+            });
+            _keptByUser++;
+          } else if (_nw) {
+            _out.push(_nw);
+          }
+        }
+        steps = _out;
+        for (var _ri = 0; _ri < steps.length; _ri++) steps[_ri].n = _ri + 1;
+      }
+      aiPlanKeepDone = 0;   // 用完即清，下一次重新生成默认不保留
+
+      var _inh = aiPlanInheritDone(steps, _oldSteps);
+      aiPlan = {
+        title: "项目开发计划",
+        steps: steps,
+        status: "ready",
+        ts: Date.now(),
+        flowSig: aiDetect.sig || "",
+        prj: currentProject.prjGUID
+      };
+      aiPlanSave();
+      aiRenderPlan();
+      if (_keptByUser > 0) {
+        aiAddMsg("重新生成好了。" + _keptByUser + " 步已完成的原样保留（不重做），其余 " +
+                 (steps.length - _keptByUser) + " 步是新生成的。", false);
+      } else if (_inh.total) {
+        aiAddMsg("重新生成好了。原有 " + _inh.total + " 个已完成步骤，保留了 " + _inh.kept + " 个（按步骤名匹配）。" +
+          (_inh.kept < _inh.total
+            ? "有 " + (_inh.total - _inh.kept) + " 个步骤名称变了，已回到未开始，需要重做。"
+            : "做过的不会重做。"), false);
+      } else if (!bizCount) {
+        aiAddMsg("业务部分没生成出来，先把地基和骨架这几步给你。可以再点一次「生成开发计划」。", false);
+      } else {
+        aiAddMsg("计划列好了：前 6 步是地基和骨架，后面 " + bizCount + " 步是业务功能。没问题就点「开始吧」。", false);
+      }
+    }
+
+    // 当前项目在磁盘上的绝对路径（执行指令和真实请求必须用同一个，避免两处算法漂移）
+    function aiProjectDir() {
+      var ws = (aiDetect && aiDetect.ws) || "";
+      var pj = (typeof currentProject !== "undefined" && currentProject && currentProject.prjName)
+        ? String(currentProject.prjName) : "";
+      if (!ws || !pj) return "";
+      var root = ws;
+      while (root.length > 1 && (root.charAt(root.length - 1) === "/" || root.charAt(root.length - 1) === "\\")) {
+        root = root.slice(0, -1);
+      }
+      var sep = (root.indexOf("\\") >= 0) ? "\\" : "/";
+      return root + sep + pj;
+    }
+
+    // 盘符路径转 WSL 路径：E:\a\b  ->  /mnt/e/a/b
+    // 本机 terminal 工具跑在 WSL 里，直接把 E:\ 丢进去会「文件不存在」，
+    // 这是 Agent 反复重试同一条命令、最后 180 秒超时的根源。
+    // Git Bash / MSYS 的盘符写法：E:\x -> /e/x（WSL 是 /mnt/e/x，两者不通用）
+    function toMsysPath(p) {
+      var s = String(p || "").replace(/\\/g, "/");
+      var m = s.match(/^([A-Za-z]):\/(.*)$/);
+      if (m) return "/" + m[1].toLowerCase() + "/" + m[2];
+      return s;
+    }
+
+    function toWslPath(p) {
+      var s = String(p || "");
+      var m = /^([A-Za-z]):[\\\/]/.exec(s);
+      if (!m) return s;
+      return "/mnt/" + m[1].toLowerCase() + "/" + s.slice(3).replace(/\\/g, "/");
+    }
+
+    // ---- 开始执行 ----
+    // ---- 计划执行：一次 run 只做一步，进度由程序掌握 ----
+    // 以前靠 Agent 自己输出 [[STEP_START:n]] 上报进度，模型跑长了就漏标、错标，
+    // 结果聊天说第 9 步做完了、卡片还停在第 6 步。现在程序自己知道在第几步，
+    // Agent 只负责「做好这一步」，状态再也不会对不上。
+    function aiPlanStart() {
+      if (!aiPlan || !aiPlan.steps || !aiPlan.steps.length) return;
+      if (aiPlan.status === "running") return;   // 防重入：连点也只跑一份
+      // 清掉上次中断残留的 doing：以前靠 Agent 上报，会出现第 6 步和第 8 步同时「正在处理」。
+      // 现在同一时间只允许一步在做，由 aiPlanStepNext 自己设置。
+      aiPlan.steps.forEach(function (s) { if (s.state === "doing") s.state = "todo"; });
+      aiPlan.stepMode = 0;      // 一键跑完 = 连续模式
+      aiPlan.target = 0;
+      aiPlan.paused = 0;
+      aiPlan.status = "running";
+      aiPlanSave(); aiRenderPlan();
+      aiToolClear();
+      aiToolState("准备开始…", "on");
+      aiWatchStart();
+      aiAddMsg("开始吧", true);
+      aiPlanStepNext();
+    }
+
+    // 单独执行某一步（按钮下沉到步骤上）：只跑这一步，跑完停住不往下走。
+    // 已完成的步骤点「重做」也走这里 —— 先把状态退回未完成再跑。
+    function aiPlanRunStep(n) {
+      if (!aiPlan || !aiPlan.steps || !aiPlan.steps.length) return;
+      if (aiPlan.status === "running") {
+        aiAddMsg("现在有一步正在跑（第 " + (aiPlan.cur || "?") + " 步），等它结束，或先点那一步的「暂停」。", false);
+        return;
+      }
+      var st = aiPlan.steps[n - 1];
+      if (!st) return;
+      if (AGENT_BUSY) { agentBusyCheck("aiCode"); return; }
+      if (st.state === "done") { st.state = "todo"; st.note = ""; }
+      st.fix = 0;
+      st.fixViols = null;
+      aiPlan.stepMode = 1;
+      aiPlan.target = n;
+      aiPlan.cur = n;
+      aiPlan.paused = 0;
+      aiPlan.interrupted = 0;
+      aiPlan.status = "running";
+      aiPlanLiveId = aiPlanId(aiPlan);
+      aiPlanSave(); aiRenderPlan();
+      aiToolClear();
+      aiToolState("单步执行：第 " + n + " 步", "on");
+      aiToolLog("", "▶ 单步执行第 " + n + " 步：" + st.name);
+      aiWatchStart();
+      aiAddMsg("单步执行第 " + n + " 步：" + st.name, true);
+      aiPlanStepNext();
+    }
+
+    // 手动把某一步标为已完成（状态被写坏时的人工校正入口）
+    function aiPlanMarkDone(n) {
+      if (!aiPlan) return;
+      var st = aiPlan.steps[n - 1];
+      if (!st) return;
+      if (st.state === "done") return;
+      st.state = "done";
+      st.note = st.note || "手动确认完成";
+      st.fix = 0;
+      st.fixViols = null;
+      aiPlanSave(); aiRenderPlan();
+      aiToolLog("ok", "✓ 第 " + n + " 步手动标为完成");
+      aiAddMsg("第 " + n + " 步已手动标为完成（" + aiPlanDoneCount() + "/" + aiPlan.steps.length + "）。", false);
+    }
+
+    function aiPlanDoneCount() {
+      var c = 0;
+      (aiPlan.steps || []).forEach(function (s) { if (s.state === "done") c++; });
+      return c;
+    }
+
+    function aiPlanCur() {
+      if (!aiPlan || !aiPlan.steps) return null;
+      // 单步模式：只认指定那一步（卢Sir：按钮下沉到步骤上，能单独执行某一步）
+      if (aiPlan.stepMode && aiPlan.target) {
+        var t = aiPlan.steps[aiPlan.target - 1];
+        if (t && t.state !== "done") return t;
+        return null;
+      }
+      for (var i = 0; i < aiPlan.steps.length; i++) {
+        if (aiPlan.steps[i].state !== "done") return aiPlan.steps[i];
+      }
+      return null;
+    }
+
+    function aiPlanStepPrompt(st) {
+      var L = [];
+      var total = aiPlan.steps.length;
+      L.push("现在只做开发计划的第 " + st.n + " 步（共 " + total + " 步），不要做后面任何一步。");
+      L.push("");
+      L.push("【本步】" + st.name);
+      if (st.desc) L.push("说明：" + st.desc);
+      if (st.detail) {
+        L.push("业务细节（照这个做，不要自行发挥）：");
+        String(st.detail).split(String.fromCharCode(10)).forEach(function (dl) { L.push("  " + dl); });
+      }
+      // 第 7 步「设计数据结构」专属方法论：只在一步出现，约 900 字符。
+      // 卢Sir 要求「AI 先站在业务流程全局把数据结构想清楚，再动手写代码」——
+      // 这一步的产物是 doc/data-model.md，后面建表、写 DAO 全照它来。
+      if (String(st.name || "").indexOf("设计数据结构") >= 0) {
+        L.push("");
+        L.push("【这一步只做数据结构设计：只出文档，不写一行代码】");
+        L.push("先通读上面的完整业务流程，按下面五件事依次想清楚，结论全部写进 doc/data-model.md。");
+        L.push("");
+        L.push("一、找出业务对象");
+        L.push("  判别标准：有独立生命周期、需要单独列表/详情的才算一个对象。");
+        L.push("  典型：询盘单、询盘产品行、SKU、产品目录册、样品采购单、样品档案、报价单、销售订单、采购单、物流单。");
+        L.push("");
+        L.push("二、定关系 —— 下面每一对都必须明确回答，不许含糊带过：");
+        L.push("  · 询盘单 ↔ 询盘产品行：一个询盘单下有几行？客户当初提的「要什么」记在哪张表？");
+        L.push("  · 询盘产品行 ↔ SKU：同一张表还是两张表？客户的需求 → 寻源后定下的具体货，中间靠什么连起来？");
+        L.push("      （这是本项目最容易搞混的一处，必须写清是两层还是一层，以及怎么从需求走到 SKU）");
+        L.push("  · SKU ↔ 产品目录册：一个 SKU 只能进一个目录册吗？同一个 SKU 进多个目录册怎么算？");
+        L.push("  · 目录册 ↔ 客户：一个客户能有几本目录册？重新生成算新版本还是覆盖旧版？");
+        L.push("  · 样品采购单 / 报价单 / 销售订单 / 采购单：金额和数量记在单头还是行上？父子怎么串？");
+        L.push("");
+        L.push("三、定字段与约束：主键、业务编号规则（如 CUS20261106-001）、必填项、唯一约束、状态枚举及流转；");
+        L.push("  四尾字段 id / created_at / created_by / org_id 必须齐。");
+        L.push("");
+        L.push("四、快照还是引用（最容易埋雷）：凡是发给客户或供应商、需要留档的单据（目录册 / 报价单 / 订单），");
+        L.push("  一律用复制快照，不许按 id 实时查 —— 否则改一次价格，历史单据全跟着变。每张这类单据都要写明选哪种。");
+        L.push("");
+        L.push("五、落文档 doc/data-model.md，必须含四节：");
+        L.push("  ① 业务对象清单（名称 / 说明 / 生命周期）");
+        L.push("  ② 关系说明（每个一对一 / 一对多 / 多对多都写清外键落在哪张表）");
+        L.push("  ③ 每张表的字段（字段名 / 类型 / 约束 / 说明）");
+        L.push("  ④ 关键设计决策（每条写：问题 → 选择 → 为什么不选另一个）");
+        L.push("");
+        L.push("交活前自查：每个一对多 / 多对多都写明了；每张对外单据都定了快照还是引用；四尾字段齐全；");
+        L.push("文档写完后它就是后续所有步骤的唯一依据，后面建表、写 DAO 一律照它，发现不一致先改文档再改代码。");
+      }
+      L.push("");
+      var doneNames = [];
+      aiPlan.steps.forEach(function (s) { if (s.state === "done") doneNames.push(s.n + ". " + s.name); });
+      if (doneNames.length) {
+        L.push("【已经做完的，不要重做】" + doneNames.join("；"));
+        L.push("");
+      }
+      var nextNames = [];
+      aiPlan.steps.forEach(function (s) { if (s.n > st.n) nextNames.push(s.n + "." + s.name); });
+      if (nextNames.length) {
+        var _n3 = nextNames.slice(0, 3).join("；");
+        L.push("【后面还有 " + nextNames.length + " 步（" + _n3 + (nextNames.length > 3 ? " 等" : "") + "），这一步一步来，不要碰】");
+        L.push("");
+      }
+      var _ws = (aiDetect && aiDetect.ws) || "";
+      var _prj = currentProject ? String(currentProject.prjName || "") : "";
+      if (_ws && _prj) {
+        var _sep = (_ws.indexOf("\\") >= 0) ? "\\" : "/";
+        var _root = _ws.replace(/[\/\\]+$/, "");
+        var _pd = aiProjectDir() || (_root + _sep + _prj);
+        var _pub = _root + _sep + "Public";
+        var _dbn = "tdev_" + _prj.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+        L.push("【工作目录】项目目录 " + _pd + "；公共目录 " + _pub + "；本项目库名 " + _dbn);
+        L.push("WSL 写法：" + toWslPath(_pd) + " 和 " + toWslPath(_pub));
+        L.push("");
+      }
+      if (st.n === 1) {
+        L.push("【开工前先交作业，答不完不许动手】");
+        L.push("① 本项目前端、后端、服务器、数据库、缓存、构建各用什么，明令禁止哪些；");
+        L.push("② 这次要动的表，四个必备字段是什么；");
+        L.push("③ 新建文件分别落在哪一层，各层职责边界；");
+        L.push("④ 界面颜色从哪里取，能不能自己写色值。");
+        L.push("");
+      }
+      L.push("【要求】");
+      // 卢Sir 2026-11-09：数据结构文档必须每步开工前先读 —— 它容错具于「常驻一句路径」，
+      // 纯前端步骤会被模型自行判为「不用建表」而跳过，所以固定写进单步提示词第 0 条。
+      L.push("0. 开工前先读项目目录下 doc/data-model.md（不存在就说明「还没设计数据结构」并跳过）；凡涉及表、字段、接口的改动，一律照它来，不许自己另设计一套。");
+      L.push("1. 只做第 " + st.n + " 步，做完就停，不要顺手做下一步。");
+      L.push("2. 做完后单独输出一行：[[STEP_DONE:" + st.n + "]] 一句话说明产出了什么");
+      L.push("3. 需要密码 / 端口 / 方案选择时，单独输出一行 ASK（格式见常驻规则），然后停下等我。");
+      L.push("4. 卡住就说明卡在哪，不要猜、不要假装做完。");
+      L.push("5. 编译要求：改了后端（Java / SQL / 配置）必须编译通过（javac / mvn compile），编译不过就自己修，修不好如实说，不许留到以后。只改前端（HTML / JS / CSS）不用编译。");
+      L.push("6. 验证方式（重要，照这个来，别自己加戏）：");
+      L.push("   · 一批改动只在最后验证一次，中途不许改一点就重启一次。");
+      L.push("   · 只有后端需要编译 + 重启：改完后编译一次、重启服务一次，然后用命令（curl / mysql）验证接口返回的字段和值与预期一致。");
+      L.push("   · 前端只做代码级核对，不打开浏览器渲染验证。对照业务流程和 doc/data-model.md，逐项确认字段名对得上、接口路径和参数对得上、交互和跳转逻辑符合设计、空/加载/错误三态都写了。有不一致就改代码。");
+      L.push("   · 同一步里先后改了好几处，攒到最后一起验证，不要每处都跑一轮。");
+      L.push("7. 交活时说明：改了哪些文件、后端接口验证结果（真实返回）、前端核对结论（哪几条对上了）。不要承诺「页面上能看到什么」——界面效果由用户自己打开验收。");
+      L.push("");
+      L.push("【交活前先自查：铁律 6 条 + 界面 5 条，不过会被打回重做】");
+      L.push("  角色/身份不许写字面量；DAO 查询必须带 DataScope；前端只能走 api.js；建表必须有 id/created_at/created_by/org_id；样式不许裸色值；不许 DriverManager 直连。");
+      L.push("  界面改动另加 5 条：间距只走 --space-*；label 与控件高度统一；一屏只有一个实心主按钮且在右下；空/加载/错误三态齐全；不重复定义 app.css 已有类。");
+      var fxp = aiPlanStepFixPrompt(st);
+      if (fxp) { L.push(""); L.push(fxp); }
+      return L.join(aiNL());
+    }
+
+    // 返工提示词：把校验器抓到的「文件 + 规则」原样喂回去。
+    // 只报「没过」不报「哪儿没过」，Agent 就只能瞎猜 —— 这正是之前死循环的原因。
+    function aiPlanStepFixPrompt(st) {
+      var v = (st && st.fixViols) || [];
+      if (!v.length) return "";
+      var L = [];
+      L.push("【返工：上一轮没过自动校验，必须先把这些改掉，再继续本步】");
+      v.forEach(function (x, i) { L.push("  " + (i + 1) + ". " + x); });
+      L.push("只改上面这些点；清单里若有不属于本步的历史问题，只在回复里说明，不要动它。");
+      L.push("改完自己再核一遍，同一处别再犯。");
+      return L.join(aiNL());
+    }
+
+    // 一步收尾的统一入口：ASK 感知 + 校验 + 返工 + 推进。
+    // 之前这段逻辑只写在 aiPlanStepNext 的 onDone 里，aiSendText（ASK 回答）没有它 ——
+    // Agent 输出 [[ASK]] 等回答时 run 已结束，onDone 照样标 done 推进下一步，
+    // 用户的回答反而发进下一个无关的 run。这里把收尾逻辑抽出来共用。
+    function aiStepSettle(myPlan, st, full) {
+      aiBeatStop();
+      if (!aiPlan || aiPlanId(aiPlan) !== aiPlanId(myPlan)) return;
+      var st2 = aiPlan.steps[st.n - 1] || st;
+      // 1) Agent 在等用户回答：这一轮只是把问题抛出来了，活没干完，不能算完成。
+      //    等待期间没有新事件，看门狗会误判中断 —— 关掉它，回答的 run 里再重新开。
+      var askPending = aiAskScan(full);
+      if (askPending) {
+        aiWatchStop();
+        st2.state = "doing";
+        st2.note = "等待你的回答";
+        aiPlanSave(); aiRenderPlan();
+        aiToolState("等待你回答弹窗里的问题…", "");
+        return;
+      }
+      aiScanMarks(full);
+      aiCodeGuard(function (ok, viols) {
+        viols = viols || [];
+        if (!aiPlan || aiPlanId(aiPlan) !== aiPlanId(myPlan)) return;
+        if (!ok) {
+          // 用户刚点了暂停：就算有违规也别把暂停解开（返工不能凌驾在暂停之上）
+          if (aiPlan.paused) {
+            st2.state = "todo";
+            st2.note = "有违规，已暂停";
+            aiPlanSave(); aiRenderPlan();
+            aiToolState("已暂停（这步还有 " + viols.length + " 处违规）", "");
+            return;
+          }
+          var nFix = (st2.fix || 0) + 1;
+          if (nFix <= 2) {
+            st2.fix = nFix;
+            st2.fixViols = viols;
+            st2.state = "todo";
+            st2.note = "第 " + nFix + " 次返工";
+            aiPlan.paused = 0;
+            aiPlanSave(); aiRenderPlan();
+            aiToolState("第 " + st2.n + " 步第 " + nFix + " 次返工：" + viols.length + " 处违规", "bad");
+            aiToolLog("err", "✗ 校验没过（" + viols.length + " 处），清单已发回 Agent 自己改");
+            aiAddMsg("第 " + st2.n + " 步没过校验，" + viols.length + " 处。清单已经发回给 Agent 自己改（第 " + nFix + "/2 次），不用你动手：\n- " + viols.join("\n- "), false);
+            setTimeout(function () { aiPlanStepNext(); }, 800);
+            return;
+          }
+          st2.state = "todo";
+          st2.note = "返工 2 次仍未通过";
+          st2.fix = 0;
+          aiPlan.status = "paused";
+          aiPlan.paused = 1;
+          aiPlanLiveId = null;
+          aiWatchStop();
+          aiPlanSave(); aiRenderPlan();
+          aiToolState("已停止：第 " + st2.n + " 步返工 2 次仍没过", "bad");
+          aiToolLog("err", "✗ 返工 2 次仍未过，停下等卢Sir 定夺");
+          aiAddMsg("第 " + st2.n + " 步返工 2 次还是没过，浩克不再空转。剩下的：\n- " + viols.join("\n- ") + "\n\n可以：① 点「继续执行」再试一次 ② 直接说怎么改 ③ 说这步跳过。", false);
+          return;
+        }
+        st2.fix = 0;
+        st2.fixViols = null;
+        st2.state = "done";
+        if (!st2.note) st2.note = "完成";
+        aiPlanSave(); aiRenderPlan();
+        aiToolState("第 " + st2.n + " 步完成（" + aiPlanDoneCount() + "/" + aiPlan.steps.length + "）", "on");
+        aiToolLog("ok", "✓ 第 " + st2.n + " 步完成" + (st2.fix ? "（返工后通过）" : ""));
+        if (aiPlan.paused) {
+          aiPlan.status = "paused";
+          aiPlanLiveId = null;
+          aiWatchStop();
+          aiPlanSave(); aiRenderPlan();
+          aiToolState("已暂停：做完第 " + st2.n + " 步", "");
+          return;
+        }
+        setTimeout(function () { aiPlanStepNext(); }, 400);
+      });
+    }
+
+    function aiPlanStepNext() {
+      if (!aiPlan) return;
+      if (aiPlan.paused) {
+        aiPlan.status = "paused";
+        aiPlanLiveId = null;
+        aiWatchStop();
+        aiPlanSave(); aiRenderPlan();
+        aiToolState("已暂停，点「继续执行」接着做", "");
+        return;
+      }
+      var st = aiPlanCur();
+      if (!st && aiPlan.stepMode) {
+        // 单步模式：这一步处理完就停，绝不自动往下走
+        var _tnStep = aiPlan.target || 0;
+        aiPlan.stepMode = 0;
+        aiPlan.target = 0;
+        aiPlan.paused = 1;
+        aiPlan.status = "paused";
+        aiPlanLiveId = null;
+        aiWatchStop();
+        aiPlanSave(); aiRenderPlan();
+        aiToolState("第 " + _tnStep + " 步已处理完（单步模式，没往下走）", "on");
+        aiToolLog("ok", "✓ 单步完成：" + _tnStep);
+        aiAddMsg("第 " + _tnStep + " 步做完了。单步模式只跑这一步 —— 要继续就点下一步的「执行」，或点底部的「跑完剩下的」。", false);
+        return;
+      }
+      if (!st) {
+        aiPlan.status = "done";
+        aiPlan.paused = 0;
+        aiPlanLiveId = null;
+        aiWatchStop();
+        aiPlanSave(); aiRenderPlan();
+        aiToolState("全部完成 " + aiPlanDoneCount() + "/" + aiPlan.steps.length, "");
+        aiAddMsg("计划里的 " + aiPlan.steps.length + " 步全部做完了 🎉", false);
+        return;
+      }
+      var myPlan = aiPlan;
+      st.state = "doing";
+      aiPlan.cur = st.n;
+      aiPlanLiveId = aiPlanId(myPlan);
+      aiPlanSave(); aiRenderPlan();
+      aiToolState("正在做第 " + st.n + "/" + aiPlan.steps.length + " 步：" + st.name, "on");
+      aiToolLog("", "▶ 第 " + st.n + " 步：" + st.name);
+      aiBeatStart();
+      agentRun("aiCode", aiPlanStepPrompt(st), {
+        onDone: function (full) {
+          // 收尾逻辑已抽到 aiStepSettle：ASK 感知 + 校验 + 返工 + 推进。
+          // 千万别按对象身份判断：界面一重绘 aiPlan 就被重建，引用变了，
+          // 正常完成也会被这句直接挡回去（上一版就是卡在这）。
+          aiStepSettle(myPlan, st, full);
+        },
+        onError: function (msg) {
+          aiBeatStop();
+          if (!aiPlan || aiPlanId(aiPlan) !== aiPlanId(myPlan)) return;
+          var st3 = aiPlan.steps[st.n - 1] || st;
+          st3.state = "todo";
+          aiPlan.status = "paused";
+          aiPlan.paused = 1;
+          aiPlanLiveId = null;
+          aiWatchStop();
+          aiPlanSave(); aiRenderPlan();
+          aiToolState("已停止：第 " + st3.n + " 步出错", "bad");
+          aiToolLog("err", "✗ 第 " + st3.n + " 步出错：" + String(msg).slice(0, 200));
+          aiChoices(msg);
+        }
+      }).catch(function (e) {
+        // agentRun 在发请求前就失败（Tauri 不可用 / 场景不存在）时，它内部的
+        // onError 不会触发，步骤会永远卡在 doing。这里兜底：计划还在 running 才处理
+        // （invoke 失败已由 agentRun 内部 catch 调过 onError、status 变 paused，不会双处理）。
+        if (!aiPlan || aiPlan.status !== "running") return;
+        aiBeatStop();
+        if (!aiPlan || aiPlanId(aiPlan) !== aiPlanId(myPlan)) return;
+        var st5 = aiPlan.steps[st.n - 1] || st;
+        st5.state = "todo";
+        aiPlan.status = "paused";
+        aiPlan.paused = 1;
+        aiPlanLiveId = null;
+        aiWatchStop();
+        aiPlanSave(); aiRenderPlan();
+        aiToolState("已停止：第 " + st5.n + " 步启动失败", "bad");
+        aiToolLog("err", "✗ 启动失败：" + String(e).slice(0, 160));
+        aiChoices(String(e));
+      });
+    }
+
+    function aiPlanPause() {
+      if (!aiPlan) return;
+      aiPlan.paused = 1;
+      // 立刻解锁，不等这一轮回调。真卡死时那个回调永远不会来，等它就是死等。
+      aiPlan.status = "paused";
+      aiPlanLiveId = null;
+      (aiPlan.steps || []).forEach(function (s) { if (s.state === "doing") s.state = "todo"; });
+      aiWatchStop();
+      aiPlanSave(); aiRenderPlan();
+      aiToolState("已暂停", "");
+      aiToolLog("", "⏸ 已暂停");
+      aiAddMsg("已暂停。点「继续执行」从下一个没做完的步骤接着做。", false);
+    }
+
+    // ---- 看门狗：一轮到底是真在跑，还是早就断了没人告诉界面 ----
+    // 判定依据只有一个：还有没有新事件进来。90 秒没动静就亮黄灯，300 秒就自动解锁，
+    // 免得界面永远停在「处理中」、按钮永远点不动（卢Sir 就是这么被坑的）。
+    var _aiWatch = null;
+    function aiWatchStop() {
+      if (_aiWatch) { clearInterval(_aiWatch); _aiWatch = null; }
+    }
+    function aiWatchStart() {
+      aiWatchStop();
+      window.__aiLastEvt = Date.now();
+      window.__aiRunT0 = Date.now();
+      _aiWatch = setInterval(function () {
+        if (!aiPlan || aiPlan.status !== "running") { aiWatchStop(); return; }
+        var idle = Math.round((Date.now() - (window.__aiLastEvt || Date.now())) / 1000);
+        var runS = Math.round((Date.now() - (window.__aiRunT0 || Date.now())) / 1000);
+        if (idle >= 300) {
+          aiPlan.status = "paused";
+          aiPlan.paused = 1;
+          aiPlanLiveId = null;
+          (aiPlan.steps || []).forEach(function (s) { if (s.state === "doing") s.state = "todo"; });
+          aiPlanSave(); aiRenderPlan();
+          aiToolState("已判定中断：" + idle + " 秒零响应，已自动解锁", "warn");
+          aiToolLog("warn", "⚠ " + idle + " 秒没有任何响应，判定这一轮已经断了。点「继续执行」接着做。");
+          aiWatchStop();
+        } else if (idle >= 90) {
+          aiToolState("⚠ 已 " + idle + " 秒无响应（本轮已跑 " + Math.floor(runS / 60) + " 分 " + (runS % 60) + " 秒），可能卡住了", "warn");
+        }
+      }, 5000);
+    }
+
+    // ---- 扫描进度标记 ----
+    // B2：技术栈硬校验 —— 扫项目里的依赖清单，命中「禁止」列关键词就红牌。
+    // B2：硬校验 —— 依赖清单（技术栈）+ 代码铁律，两条都过才算这步完成。
+    // 原理：违规一定留痕（用 Spring → pom 里有 spring-boot-starter；绕过 api.js → 直接 new XMLHttpRequest），比任何提示词都硬。
+    function aiCodeGuard(fin) {
+      // 违规清单必须交出去：只报「过/不过」的话，Agent 永远不知道自己错在哪，
+      // 人点一次继续它就照原样再犯一次 —— 那才是真死循环。
+      var done = function (ok, viols) { if (typeof fin === "function") fin(ok, viols || []); };
+      var ws = (aiDetect && aiDetect.ws) || "";
+      if (!currentProject || !ws || !AGENT_CONST) { done(true, []); return; }
+      var viols = [];
+      // 取词：只把「禁止」列里、且「规定」列没出现过的英文技术名当禁止词（否则 Redis/Tomcat 会误伤）
+      var FB = AGENT_CONST.forbids || {}, ST = AGENT_CONST.stack || {};
+      var allowTxt = " ";
+      for (var ak in ST) { if (Object.prototype.hasOwnProperty.call(ST, ak) && ST[ak]) allowTxt += String(ST[ak]).toLowerCase() + " "; }
+      var words = [];
+      for (var k in FB) {
+        if (!Object.prototype.hasOwnProperty.call(FB, k) || !FB[k]) continue;
+        var parts = String(FB[k]).split(/[,\/，、]/);
+        for (var pi = 0; pi < parts.length; pi++) {
+          var w = parts[pi].trim();
+          if (w.length < 4) continue;
+          if (!/^[A-Za-z][A-Za-z0-9\-\.]*$/.test(w)) continue;
+          if (allowTxt.indexOf(w.toLowerCase()) >= 0) continue;
+          words.push(w);
+        }
+      }
+      var p1 = words.length
+        ? window.__TAURI__.core.invoke("stack_check", { prjName: currentProject.prjName, workspace: ws, forbid: words.join(",") })
+        : Promise.resolve("{\"ok\":true,\"violations\":[]}");
+      p1.then(function (res) {
+        var o = null;
+        try { o = JSON.parse(String(res || "{}")); } catch (e) { o = null; }
+        if (o && o.violations) { for (var i = 0; i < o.violations.length; i++) viols.push(o.violations[i]); }
+        return window.__TAURI__.core.invoke("ironlaw_check", { prjName: currentProject.prjName, workspace: ws });
+      }).then(function (res2) {
+        var o2 = null;
+        try { o2 = JSON.parse(String(res2 || "{}")); } catch (e) { o2 = null; }
+        if (o2 && o2.violations) { for (var i = 0; i < o2.violations.length; i++) viols.push(o2.violations[i]); }
+        if (!viols.length) { done(true, []); return; }
+        done(false, viols);
+      }).catch(function () { done(true, []); });
+    }
+
+    function aiScanMarks(full) {
+      if (!aiPlan || !aiPlan.steps || !aiPlan.steps.length) return;
+      var t = String(full || "");
+      var KS = "[[STEP_START:";
+      var KD = "[[STEP_DONE:";
+      var NLc = String.fromCharCode(10);
+      var pos = 0;
+      var changed = false;
+      while (true) {
+        var i1 = t.indexOf(KS, pos);
+        var i2 = t.indexOf(KD, pos);
+        var i = -1;
+        var kind = "";
+        if (i1 >= 0 && (i2 < 0 || i1 < i2)) { i = i1; kind = "start"; }
+        else if (i2 >= 0) { i = i2; kind = "done"; }
+        if (i < 0) break;
+        var keyLen = (kind === "start") ? KS.length : KD.length;
+        var j = t.indexOf("]]", i);
+        if (j < 0) break;
+        var n = parseInt(t.slice(i + keyLen, j), 10);
+        var tailEnd = t.indexOf(NLc, j);
+        var note = t.slice(j + 2, tailEnd < 0 ? t.length : tailEnd).trim();
+        if (n > 0) {
+          var st = aiPlan.steps[n - 1];
+          if (st) {
+            // 单步模式：只认当前这一步的标记。Agent 把编号写歪（说做完第 9 步其实在第 3 步）
+            // 时一律忽略，否则卡片会被它带偏，和实际进度对不上。
+            var isCur = aiPlan.cur ? (n === aiPlan.cur) : true;
+            if (isCur) {
+              if (kind === "start" && st.state !== "done") { st.state = "doing"; changed = true; }
+              if (kind === "done" && note) { st.note = note; changed = true; }
+            }
+          }
+        }
+        pos = j + 2;
+      }
+      if (changed) { aiPlanSave(); aiRenderPlan(); }
+    }
+
+    // ---- 心跳 ----
+    function aiBeatStart() {
+      aiBeatStop();
+      aiBeatIdx = 0;
+      aiBeatTimer = setInterval(function () {
+        if (!aiPlan || aiPlan.status !== "running") return;
+        var doing = null;
+        aiPlan.steps.forEach(function (s) { if (!doing && s.state === "doing") doing = s; });
+        if (!doing) return;
+        aiBeatIdx = (aiBeatIdx + 1) % AI_BEATS.length;
+        var row = document.querySelector('.ui-plan-step[data-n="' + doing.n + '"]');
+        if (row) {
+          var el = row.querySelector('[data-role="status"]');
+          if (el) el.textContent = AI_BEATS[aiBeatIdx];
+        }
+      }, 18000);
+    }
+    function aiBeatStop() {
+      if (aiBeatTimer) { clearInterval(aiBeatTimer); aiBeatTimer = null; }
+    }
+
+    // ---- 出错给选择题 ----
+    function aiChoices(msg) {
+      var list = document.getElementById("aiMsgList");
+      if (!list) return;
+      var row = document.createElement("div");
+      row.className = "chat-msg bot";
+      var L = [];
+      L.push('<div class="chat-bubble">');
+      L.push('这一步没做成：' + escHtml(String(msg).slice(0, 260)) + '<br>你想怎么办？');
+      L.push('<div class="ui-choices">');
+      L.push('<button class="btn btn-xs" data-ch="retry">重新试一次</button>');
+      L.push('<button class="btn btn-xs" data-ch="skip">跳过这一步</button>');
+      L.push('<button class="btn btn-xs" data-ch="stop">先停下来</button>');
+      L.push('</div></div>');
+      row.innerHTML = L.join("");
+      list.appendChild(row);
+      list.scrollTop = list.scrollHeight;
+      Array.prototype.forEach.call(row.querySelectorAll("[data-ch]"), function (b) {
+        b.onclick = function () {
+          var ch = b.getAttribute("data-ch");
+          row.remove();
+          if (ch === "retry") { aiAddMsg("重新试一次这一步", true); aiPlanStart(); }
+          else if (ch === "skip") {
+            if (aiPlan) {
+              // onError 已把出错步的 doing 清成 todo，按 doing 找永远找不到 → 跳过的其实是下一步。
+              // 正确语义：跳过「第一个没做完的步骤」。
+              var doing = null;
+              aiPlan.steps.forEach(function (s) { if (!doing && s.state !== "done") doing = s; });
+              if (doing) { doing.state = "done"; doing.note = "这一步跳过了"; aiPlanSave(); aiRenderPlan(); }
+            }
+            aiAddMsg("跳过这一步，接着往下做", true);
+            aiPlanStart();
+          } else { aiAddMsg("先停下，我自己看看", true); }
+        };
+      });
+    }
+
+    // ---- 看看某一步产物 ----
+    function aiLook(n) {
+      if (!aiPlan) return;
+      var s = aiPlan.steps[n - 1];
+      if (!s) return;
+      aiAddMsg("看看第 " + n + " 步的产物", true);
+      agentRun("aiCode", "第 " + n + " 步（" + s.name + "）刚才产出了什么？只列文件路径加一句话说明，不要改动任何文件。", {
+        onDone: function () {}
+      }).catch(function () {});
+    }
+
+    function aiRestoreHist() {
+      return agentHistRender("aiCode");
+    }
+
+    // ---- 执行过程日志：工具调用 / 思考 / 耗时，独立面板，永远滚到最新一条 ----
+    function aiToolLog(cls, text) {
+      var b = document.getElementById("aiToolBody");
+      if (!b) return null;
+      var d = document.createElement("div");
+      d.className = "ai-tool-row" + (cls ? " " + cls : "");
+      var n = new Date();
+      var hm = ("0" + n.getHours()).slice(-2) + ":" + ("0" + n.getMinutes()).slice(-2) + ":" + ("0" + n.getSeconds()).slice(-2);
+      d.textContent = hm + "  " + text;
+      while (b.childElementCount > 300) { b.removeChild(b.firstChild); }
+      b.appendChild(d);
+      b.scrollTop = b.scrollHeight;
+      return d;
+    }
+    function aiToolState(text, cls) {
+      var el = document.getElementById("aiToolState");
+      if (el) {
+        el.textContent = text;
+        el.className = "ai-tool-state" + (cls ? " " + cls : "");
+      }
+      // 只有真有 Agent 在跑（或有活跃计划）时才露出「强制解锁」逃生口
+      var ub = document.getElementById("aiToolUnlock");
+      if (ub) ub.className = "ai-tool-unlock" + ((AGENT_BUSY || (aiPlan && aiPlan.status === "running")) ? " on" : "");
+    }
+
+    // 数据结构文档：查看 + 直接编辑保存（复用 process_load / process_save，后者自动备份旧版到 doc/versions）
+    function aiViewDataModel() {
+      if (!currentProject) { aiAddMsg("请先在「基础信息」选择项目", false); return; }
+      var ws = (aiDetect && aiDetect.ws) || "";
+      if (!ws) { aiAddMsg("还没设置工作路径，请先到「项目空间」设置", false); return; }
+      if (!window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("process_load", {
+        prjName: currentProject.prjName, workspace: ws, fileName: "data-model.md"
+      }).then(function (content) {
+        aiDocEditor("数据结构设计 · doc/data-model.md", content || "");
+      }).catch(function (e) {
+        aiAddMsg("还没有数据结构文档（第 7 步做完才会有）。点第 7 步的「执行」让 Agent 先设计数据结构。", false);
+        aiAskDocCreate();
+      });
+    }
+
+    function aiAskDocCreate() {
+      aiConfirmBox("还没有数据结构文档",
+        "第 7 步「设计数据结构」会把 doc/data-model.md 生成出来。<br><br>要现在就去执行第 7 步吗？",
+        "去执行第 7 步", function () {
+          var st7 = null;
+          (aiPlan && aiPlan.steps || []).forEach(function (s) { if (!st7 && String(s.name || "").indexOf("设计数据结构") >= 0) st7 = s; });
+          if (st7) aiPlanRunStep(st7.n); else aiAddMsg("当前计划里没有「设计数据结构」这一步，先重新生成计划。", false);
+        });
+    }
+
+    function aiDocEditor(title, content) {
+      var old = document.getElementById("aiDocMask");
+      if (old) old.remove();
+      var mask = document.createElement("div");
+      mask.id = "aiDocMask";
+      mask.className = "modal show";
+      var H = [];
+      H.push('<div class="modal-box" style="width:860px;max-width:94vw">');
+      H.push('<h4 style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">');
+      H.push('<span>' + escHtml(title) + '</span>');
+      H.push('<span style="font-size:12px;color:var(--ink600);font-weight:400">可直接改，保存时旧版自动备份</span>');
+      H.push('</h4>');
+      H.push('<textarea id="aiDocText" spellcheck="false" style="width:100%;height:56vh;font-family:Cascadia Code,Consolas,monospace;font-size:13px;line-height:1.65;padding:12px;border:1px solid var(--line300);border-radius:var(--r-md);resize:vertical;box-sizing:border-box"></textarea>');
+      H.push('<div class="modal-actions"><button class="btn" id="aiDocCancel">关闭</button>');
+      H.push('<button class="btn btn-primary" id="aiDocSave">保存</button></div></div>');
+      mask.innerHTML = H.join("");
+      document.body.appendChild(mask);
+      var ta = document.getElementById("aiDocText");
+      ta.value = content || "";
+      var close = function () { try { mask.remove(); } catch (e) {} };
+      document.getElementById("aiDocCancel").onclick = close;
+      mask.onclick = function (ev) { if (ev.target === mask) close(); };
+      document.getElementById("aiDocSave").onclick = function () {
+        if (!window.__TAURI__ || !window.__TAURI__.core) return;
+        window.__TAURI__.core.invoke("process_save", {
+          prjName: currentProject.prjName, workspace: (aiDetect && aiDetect.ws) || "",
+          fileName: "data-model.md", content: ta.value
+        }).then(function () {
+          close();
+          aiAddMsg("数据结构文档已保存（旧版在 doc/versions 里）。后续步骤都以这份为准。", false);
+          aiToolLog("ok", "✓ 数据结构文档已更新");
+        }).catch(function (e) { aiAddMsg("保存失败：" + e, false); });
+      };
+    }
+
+    // 通用确认框。WebView2 里 window.confirm 点「否」仍会执行（实测），必须用自己的。
+    function aiConfirmBox(title, bodyHtml, okText, onOk, cancelText) {
+      var old = document.getElementById("aiConfirmMask");
+      if (old) old.remove();
+      var mask = document.createElement("div");
+      mask.id = "aiConfirmMask";
+      mask.className = "modal show";
+      mask.style.zIndex = "99999";   // 必须高于 ai-ask(9999) / constr-modal(999)，否则弹窗被盖住用户以为没反应
+      var H = [];
+      H.push('<div class="modal-box">');
+      H.push('<h4>' + escHtml(title) + '</h4>');
+      H.push('<div style="font-size:13px;line-height:1.8;color:var(--ink700)">' + bodyHtml + '</div>');
+      H.push('<div class="modal-actions">');
+      H.push('<button class="btn" id="aiCfmCancel">' + escHtml(cancelText || "取消") + '</button>');
+      H.push('<button class="btn btn-primary" id="aiCfmOk">' + escHtml(okText || "确定") + '</button>');
+      H.push('</div></div>');
+      mask.innerHTML = H.join("");
+      document.body.appendChild(mask);
+      var close = function () { try { mask.remove(); } catch (e) {} };
+      document.getElementById("aiCfmCancel").onclick = close;
+      document.getElementById("aiCfmOk").onclick = function () { close(); if (typeof onOk === "function") onOk(); };
+      mask.onclick = function (ev) { if (ev.target === mask) close(); };
+    }
+
+    // 通用多按钮弹窗：buttons = [{text, primary, cb}]
+    function aiChoiceBox(title, bodyHtml, buttons) {
+      var old = document.getElementById("aiConfirmMask");
+      if (old) old.remove();
+      var mask = document.createElement("div");
+      mask.id = "aiConfirmMask";
+      mask.className = "modal show";
+      mask.style.zIndex = "99999";
+      var H = [];
+      H.push('<div class="modal-box">');
+      H.push('<h4>' + escHtml(title) + '</h4>');
+      H.push('<div style="font-size:13px;line-height:1.8;color:var(--ink700)">' + bodyHtml + '</div>');
+      H.push('<div class="modal-actions">');
+      (buttons || []).forEach(function (b, i) {
+        H.push('<button class="btn' + (b.primary ? ' btn-primary' : '') + '" data-cb="' + i + '">' + escHtml(b.text) + '</button>');
+      });
+      H.push('</div></div>');
+      mask.innerHTML = H.join("");
+      document.body.appendChild(mask);
+      var close = function () { try { mask.remove(); } catch (e) {} };
+      Array.prototype.forEach.call(mask.querySelectorAll("[data-cb]"), function (el) {
+        el.onclick = function () {
+          var idx = parseInt(el.getAttribute("data-cb"), 10);
+          close();
+          var b = (buttons || [])[idx];
+          if (b && typeof b.cb === "function") b.cb();
+        };
+      });
+      mask.onclick = function (ev) { if (ev.target === mask) close(); };
+    }
+
+    // 「重新生成」前的确认：把「会保留几步、哪些可能丢」讲清楚再让用户点
+    function aiAskRegen() {
+      // 立即给可见反馈：按钮点下去到弹窗出现之间不能有静默期，
+      // 否则用户会以为界面卡死（这就是"点了重新生成没反应"的观感来源）。
+      aiToolLog("run", "点了「重新生成」，正在检查当前进度…");
+      if (!aiPlan || !aiPlan.steps || !aiPlan.steps.length) { aiGenPlan(); return; }
+      if (aiPlan.status === "running") {
+        aiAddMsg("现在正在执行第 " + (aiPlan.cur || "?") + " 步，等它结束或点「暂停全部」后再重新生成。", false);
+        return;
+      }
+      var dn = 0, samples = [];
+      aiPlan.steps.forEach(function (s) {
+        if (s.state === "done") { dn++; if (samples.length < 3) samples.push(s.name); }
+      });
+      if (!dn) { aiGenPlan(); return; }   // 一步都没完成，没什么可丢的，不打扰
+      // 已完成的步骤不一定连续（用户可能手工标了 8/9/10，而 7 还没做）。
+      // 这里绝对不能找「连续前缀」：一旦中间有一步没做，后面做完的全都会丢。
+      // 改成把所有 done 的序号都记下来，逐位保留。
+      var doneIdx = [];
+      for (var i = 0; i < aiPlan.steps.length; i++) {
+        if (aiPlan.steps[i].state === "done") doneIdx.push(i + 1);
+      }
+      var rangeTxt = (function (arr) {
+        if (!arr.length) return "";
+        var out = [], s = arr[0], p = arr[0];
+        for (var k = 1; k < arr.length; k++) {
+          if (arr[k] === p + 1) { p = arr[k]; continue; }
+          out.push(s === p ? ("" + s) : (s + "-" + p)); s = p = arr[k];
+        }
+        out.push(s === p ? ("" + s) : (s + "-" + p));
+        return out.join("、");
+      })(doneIdx);
+      var B = [];
+      B.push("当前计划 <b>" + aiPlan.steps.length + "</b> 步，其中 <b>" + dn + "</b> 步已完成。");
+      B.push("<br><br><b>保留已完成</b>：已做完的 <b>" + dn + "</b> 步（第 " + escHtml(rangeTxt) + " 步）原样不动，" +
+             "只重新生成剩下的 " + (aiPlan.steps.length - dn) + " 步。做过的一步都不会重做。");
+      B.push("<br><b>全部重新生成</b>：整份重排，已完成的按名称尽量保留（名称变了的要重做）。");
+      aiChoiceBox("重新生成开发计划", B.join(""), [
+        { text: "保留已完成（" + dn + " 步不动）", primary: true, cb: function () { aiRegenKeep(1); } },
+        { text: "全部重新生成", cb: function () { aiRegenKeep(0); } },
+        { text: "取消", cb: function () { aiToolLog("dim", "已取消重新生成"); } }
+      ]);
+    }
+
+    // 重新生成时保留前 N 步（N=0 表示整份重排，仅按名称继承）
+    var aiPlanKeepDone = 0;   // 1 = 保留所有已完成的步骤（不管是否连续）；0 = 全部重生成
+    function aiRegenKeep(mode) {
+      aiPlanKeepDone = (parseInt(mode, 10) === 1) ? 1 : 0;
+      if (aiPlanKeepDone) aiToolLog("dim", "保留已完成的步骤，只重新生成没做的部分");
+      aiGenPlan();
+    }
+
+    // 强制解锁：前后端两把锁一起放。只在真卡死时用 —— 真在跑的任务结果可能丢。
+    function aiForceUnlock() {
+      if (!window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("agent_force_unlock").then(function (r) {
+        agentBusyClear();
+        if (aiPlan && aiPlan.status === "running") {
+          aiPlan.status = "paused";
+          aiPlan.paused = 1;
+          aiPlanLiveId = null;
+          (aiPlan.steps || []).forEach(function (s) { if (s.state === "doing") s.state = "todo"; });
+          aiPlanSave(); aiRenderPlan();
+        }
+        aiToolState("已强制解锁", "");
+        aiToolLog("err", "✗ 已强制解锁（前后端两把锁一起放）");
+        aiAddMsg("已强制解锁。如果刚才确实有任务在跑，它的结果可能没写完 —— 做之前先看一眼代码状态。", false);
+      }).catch(function (e) { aiAddMsg("解锁失败：" + e, false); });
+    }
+    function aiToolClear() {
+      var b = document.getElementById("aiToolBody");
+      if (b) b.innerHTML = "";
+    }
+
+    // ---- 阻塞式询问：Agent 需要密码 / 方案选择时必须弹窗，不能只在聊天里问 ----
+    var aiAskShown = "";
+    function aiAskScan(full) {
+      var t = String(full || "");
+      var i = t.indexOf("[[ASK:");
+      if (i < 0) return false;
+      var j = t.indexOf("]]", i);
+      if (j < 0) return false;
+      var raw = t.slice(i + 6, j);
+      if (aiAskShown === raw) return true;
+      var spec = null;
+      try { spec = JSON.parse(raw); } catch (e) { return false; }
+      if (!spec) return false;
+      aiAskShown = raw;
+      aiAskShow(spec);
+      return true;
+    }
+    function aiAskShow(spec) {
+      var old = document.getElementById("aiAskMask");
+      if (old) old.remove();
+      var mask = document.createElement("div");
+      mask.id = "aiAskMask";
+      mask.className = "ai-ask-mask";
+      var H = [];
+      H.push('<div class="ai-ask-card">');
+      H.push('<div class="ai-ask-title">' + escHtml(spec.title || "需要你确认一下") + '</div>');
+      if (spec.body) H.push('<div class="ai-ask-body">' + escHtml(spec.body) + '</div>');
+      if (spec.options && spec.options.length) {
+        H.push('<div class="ai-ask-opts">');
+        spec.options.forEach(function (o, k) {
+          H.push('<label class="ai-ask-opt"><input type="radio" name="aiAskOpt" value="' +
+            escHtml(String(o.v || o.label || "")) + '"' + (k === 0 ? " checked" : "") + '> ' +
+            escHtml(o.label || o.v || "") + '</label>');
+        });
+        H.push('</div>');
+      }
+      var secret = !!(spec.field && spec.field.secret);
+      if (spec.field) {
+        H.push('<div class="ai-ask-field"><label>' + escHtml(spec.field.label || "请输入") + '</label>');
+        H.push('<input id="aiAskVal" type="' + (secret ? "password" : "text") + '" autocomplete="off" spellcheck="false" placeholder="' +
+          escHtml(spec.field.placeholder || "") + '"></div>');
+      }
+      H.push('<div class="ai-ask-actions"><button class="btn btn-primary" id="aiAskOk">确定并继续</button>');
+      H.push('<button class="btn" id="aiAskCancel">先不做</button></div>');
+      if (spec.hint) H.push('<div class="ai-ask-hint">' + escHtml(spec.hint) + '</div>');
+      H.push('</div>');
+      mask.innerHTML = H.join("");
+      document.body.appendChild(mask);
+      var valEl = document.getElementById("aiAskVal");
+      if (valEl) setTimeout(function () { valEl.focus(); }, 60);
+      document.getElementById("aiAskCancel").onclick = function () {
+        mask.remove();
+        aiAskShown = "";
+        // 用户拒绝了：先把计划真正暂停（否则这轮 run 结束后 onDone 会把它当完成推进），
+        // 再告诉 Agent 别傻等。回复 run 里 status 已不是 running，不会被误收尾。
+        if (aiPlan) {
+          aiPlan.status = "paused";
+          aiPlan.paused = 1;
+          aiPlanLiveId = null;
+          (aiPlan.steps || []).forEach(function (s) { if (s.state === "doing") s.state = "todo"; });
+          aiPlanSave(); aiRenderPlan();
+        }
+        aiWatchStart();
+        aiSendText("用户选择「先不做」，这一步暂停。请说明当前项目的状态和下一步建议，不要继续做这一步。", "已选择「先不做」，等我安排。");
+        aiToolState("已取消：这一步等你安排", "");
+      };
+      document.getElementById("aiAskOk").onclick = function () {
+        var opt = "";
+        var r = mask.querySelector('input[name="aiAskOpt"]:checked');
+        if (r) opt = r.value;
+        var val = valEl ? valEl.value : "";
+        if (spec.field && !String(val).trim()) {
+          if (valEl) { valEl.style.borderColor = "#D93025"; valEl.focus(); }
+          return;
+        }
+        mask.remove();
+        var parts = [];
+        if (opt) parts.push(opt);
+        if (val) parts.push(val);
+        var ans = parts.join(" | ");
+        // 密钥类答案：只发给 Agent，聊天记录里显示遮蔽值
+        aiSendText(ans, secret ? ("已填写 " + (spec.field.label || "密钥") + "：[已遮蔽]") : ans);
+      };
+    }
+
+    function aiAddMsg(text, mine) {
+      var list = document.getElementById("aiMsgList");
+      if (!list) return;
+      var empty = document.getElementById("aiEmpty");
+      if (empty) empty.remove();
+      var row = document.createElement("div");
+      row.className = "chat-msg " + (mine ? "me" : "bot");
+      row.innerHTML = '<div class="chat-bubble">' + escHtml(text) + '</div>';
+      list.appendChild(row);
+      list.scrollTop = list.scrollHeight;
+    }
+
+    // text = 真正发给 Agent 的内容；display = 聊天窗口里显示的内容（密钥要遮蔽）
+    function aiSendText(text, display) {
+      if (!text) return;
+      if (!window.__TAURI__ || !window.__TAURI__.core) { aiAddMsg("Tauri 不可用", false); return; }
+      if (!currentProject) { aiAddMsg("请先在「基础信息」选择或新建项目", false); return; }
+      aiAddMsg(display || text, true);
+      agentHistPush("aiCode", display || text, true);
+      var ctx = text;
+      if (aiPlan && aiPlan.steps && aiPlan.steps.length) {
+        var pl = ["【当前开发计划】"];
+        aiPlan.steps.forEach(function (st2) {
+          var tag = st2.state === "done" ? "（已完成）" : (st2.state === "doing" ? "（正在做）" : "（还没做）");
+          pl.push(st2.n + ". " + st2.name + (st2.desc ? " —— " + st2.desc : "") + tag);
+        });
+        pl.push("");
+        pl.push("【我的回答】");
+        pl.push(text);
+        ctx = pl.join(aiNL());
+      }
+      agentRun("aiCode", ctx, {
+        // 这是 ASK 弹窗的回答通道：回答完 Agent 会在这个 run 里把活干完，
+        // 所以 onDone 要像正常步骤一样收尾（校验 → 打勾 → 下一步）。
+        // 普通提问走 aiSend，不走这里。
+        beforeSend: function () { aiWatchStart(); },
+        onDone: function (full) {
+          modSet("ai_code", true);
+          if (aiAskScan(full)) return;          // 连环 ASK，继续等
+          if (!aiPlan || aiPlan.status !== "running") return;   // 没有在跑的计划，只是普通回答
+          var _cur = aiPlanCur();
+          if (!_cur) return;
+          var _cur2 = aiPlan.steps[_cur.n - 1] || _cur;
+          if (_cur2.state !== "doing" && _cur2.note !== "等待你的回答") return;  // 计划没在等回答，别误收尾
+          aiStepSettle(aiPlan, _cur, full);
+        },
+        onError: function (msg) { aiAddMsg("编码失败：" + msg, false); }
+      }).catch(function () {});    }
+
+    function aiSend() {
+      var input = document.getElementById("aiInput");
+      if (!input) return;
+      var text = input.value.trim();
+      if (!text) return;
+      if (!window.__TAURI__ || !window.__TAURI__.core) { aiAddMsg("Tauri 不可用", false); return; }
+      if (!currentProject) { aiAddMsg("请先在「基础信息」选择或新建项目", false); return; }
+      aiAddMsg(text, true);
+      agentHistPush("aiCode", text, true);
+      input.value = "";
+      draftClear("aiCode");
+      taGrow(input);
+      // 生成计划走的是一次性会话，主会话里没有流程全文；用户追问时把当前计划带上即可回答
+      // （计划只有几百字符，比重新灌整份流程省得多）
+      var ctx = text;
+      if (aiPlan && aiPlan.steps && aiPlan.steps.length) {
+        var pl = ["【当前开发计划】"];
+        aiPlan.steps.forEach(function (st2) {
+          var tag = st2.state === "done" ? "（已完成）" : (st2.state === "doing" ? "（正在做）" : "（还没做）");
+          pl.push(st2.n + ". " + st2.name + (st2.desc ? " —— " + st2.desc : "") + tag);
+        });
+        pl.push("");
+        pl.push("【我的问题】");
+        pl.push(text);
+        ctx = pl.join(aiNL());
+      }
+      // 统一组件：场景 aiCode（禁止改流程 JSON / 主题）
+      agentRun("aiCode", ctx, {
+        onDone: function (full) { modSet("ai_code", true); aiAskScan(full); },
+        onError: function (msg) { aiAddMsg("编码失败：" + msg, false); }
+      }).catch(function () {});
+    }
+
     function renderUi() {
       content.classList.remove("chat-page", "theme-page", "constr-page");
       content.innerHTML =
-        '<div class="page-title">AI编码</div>' +
-        '<div class="page-sub">AI 按开发计划逐步骤生成项目代码（待实现）</div>' +
+        '<div class="page-title">AI开发</div>' +
+        '<div class="page-sub">AI 按业务流程生成项目源码（场景隔离：不可修改流程与主题数据）</div>' +
         '<div class="ui-layout">' +
           '<div class="ui-chat">' +
-            '<div class="ui-chat-head"><span>💬 AI 编码对话</span><span class="ui-badge">待实现</span></div>' +
-            '<div class="ui-chat-body" id="uiChatBody">' +
-              '<div class="ui-empty">' +
+            '<div class="ui-chat-head"><span>💬 AI 开发对话</span><span class="ui-badge">已接入</span></div>' +
+            '<div class="ui-chat-body" id="aiMsgList" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;justify-content:flex-start">' +
+              '<div class="ui-empty" id="aiEmpty">' +
                 '<div class="ui-empty-icon">🤖</div>' +
-                '<p>AI 编码功能即将上线</p>' +
-                '<p class="ui-empty-sub">将基于开发计划，AI 自动生成项目代码</p>' +
+                '<p>AI 开发对话</p>' +
+                '<p class="ui-empty-sub">右侧先看计划，点「生成开发计划」开始</p>' +
               '</div>' +
             '</div>' +
+            '<div class="ai-tool-panel" id="aiToolPanel">' +
+              '<div class="ai-tool-head" id="aiToolHead">' +
+                '<span class="ai-tool-title">🛠 执行过程</span>' +
+                '<span class="ai-tool-state" id="aiToolState">空闲</span>' +
+                '<span class="ai-tool-unlock" id="aiToolUnlock" title="只在真卡死时用：强制释放 Agent 锁">强制解锁</span>' +
+                '<span class="ai-tool-toggle" id="aiToolToggle">收起</span>' +
+              '</div>' +
+              '<div class="ai-tool-body" id="aiToolBody"></div>' +
+            '</div>' +
             '<div class="ui-chat-input">' +
-              '<input id="uiInput" placeholder="描述编码需求..." disabled />' +
-              '<button id="uiSendBtn" disabled>发送</button>' +
+              '<textarea id="aiInput" rows="1" placeholder="也可以直接描述要改的地方，例如：订单列表加上按日期筛选（Enter 发送，Shift+Enter 换行）"></textarea>' +
+              '<button id="aiSendBtn">发送</button>' +
             '</div>' +
           '</div>' +
           '<div class="ui-canvas">' +
             '<div class="ui-canvas-head"><span id="uiTitle">📋 开发计划</span><span class="ui-badge">步骤状态</span></div>' +
-            '<div class="ui-canvas-body" id="uiCanvasBody">' +
-              '<div class="ui-plan">' +
-                '<div class="ui-plan-head">' +
-                  '<div class="ui-plan-title">项目开发计划</div>' +
-                  '<div class="ui-plan-progress"><span>0/5 完成</span><div class="ui-plan-bar"><div class="ui-plan-fill" style="width:0%"></div></div></div>' +
-                '</div>' +
-                '<div class="ui-plan-steps" id="uiPlanSteps">' +
-                  '<div class="ui-plan-step"><span class="ui-step-state ui-step-todo">⏳</span><span class="ui-step-name">环境准备与项目初始化</span><span class="ui-step-status">待开始</span></div>' +
-                  '<div class="ui-plan-step"><span class="ui-step-state ui-step-todo">⏳</span><span class="ui-step-name">核心模块开发</span><span class="ui-step-status">待开始</span></div>' +
-                  '<div class="ui-plan-step"><span class="ui-step-state ui-step-todo">⏳</span><span class="ui-step-name">业务流程实现</span><span class="ui-step-status">待开始</span></div>' +
-                  '<div class="ui-plan-step"><span class="ui-step-state ui-step-todo">⏳</span><span class="ui-step-name">界面与交互完善</span><span class="ui-step-status">待开始</span></div>' +
-                  '<div class="ui-plan-step"><span class="ui-step-state ui-step-todo">⏳</span><span class="ui-step-name">测试与部署</span><span class="ui-step-status">待开始</span></div>' +
-                '</div>' +
-              '</div>' +
+            '<div class="ui-canvas-body ui-canvas-pad" id="uiCanvasBody">' +
+              '<div class="ui-plan-empty">正在检查项目状态…</div>' +
             '</div>' +
           '</div>' +
         '</div>';
+      var ab = document.getElementById("aiSendBtn");
+      if (ab) ab.onclick = aiSend;
+      var ain = document.getElementById("aiInput");
+      bindComposer(ain, "aiCode", aiSend);
+      var unlockEl = document.getElementById("aiToolUnlock");
+      if (unlockEl) unlockEl.onclick = function (ev) {
+        if (ev && ev.stopPropagation) ev.stopPropagation();   // 别触发整行收起
+        aiForceUnlock();
+      };
+      var thead = document.getElementById("aiToolHead");
+      if (thead) thead.onclick = function () {
+        var p = document.getElementById("aiToolPanel");
+        if (!p) return;
+        p.classList.toggle("collapsed");
+        var tg = document.getElementById("aiToolToggle");
+        if (tg) tg.textContent = p.classList.contains("collapsed") ? "展开" : "收起";
+      };
+      aiRestoreHist();
+      aiDetect();
     }
 
     function renderProcess() {
@@ -1479,9 +3973,7 @@ function doConnect(baseUrl, token) {
           '</div>' +
         '</div>';
       document.getElementById("procSendBtn").addEventListener("click", procSend);
-      document.getElementById("procInput").addEventListener("keydown", function(e){
-        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); procSend(); }
-      });
+      bindComposer(document.getElementById("procInput"), "process", procSend);
       procSid = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "tdev-proc";
       procRestoreChat();
       procRestore();
@@ -1584,6 +4076,8 @@ function doConnect(baseUrl, token) {
       list.appendChild(row);
       list.scrollTop = list.scrollHeight;
     }
+
+    // 创建流程梳理流式气泡（思考区 + 回复区，样式与 Agent 连接测试一致）
     function procLoadHist() {
       try { return JSON.parse(localStorage.getItem("proc_hist_" + procSid) || "[]"); }
       catch(e) { return []; }
@@ -1601,6 +4095,8 @@ function doConnect(baseUrl, token) {
       if (!window.__TAURI__ || !window.__TAURI__.core) { procAddSys("Tauri 不可用"); return; }
       procAddMsg(text, true);
       input.value = "";
+      draftClear("process");
+      taGrow(input);
       // 识别回退指令：直接恢复版本（不走 Agent）
       if (/回退|撤销|undo|上一步|恢复/.test(text)) {
         procAddSys("执行回退操作...");
@@ -1652,20 +4148,17 @@ function doConnect(baseUrl, token) {
         }).then(function(c){ currentJson = c; }).catch(function(){ currentJson = ""; });
         loadProm.then(function(){
           var prompt = "请把以下业务流程描述整理为结构化流程图 JSON，并用 terminal 工具（python 命令）直接写入文件：" + docDirMnt + "/" + fileName + "。" +
-          "注意：当前是 WSL 环境，路径必须用 /mnt/ 前缀（如 /mnt/e/...），绝对不要用 E: 盘符。必须用 terminal 工具执行 python 命令写入，不要用 write_file（会失败）。目录不存在就先 os.makedirs(..., exist_ok=True)。" +
+          "注意：当前是 WSL 环境。写文件用 wf 工具（wf write <路径>，内容走 stdin，原子写+自动备份，会自动转换 E:/ 与 /mnt/e/ 两种路径）；没有 wf 就用 terminal 执行 python3 写入。不要用 write_file（Windows 上会因 WSL 警告误报失败）。目录不存在 wf 会自动创建。" +
           "JSON 格式严格为：{" + q + "flow_name" + q + ":流程名称," + q + "steps" + q + ":[{" + q + "name" + q + ":主流程节点1," + q + "children" + q + ":[{" + q + "name" + q + ":子流程节点a," + q + "children" + q + ":[{" + q + "name" + q + ":三级节点," + q + "children" + q + ":[]}]}]}]}。" +
           "主流程节点从上到下排列（steps 数组顺序即主流程顺序）；children 数组每个元素是对象 {name, children}，无下级则 children 为空数组；支持无限层级嵌套。" +
           "当前已有流程文件内容（未修改的节点必须原样保留，只按用户要求增删改指定节点，禁止丢失或改写其他节点）：" +
           (currentJson ? currentJson : "（无）") +
           "。用户要求：" + text + "。写完文件后回复：已生成";
-          var newSid = "proc-" + Date.now();
-          window.__TAURI__.core.invoke("agent_ask", { question: prompt, sessionId: newSid })
-            .then(function(reply) {
-              procAddSys(reply || "Agent 已响应");
-            })
-            .catch(function(e) {
-              procAddSys("梳理失败：" + e);
-            });
+          // 统一组件：场景 process（业务流程梳理，禁止改源码/主题）
+          agentRun("process", prompt, {
+            onDone: function () { modSet("process", true); },
+            onError: function (msg) { procAddSys("梳理失败：" + msg); }
+          }).catch(function () {});
         });
       });
     }
@@ -2447,7 +4940,9 @@ function doConnect(baseUrl, token) {
             workspace: ws
           }).then(function(files){
             procLastFiles = (files && files.length) ? files.join(",") : null;
+            modSet("process", true);
           }).catch(function(){});
+          modSet("process", true);
         }).catch(function(e){ procAddSys("保存失败：" + e); });
       });
     }
@@ -2547,27 +5042,40 @@ function doConnect(baseUrl, token) {
         setDot(d3,false); setDot(d9,false); setDot(d4,false);
         return;
       }
-      setDot(d0, true);              // 基础信息：项目存在
-      setDot(d2, true);              // 项目约束：模板已填入
-      var themeSaved = false;
-      try { themeSaved = !!localStorage.getItem("theme_json_" + currentProject.prjGUID); } catch(e) {}
-      setDot(d1, themeSaved);        // 主题风格
-      setDot(d3, false);             // 业务流程：异步检测
-      setDot(d9, false);             // AI编码：暂无
-      setDot(d4, false);             // 部署发布：暂无
-      // 异步检测 doc 目录是否有流程 JSON
+      // 统一从 module_state 表读取（先取 workspace，一次查询整体判断）
       window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function(v){
         var ws = "";
         try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
-        if (!ws || !currentProject) return;
-        window.__TAURI__.core.invoke("process_list", {
+        return window.__TAURI__.core.invoke("module_state_get", {
+          prjGuid: currentProject.prjGUID,
           prjName: currentProject.prjName,
           workspace: ws
-        }).then(function(files){
-          var has = (files || []).some(function(f){ return f.indexOf("_flow.json") >= 0 || f.indexOf("flow.json") >= 0; });
-          setDot(d3, has);
-        }).catch(function(){});
-      }).catch(function(){});
+        });
+      }).then(function(json){
+        var st = {};
+        try { st = JSON.parse(json || "{}"); } catch(e) {}
+        setDot(d0, !!st.basic);
+        setDot(d1, !!st.theme);
+        setDot(d2, !!st.constraints);
+        setDot(d3, !!st.process);
+        setDot(d9, !!st.ai_code);
+        setDot(d4, !!st.deploy);
+      }).catch(function(){
+        // 兜底：基础信息/约束亮
+        setDot(d0, true); setDot(d2, true);
+        setDot(d1, false); setDot(d3, false); setDot(d9, false); setDot(d4, false);
+      });
+    }
+
+    // 模块状态更新（统一写入 module_state 表，成功后刷新灯）
+    function modSet(module, filled) {
+      if (!currentProject) return;
+      if (!window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("module_state_set", {
+        prjGuid: currentProject.prjGUID,
+        module: module,
+        filled: !!filled
+      }).then(function(){ updateMenuDots(); }).catch(function(){});
     }
 
     // 动态页分发
@@ -2585,7 +5093,6 @@ function doConnect(baseUrl, token) {
     function render(idx) {
       // 清理页面级 class（防残留导致布局问题）
       content.classList.remove("chat-page", "theme-page", "constr-page");
-      updateMenuDots();
       current = idx;
       var m = MODULES[idx];
       var body = m.body.map(function(t){ return "<p>" + t + "</p>"; }).join("");
@@ -2702,6 +5209,13 @@ function doConnect(baseUrl, token) {
           if (guid) {
             var sel = document.getElementById("projSel");
             sel.value = guid;
+            // 新项目需先更新 currentProject 再亮灯（后端 project_create 已初始化 module_state）
+            window.__TAURI__.core.invoke("project_list").then(function(list){
+              var found = null;
+              (list || []).forEach(function(p){ if (p.prjGUID === guid) found = p; });
+              currentProject = found; AGENT_CONST = null; AGENT_THEME = null;
+              updateMenuDots();
+            });
           }
           document.getElementById("statusText").textContent = "已保存项目：" + name;
         }, 1200);
