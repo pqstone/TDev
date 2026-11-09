@@ -14,3 +14,10 @@ src-tauri/gen/
 *.user
 Thumbs.db
 .DS_Store
+
+# 手改前端前的自动备份（不入库）
+*.bak
+*.bak-*
+*.bak2-*
+*.bak3-*
+*.bak4-*
