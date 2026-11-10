@@ -9,6 +9,8 @@ use rusqlite::{params, Connection};
 use tauri::Manager;
 use tauri::Emitter;
 
+pub mod deploy;
+
 // ============================================================
 // 全局 Agent 互斥锁（2026-11-06 卢Sir 定：只允许一个 Agent 运行）
 // ------------------------------------------------------------
@@ -186,7 +188,19 @@ pub fn run() {
             flow_backup_list,
             flow_backup_load,
             module_state_set,
-            module_state_get
+            module_state_get,
+            deploy_server_list,
+            deploy_server_save,
+            deploy_server_delete,
+            deploy_server_test,
+            deploy::deploy_config_get,
+            deploy::deploy_config_save,
+            deploy::deploy_release_list,
+            deploy::deploy_release_log,
+            deploy::deploy_run,
+            deploy::deploy_status,
+            deploy::deploy_agent_prepare,
+            deploy::deploy_release_note
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -203,13 +217,13 @@ fn db_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
 }
 
 /// 打开数据库连接（统一入口）
-fn db_conn(app: &tauri::AppHandle) -> Result<Connection, String> {
+pub(crate) fn db_conn(app: &tauri::AppHandle) -> Result<Connection, String> {
     let path = db_path(app)?;
     Connection::open(&path).map_err(|e| format!("打开数据库失败: {e}"))
 }
 
 /// 当前时间字符串（YYYY-MM-DD HH:MM:SS，纯 std）
-fn now_str() -> String {
+pub(crate) fn now_str() -> String {
     let d = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default();
     let secs = d.as_secs();
     let days = secs / 86400;
@@ -261,6 +275,10 @@ fn db_init(app: tauri::AppHandle) -> Result<String, String> {
          INSERT OR IGNORE INTO app_meta(key, value) VALUES('theme', 'arctic-glacier-blue');",
     )
     .map_err(|e| format!("初始化表失败: {e}"))?;
+
+    // 部署发布：服务器表（幂等建表，旧库自动升级）
+    deploy_ensure_table(&conn)?;
+    deploy::ensure_tables(&conn)?;
 
     // 读取数据表清单
     let mut stmt = conn
@@ -1462,6 +1480,432 @@ fn module_state_get(app: tauri::AppHandle, prj_guid: String, prj_name: String, w
     serde_json::to_string(&map).map_err(|e| format!("序列化失败: {e}"))
 }
 
+
+// ============================================================
+// 部署发布 · 服务器管理（2026-11-10）
+// 设计文档：docs/deploy-module.md
+// ------------------------------------------------------------
+// 密码只以 DPAPI 密文入库（当前 Windows 用户作用域），前端永远拿不到明文。
+// 服务器清单按项目（prj_guid）隔离，切项目只看到本项目服务器。
+// ============================================================
+
+/// 建表（幂等）：db_init 与各命令入口都调用，旧库升级自动完成
+pub(crate) fn deploy_ensure_table(conn: &Connection) -> Result<(), String> {
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS deploy_servers (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            prj_guid     TEXT    NOT NULL,
+            name         TEXT    NOT NULL,
+            os_type      TEXT    NOT NULL,
+            host         TEXT    NOT NULL,
+            port         INTEGER NOT NULL DEFAULT 22,
+            username     TEXT    NOT NULL,
+            password_enc TEXT,
+            remark       TEXT,
+            created_at   TEXT    NOT NULL,
+            updated_at   TEXT    NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_deploy_servers_prj ON deploy_servers(prj_guid);",
+    )
+    .map_err(|e| format!("创建服务器表失败: {e}"))
+}
+
+fn hex_encode(bytes: &[u8]) -> String {
+    let mut s = String::with_capacity(bytes.len() * 2);
+    for b in bytes {
+        s.push_str(&format!("{:02x}", b));
+    }
+    s
+}
+
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    let b = s.as_bytes();
+    if b.len() % 2 != 0 {
+        return Err("密文长度不合法".to_string());
+    }
+    let mut v = Vec::with_capacity(b.len() / 2);
+    let mut i = 0;
+    while i < b.len() {
+        let hi = (b[i] as char).to_digit(16).ok_or("密文含非法字符")?;
+        let lo = (b[i + 1] as char).to_digit(16).ok_or("密文含非法字符")?;
+        v.push(((hi << 4) | lo) as u8);
+        i += 2;
+    }
+    Ok(v)
+}
+
+/// Windows DPAPI 加密（当前用户作用域：换机器、换 Windows 用户都解不开）
+#[cfg(windows)]
+fn dpapi_protect(plain: &str) -> Result<String, String> {
+    use windows_sys::Win32::Foundation::LocalFree;
+    use windows_sys::Win32::Security::Cryptography::{CryptProtectData, CRYPT_INTEGER_BLOB};
+
+    let data = plain.as_bytes();
+    let mut input = CRYPT_INTEGER_BLOB {
+        cbData: data.len() as u32,
+        pbData: data.as_ptr() as *mut u8,
+    };
+    let mut output = CRYPT_INTEGER_BLOB {
+        cbData: 0,
+        pbData: std::ptr::null_mut(),
+    };
+    let ok = unsafe {
+        CryptProtectData(
+            &mut input,
+            std::ptr::null(),
+            std::ptr::null(),
+            std::ptr::null(),
+            std::ptr::null(),
+            0,
+            &mut output,
+        )
+    };
+    if ok == 0 {
+        return Err(format!("密码加密失败: {}", std::io::Error::last_os_error()));
+    }
+    let cipher = unsafe {
+        std::slice::from_raw_parts(output.pbData, output.cbData as usize).to_vec()
+    };
+    unsafe { LocalFree(output.pbData as *mut core::ffi::c_void) };
+    Ok(hex_encode(&cipher))
+}
+
+#[cfg(not(windows))]
+fn dpapi_protect(plain: &str) -> Result<String, String> {
+    // 非 Windows 开发机：仅做可逆标记，生产以 Windows 为准
+    Ok(format!("plain:{}", hex_encode(plain.as_bytes())))
+}
+
+/// Windows DPAPI 解密（第二阶段 SSH/SFTP 上传时使用）
+#[allow(dead_code)]
+#[cfg(windows)]
+pub(crate) fn dpapi_unprotect(cipher_hex: &str) -> Result<String, String> {
+    use windows_sys::Win32::Foundation::LocalFree;
+    use windows_sys::Win32::Security::Cryptography::{CryptUnprotectData, CRYPT_INTEGER_BLOB};
+
+    let cipher = hex_decode(cipher_hex)?;
+    let mut input = CRYPT_INTEGER_BLOB {
+        cbData: cipher.len() as u32,
+        pbData: cipher.as_ptr() as *mut u8,
+    };
+    let mut output = CRYPT_INTEGER_BLOB {
+        cbData: 0,
+        pbData: std::ptr::null_mut(),
+    };
+    let ok = unsafe {
+        CryptUnprotectData(
+            &mut input,
+            std::ptr::null_mut(),
+            std::ptr::null(),
+            std::ptr::null(),
+            std::ptr::null(),
+            0,
+            &mut output,
+        )
+    };
+    if ok == 0 {
+        return Err(format!("密码解密失败: {}", std::io::Error::last_os_error()));
+    }
+    let plain = unsafe {
+        std::slice::from_raw_parts(output.pbData, output.cbData as usize).to_vec()
+    };
+    unsafe { LocalFree(output.pbData as *mut core::ffi::c_void) };
+    String::from_utf8(plain).map_err(|e| format!("密码解码失败: {e}"))
+}
+
+#[allow(dead_code)]
+#[cfg(not(windows))]
+pub(crate) fn dpapi_unprotect(cipher_hex: &str) -> Result<String, String> {
+    let raw = hex_decode(cipher_hex.trim_start_matches("plain:"))?;
+    String::from_utf8(raw).map_err(|e| format!("密码解码失败: {e}"))
+}
+
+/// 服务器列表（数据层，便于单测）：不返回密码，只返回 has_password
+fn deploy_server_list_db(conn: &Connection, prj_guid: &str) -> Result<Vec<serde_json::Value>, String> {
+    deploy_ensure_table(conn)?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, name, os_type, host, port, username,
+                    CASE WHEN password_enc IS NULL OR password_enc = '' THEN 0 ELSE 1 END,
+                    remark, created_at, updated_at
+             FROM deploy_servers WHERE prj_guid = ?1 ORDER BY id DESC",
+        )
+        .map_err(|e| format!("查询服务器失败: {e}"))?;
+    let rows = stmt
+        .query_map(params![prj_guid], |r| {
+            Ok(serde_json::json!({
+                "id": r.get::<_, i64>(0)?,
+                "name": r.get::<_, String>(1)?,
+                "os_type": r.get::<_, String>(2)?,
+                "host": r.get::<_, String>(3)?,
+                "port": r.get::<_, i64>(4)?,
+                "username": r.get::<_, String>(5)?,
+                "has_password": r.get::<_, i64>(6)? > 0,
+                "remark": r.get::<_, Option<String>>(7)?,
+                "created_at": r.get::<_, String>(8)?,
+                "updated_at": r.get::<_, String>(9)?
+            }))
+        })
+        .map_err(|e| format!("读取服务器失败: {e}"))?;
+    rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn deploy_server_list(app: tauri::AppHandle, prj_guid: String) -> Result<Vec<serde_json::Value>, String> {
+    let conn = db_conn(&app)?;
+    deploy_server_list_db(&conn, &prj_guid)
+}
+
+/// 保存（数据层）：id=None 新增；new_pw=None 表示保持原密码不变
+fn deploy_server_save_db(
+    conn: &Connection,
+    id: Option<i64>,
+    prj_guid: &str,
+    name: &str,
+    os_type: &str,
+    host: &str,
+    port: i64,
+    username: &str,
+    new_pw: Option<&str>,
+    remark: Option<&str>,
+) -> Result<i64, String> {
+    deploy_ensure_table(conn)?;
+    let now = now_str();
+    if let Some(sid) = id {
+        // 属于本项目的记录才允许改
+        let n = match new_pw {
+            Some(enc) => conn.execute(
+                "UPDATE deploy_servers SET name=?1, os_type=?2, host=?3, port=?4, username=?5,
+                    password_enc=?6, remark=?7, updated_at=?8
+                 WHERE id=?9 AND prj_guid=?10",
+                params![name, os_type, host, port, username, enc, remark, now, sid, prj_guid],
+            ),
+            None => conn.execute(
+                "UPDATE deploy_servers SET name=?1, os_type=?2, host=?3, port=?4, username=?5,
+                    remark=?6, updated_at=?7
+                 WHERE id=?8 AND prj_guid=?9",
+                params![name, os_type, host, port, username, remark, now, sid, prj_guid],
+            ),
+        }
+        .map_err(|e| format!("更新服务器失败: {e}"))?;
+        if n == 0 {
+            return Err("未找到该服务器（或不属于当前项目）".to_string());
+        }
+        Ok(sid)
+    } else {
+        conn.execute(
+            "INSERT INTO deploy_servers
+                (prj_guid, name, os_type, host, port, username, password_enc, remark, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9)",
+            params![prj_guid, name, os_type, host, port, username, new_pw, remark, now],
+        )
+        .map_err(|e| format!("保存服务器失败: {e}"))?;
+        Ok(conn.last_insert_rowid())
+    }
+}
+
+/// 新增 / 更新服务器；password 传空字符串表示保持原密码不变
+#[tauri::command]
+fn deploy_server_save(
+    app: tauri::AppHandle,
+    id: Option<i64>,
+    prj_guid: String,
+    name: String,
+    os_type: String,
+    host: String,
+    port: i64,
+    username: String,
+    password: Option<String>,
+    remark: Option<String>,
+) -> Result<serde_json::Value, String> {
+    let name = name.trim().to_string();
+    let host = host.trim().to_string();
+    let username = username.trim().to_string();
+    let os_type = os_type.trim().to_lowercase();
+    if prj_guid.trim().is_empty() {
+        return Err("未选择项目，无法保存服务器".to_string());
+    }
+    if name.is_empty() || host.is_empty() || username.is_empty() {
+        return Err("名称、地址、用户名不能为空".to_string());
+    }
+    if os_type != "linux" && os_type != "windows" {
+        return Err("操作系统类型只能是 linux 或 windows".to_string());
+    }
+    if port < 1 || port > 65535 {
+        return Err("端口需在 1-65535 之间".to_string());
+    }
+    let remark = remark.map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
+    let new_pw = match password {
+        Some(p) if !p.is_empty() => Some(dpapi_protect(&p)?),
+        _ => None,
+    };
+
+    let conn = db_conn(&app)?;
+    let sid = deploy_server_save_db(
+        &conn, id, &prj_guid, &name, &os_type, &host, port, &username,
+        new_pw.as_deref(), remark.as_deref(),
+    )?;
+    Ok(serde_json::json!({ "id": sid }))
+}
+
+/// 删除（数据层，限定本项目）
+fn deploy_server_delete_db(conn: &Connection, prj_guid: &str, id: i64) -> Result<bool, String> {
+    deploy_ensure_table(conn)?;
+    let n = conn
+        .execute(
+            "DELETE FROM deploy_servers WHERE id = ?1 AND prj_guid = ?2",
+            params![id, prj_guid],
+        )
+        .map_err(|e| format!("删除服务器失败: {e}"))?;
+    Ok(n > 0)
+}
+
+/// 删除服务器（限定本项目）
+#[tauri::command]
+fn deploy_server_delete(app: tauri::AppHandle, prj_guid: String, id: i64) -> Result<bool, String> {
+    let conn = db_conn(&app)?;
+    deploy_server_delete_db(&conn, &prj_guid, id)
+}
+
+/// 取服务器连接端点（数据层）：测试连接与二阶段上传共用
+fn deploy_server_endpoint_db(conn: &Connection, prj_guid: &str, id: i64) -> Result<(String, i64), String> {
+    deploy_ensure_table(conn)?;
+    let mut stmt = conn
+        .prepare("SELECT host, port FROM deploy_servers WHERE id = ?1 AND prj_guid = ?2")
+        .map_err(|e| format!("查询失败: {e}"))?;
+    let mut rows = stmt
+        .query_map(params![id, prj_guid], |r| {
+            Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?))
+        })
+        .map_err(|e| format!("读取失败: {e}"))?;
+    rows.next()
+        .transpose()
+        .map_err(|e| format!("读取失败: {e}"))?
+        .ok_or_else(|| "未找到该服务器（或不属于当前项目）".to_string())
+}
+
+/// TCP 连通性探测（数据层之外的最后一步，纯 std）：返回 (可达, 耗时ms, 错误信息)
+pub(crate) fn deploy_tcp_probe(host: &str, port: i64) -> (bool, u64, String) {
+    use std::net::ToSocketAddrs;
+    let t0 = std::time::Instant::now();
+    let addrs = match (host, port as u16).to_socket_addrs() {
+        Ok(a) => a,
+        Err(e) => return (false, 0u64, format!("地址解析失败: {e}")),
+    };
+    let mut last_err = "地址解析为空".to_string();
+    for addr in addrs {
+        match std::net::TcpStream::connect_timeout(&addr, std::time::Duration::from_secs(5)) {
+            Ok(_) => return (true, t0.elapsed().as_millis() as u64, String::new()),
+            Err(e) => last_err = e.to_string(),
+        }
+    }
+    (false, t0.elapsed().as_millis() as u64, last_err)
+}
+
+/// 端口连通性测试：只验证网络可达（地址/端口/防火墙），不做登录认证
+#[tauri::command]
+async fn deploy_server_test(
+    app: tauri::AppHandle,
+    prj_guid: String,
+    id: i64,
+) -> Result<serde_json::Value, String> {
+    let (host, port) = {
+        let conn = db_conn(&app)?;
+        deploy_server_endpoint_db(&conn, &prj_guid, id)?
+    };
+
+    let probe = tauri::async_runtime::spawn_blocking(move || deploy_tcp_probe(&host, port))
+        .await
+        .map_err(|e| format!("测试任务异常: {e}"))?;
+
+    let msg = if probe.0 {
+        format!("端口 {} 可达", port)
+    } else {
+        format!("连接失败：{}（检查地址、端口、防火墙）", probe.2)
+    };
+    Ok(serde_json::json!({ "ok": probe.0, "latency_ms": probe.1, "msg": msg }))
+}
+
+/// 部署发布模块的纯函数自测（DPAPI 加解密 / 十六进制编解码）
+#[cfg(test)]
+mod deploy_tests {
+    use super::*;
+
+    #[test]
+    fn hex_roundtrip() {
+        let raw = b"\x00\x01\xfeDeploy!";
+        let enc = hex_encode(raw);
+        assert_eq!(hex_decode(&enc).unwrap(), raw.to_vec());
+        assert_eq!(hex_encode(&[]), "");
+    }
+
+    #[test]
+    fn dpapi_roundtrip() {
+        let plain = "P@ssw0rd-测试-123";
+        let enc = dpapi_protect(plain).expect("加密失败");
+        assert_ne!(enc, plain, "密文不应等于明文");
+        assert!(!enc.contains("P@ssw0rd"), "密文不应包含明文");
+        let back = dpapi_unprotect(&enc).expect("解密失败");
+        assert_eq!(back, plain);
+    }
+
+    fn mem_conn() -> Connection {
+        let c = Connection::open_in_memory().unwrap();
+        deploy_ensure_table(&c).unwrap();
+        deploy_ensure_table(&c).unwrap(); // 幂等：重复建表不报错
+        c
+    }
+
+    #[test]
+    fn server_crud_keeps_password_and_isolates_projects() {
+        let c = mem_conn();
+        let a = deploy_server_save_db(&c, None, "P1", "生产", "linux", "10.0.0.1", 22, "root", Some("enc-abc"), Some("备注")).unwrap();
+        let b = deploy_server_save_db(&c, None, "P1", "测试-Win", "windows", "10.0.0.2", 445, "admin", Some("enc-xyz"), None).unwrap();
+
+        let list = deploy_server_list_db(&c, "P1").unwrap();
+        assert_eq!(list.len(), 2);
+        assert_eq!(list[0]["id"], b, "列表应按新增倒序");
+        assert_eq!(list[0]["os_type"], "windows");
+        assert_eq!(list[0]["has_password"], true);
+        assert!(list[0].get("password_enc").is_none(), "不能把密文返回前端");
+
+        // 更新时不传密码 → 原密码密文必须保留
+        deploy_server_save_db(&c, Some(a), "P1", "生产改", "linux", "10.0.0.9", 2222, "deploy", None, None).unwrap();
+        let enc: String = c
+            .query_row("SELECT password_enc FROM deploy_servers WHERE id=?1", params![a], |r| r.get(0))
+            .unwrap();
+        assert_eq!(enc, "enc-abc");
+        let row = deploy_server_list_db(&c, "P1").unwrap().into_iter().find(|v| v["id"] == a).unwrap();
+        assert_eq!(row["name"], "生产改");
+        assert_eq!(row["port"], 2222);
+        assert_eq!(row["username"], "deploy");
+        assert_eq!(deploy_server_endpoint_db(&c, "P1", a).unwrap(), ("10.0.0.9".to_string(), 2222));
+
+        // 跨项目隔离：看不到 / 改不了 / 删不掉
+        assert!(deploy_server_list_db(&c, "P2").unwrap().is_empty());
+        assert!(deploy_server_save_db(&c, Some(a), "P2", "x", "linux", "1.1.1.1", 22, "u", None, None).is_err());
+        assert!(!deploy_server_delete_db(&c, "P2", a).unwrap());
+        assert!(deploy_server_endpoint_db(&c, "P2", a).is_err());
+
+        // 本项目删除生效
+        assert!(deploy_server_delete_db(&c, "P1", a).unwrap());
+        assert_eq!(deploy_server_list_db(&c, "P1").unwrap().len(), 1);
+    }
+
+    #[test]
+    fn tcp_probe_detects_open_and_closed_ports() {
+        let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let open_port = l.local_addr().unwrap().port() as i64;
+        let (ok, _, msg) = deploy_tcp_probe("127.0.0.1", open_port);
+        assert!(ok, "本机监听端口应判定可达，实际：{msg}");
+
+        let l2 = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let closed_port = l2.local_addr().unwrap().port() as i64;
+        drop(l2);
+        let (ok2, _, _) = deploy_tcp_probe("127.0.0.1", closed_port);
+        assert!(!ok2, "已释放端口应判定不可达");
+    }
+}
 
 /// 以主色为基准生成 10 阶色卡（Material 风格：浅阶向白混合，深阶向黑混合）
 fn generate_palette(accent: &str) -> std::collections::HashMap<String, String> {

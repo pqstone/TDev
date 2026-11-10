@@ -5,7 +5,48 @@
 
 ---
 
-## 0. 交接对象与阅读顺序
+## 0. 最新状态（2026-11-10）
+
+### 本轮新增（部署发布 + 多语言）
+
+| 能力 | 位置 | 说明 |
+| --- | --- | --- |
+| 服务器管理 | `deploy_server_*`（lib.rs） | 按项目隔离；密码 **DPAPI** 加密，前端只拿 `has_password`；端口连通性测试 |
+| 手动部署管道 | `src-tauri/src/deploy.rs` | 构建（自动加载 `Public/runtime/env.bat`、GBK 解码日志）→ 产物 glob → SSH/SFTP → 启动 → 启动验证 → 发布记录 |
+| Agent 部署 | `deploy_agent_prepare` + 前端 deploy 场景 | 自动生成专用 SSH 密钥并写入 `authorized_keys`，把上下文和铁律交给 Agent，让它自己构建/上传/重启/验证 |
+| 多语言 | `dist/index.html` i18n 区块 + `docs/i18n.md` | 中/英切换；原文即键的词典 + DOM 扫描 + MutationObserver；缺失文案采集器写 `app_meta.i18n_missing` |
+
+### 目录/文件变化
+
+- 新增 `src-tauri/src/deploy.rs`（部署引擎 + 命令）、`src-tauri/src/bin/probe.rs`（真机探针）
+- 新增文档：`docs/deploy-module.md`、`docs/i18n.md`
+- 前端仍为单文件 `dist/index.html`（i18n 区块在 `<script>` 开头）
+
+### 验证方式
+
+```bash
+cd src-tauri
+cargo test --lib                                  # 7 条单测
+cargo run --release --bin probe                   # 完整部署管道（真实服务器）
+cargo run --release --bin probe -- prepare        # 只验证 SSH 免密
+cargo run --release --bin probe -- ssh "uname -a" # 服务器上执行命令
+cargo build --release                             # 产物 target/release/tdev.exe
+```
+
+编译前必须杀掉正在运行的 `tdev.exe`：git-bash 里 `taskkill //F` 参数会被吃掉，用
+`powershell -NoProfile -Command "Stop-Process -Name tdev -Force"`。
+
+### 本机踩坑（已修，勿重犯）
+
+1. 默认 `~/.ssh/id_ed25519` **带口令**，非交互 ssh 永远 Permission denied → 用专用密钥 `~/.ssh/tdev_deploy_ed25519`。
+2. SFTP 必须先 `request_subsystem(true,"sftp")`；`SftpSession::write()` 不带 CREATE，必须 `create + write_all + close`。
+3. SSH 的 `Eof` 之后才来 `ExitStatus`，在 Eof 就 break 会把成功误判为失败。
+4. `#[tokio::test]` 会让 Tauri 的 test harness 链接出 `0xc0000139`，单测里不要用；真机验证走 `probe` 二进制。
+5. Windows 控制台输出是 GBK，按 UTF-8 读会静默丢中文报错。
+
+---
+
+## 0.1 交接对象与阅读顺序
 
 接手任何开发任务前，按此顺序读取权威文档（缺一不可）：
 

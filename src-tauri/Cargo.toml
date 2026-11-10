@@ -22,3 +22,11 @@ serde_json = "1"
 reqwest = { version = "0.12", default-features = false, features = ["json", "stream"] }
 futures-util = "0.3"
 uuid = { version = "1", features = ["v4"] }
+encoding_rs = "0.8"
+tokio = { version = "1", features = ["time", "sync", "net", "process", "rt"] }
+russh = { version = "0.65", default-features = false, features = ["ring"] }
+russh-sftp = "3"
+
+[target.'cfg(windows)'.dependencies]
+# DPAPI：部署发布模块的服务器密码加密（CryptProtectData / CryptUnprotectData）
+windows-sys = { version = "0.60", features = ["Win32_Foundation", "Win32_Security_Cryptography"] }

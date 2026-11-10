@@ -30,6 +30,8 @@
     .brand { display:flex; align-items:center; gap:10px; font-weight:600; font-size:16px; color:var(--p700); }
     .brand .mark { width:14px; height:14px; border-radius:4px; background:linear-gradient(135deg,var(--p700),var(--p300)); }
     .topbar .right { margin-left:auto; display:flex; align-items:center; gap:12px; font-size:13px; color:var(--ink500); }
+    .lang-sel { height:26px; padding:0 6px; border:1px solid var(--line300); border-radius:var(--r-md); background:var(--surface); color:var(--ink700); font-size:12px; font-family:inherit; cursor:pointer; }
+    .lang-sel:focus { outline:none; border-color:var(--p500); }
     /* ===== 中部主功能区 ===== */
     .main { flex:1; display:flex; min-height:0; }
     /* 左侧功能导航菜单栏 */
@@ -125,6 +127,49 @@
     .cfg-item-name { display:block; font-size:14px; font-weight:600; color:var(--ink900); }
     .cfg-item-sub { display:block; font-size:12px; color:var(--ink500); margin-top:2px; word-break:break-all; }
     .cfg-item-key { display:block; font-size:12px; color:var(--p700); margin-top:2px; font-family:Consolas,monospace; }
+    /* ===== 部署发布：服务器 ===== */
+    .dep-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .dep-head h4 { margin:0; }
+    .dep-item { display:flex; align-items:flex-start; gap:16px; padding:14px 16px; border:1px solid var(--line300); border-radius:var(--r-md); margin-bottom:8px; background:var(--surface); }
+    .dep-main { flex:1; min-width:0; }
+    .dep-name { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:var(--ink900); }
+    .dep-meta { display:flex; flex-wrap:wrap; gap:4px 16px; margin-top:4px; font-size:12px; color:var(--ink500); }
+    .dep-actions { display:flex; gap:8px; flex:none; padding-top:2px; }
+    .dep-test { font-size:12px; margin-top:4px; min-height:16px; }
+    .dep-test.ok { color:var(--success); }
+    .dep-test.fail { color:var(--danger); }
+    .os-badge { font-size:11px; font-weight:400; padding:1px 8px; border-radius:10px; border:1px solid var(--line300); background:var(--bg); color:var(--ink700); }
+    .os-badge.linux { color:var(--success); border-color:#BFE3D2; background:#EEF8F3; }
+    .os-badge.windows { color:var(--p700); border-color:var(--p100); background:var(--p050); }
+    .dep-empty { text-align:center; color:var(--ink500); font-size:13px; line-height:1.9; padding:32px 16px; }
+    .dep-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
+    .dep-note { font-size:12px; color:var(--ink500); margin-top:2px; }
+    .dep-hint { font-size:12px; color:var(--ink500); }
+    .dep-steps { display:flex; gap:8px; margin-bottom:12px; }
+    .dep-step { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink500); padding:6px 12px; border:1px solid var(--line300); border-radius:12px; background:var(--bg); }
+    .dep-dot { width:8px; height:8px; border-radius:50%; background:var(--line300); }
+    .dep-step.active { color:var(--p700); border-color:var(--p300); background:var(--p050); }
+    .dep-step.active .dep-dot { background:var(--p500); }
+    .dep-step.done { color:var(--success); border-color:#BFE3D2; background:#EEF8F3; }
+    .dep-step.done .dep-dot { background:var(--success); }
+    .dep-step.fail { color:var(--danger); border-color:#F3C7C7; background:#FCEFEF; }
+    .dep-step.fail .dep-dot { background:var(--danger); }
+    .dep-log { background:#0F2233; color:#C9E2F5; font-family:Consolas,monospace; font-size:12px; line-height:1.7; border-radius:var(--r-md); padding:12px 14px; height:240px; overflow:auto; white-space:pre-wrap; word-break:break-all; }
+    .dep-rel { display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid var(--line300); border-radius:var(--r-md); margin-bottom:8px; cursor:pointer; }
+    .dep-rel:hover { background:var(--p050); }
+    .dep-rel-main { flex:1; min-width:0; font-size:13px; color:var(--ink900); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .dep-rel-meta { font-size:12px; color:var(--ink500); flex:none; }
+    .dep-badge { font-size:11px; padding:1px 8px; border-radius:10px; flex:none; }
+    .dep-badge.ok { color:var(--success); background:#EEF8F3; border:1px solid #BFE3D2; }
+    .dep-badge.fail { color:var(--danger); background:#FCEFEF; border:1px solid #F3C7C7; }
+    .dep-badge.run { color:var(--p700); background:var(--p050); border:1px solid var(--p100); }
+    .dep-ai-msgs { margin-top:12px; display:flex; flex-direction:column; gap:10px; max-height:460px; overflow-y:auto; }
+    .dep-ai-msgs:empty { display:none; }
+    .dep-chat-panel { padding:0; overflow:hidden; }
+    .dep-chat-panel .ui-chat { height:520px; border:none; border-radius:0; }
+    .dep-chat-panel .ai-tool-body { max-height:180px; }
+    .dep-srv-pick { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:400; color:var(--ink500); }
+    .dep-srv-pick select { height:28px; padding:0 8px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:12px; background:var(--surface); color:var(--ink900); font-family:inherit; }
     .btn-sm { height:24px; padding:0 12px; font-size:12px; }
     /* 新增项目进度框 */
     .proj-progress {
@@ -422,6 +467,10 @@
   <header class="topbar">
     <div class="brand"><span class="mark"></span>TDev</div>
     <div class="right">
+      <select id="langSel" class="lang-sel" title="Language / 语言">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
       <span id="envTag">北极冰山 · 深邃蓝</span>
       <span id="ipcState">未连接</span>
     </div>
@@ -480,6 +529,824 @@
   </div>
 
   <script>
+    // ============================================================
+    // 多语言（i18n）：中文 / English
+    // 做法：界面上所有文案都是 JSON/HTML 里写死的中文，逐条改调用成本太高且容易漏。
+    // 这里用“原文 -> 译文”的词典 + DOM 扫描：首次遇到文本节点时记住原文，
+    // 切语言时按原文翻译/还原；动态渲染由 MutationObserver 兜住。
+    // 新增界面文案时，不用改调用处，只要在 I18N.en 里补一条即可。
+    // ============================================================
+    var LANG = "zh";
+    try { LANG = localStorage.getItem("tdev_lang") || "zh"; } catch (e) { LANG = "zh"; }
+    var LANG_ORIG = new WeakMap();      // 文本节点 -> 原文
+    var LANG_ATTR = new WeakMap();      // 元素 -> {placeholder,title}
+    var I18N_BUSY = false;
+    var I18N_OBS = null;
+
+    var I18N_EN = {
+      // ---- 导航 / 标题 ----
+      "项目工作": "Project",
+      "工具设置": "Settings",
+      "测试模块": "Test",
+      "基础信息": "Project Info",
+      "主题风格": "Theme",
+      "项目约束": "Constraints",
+      "业务流程": "Business Flow",
+      "AI开发": "AI Coding",
+      "部署发布": "Deploy",
+      "项目空间": "Workspace",
+      "模型配置": "Models",
+      "Agent配置": "Agent Config",
+      "Agent连接测试": "Agent Chat",
+      "所选项目的基础信息": "Basic information of the selected project",
+      "AI 生成主题交互定义（基于模板）": "AI generates theme tokens from a template",
+      "开发规范与红线约束（模板：devStandard）": "Coding standards and red lines (devStandard)",
+      "AI 梳理业务流程，生成可交互流程图": "AI maps the business flow into an interactive chart",
+      "AI 按开发计划生成项目代码": "AI writes code following the development plan",
+      "构建、打包与发布": "Build, package and release",
+      "设定 TDev 工具的工作路径": "Set the working directory for TDev",
+      "大模型接入参数配置（URL / API Key / 模型名）": "LLM endpoint settings (URL / API Key / model)",
+      "OpenClaw / Hermes 等 Agent 接入参数": "Agent connection settings (OpenClaw / Hermes)",
+      "在线与 Agent 沟通聊天（对接 Hermes Dashboard /api/pty）": "Chat with the agent (Hermes Dashboard /api/pty)",
+      "跟 AI 说一声，它自己构建、上传、启动并验证": "Just tell the AI - it builds, uploads, starts and verifies for you",
+
+      // ---- 通用按钮 / 状态 ----
+      "保存": "Save",
+      "取消": "Cancel",
+      "删除": "Delete",
+      "编辑": "Edit",
+      "添加": "Add",
+      "测试连接": "Test",
+      "保存配置": "Save",
+      "发送": "Send",
+      "展开": "Expand",
+      "收起": "Collapse",
+      "强制解锁": "Force unlock",
+      "执行过程": "Activity",
+      "🛠 执行过程": "Activity",
+      "💬 AI 部署对话": "AI Deployment Chat",
+      "未选择项目": "No project selected",
+      "北极冰山 · 深邃蓝": "Arctic Glacier · Deep Blue",
+      "已连接 Tauri": "Tauri connected",
+      "IPC 就绪": "IPC ready",
+      "空闲": "Idle",
+      "就绪": "Ready",
+      "未连接": "Disconnected",
+      "加载失败": "Load failed",
+      "正在处理…": "Working…",
+      "已完成": "Done",
+      "等待你的回答": "Waiting for your answer",
+
+      // ---- 基础信息 ----
+      "项目名称": "Project name",
+      "项目类型": "Project type",
+      "项目说明": "Description",
+      "项目标识 (prjGUID)": "Project ID (prjGUID)",
+      "创建时间": "Created at",
+      "删除项目": "Delete project",
+      "新增项目": "New project",
+      "请输入项目名称": "Enter project name",
+      "请输入项目说明": "Enter project description",
+      "删除项目「": "Delete project \"",
+
+      // ---- 部署发布 ----
+      "服务器": "Servers",
+      "＋ 添加服务器": "+ Add server",
+      "正在读取服务器…": "Loading servers…",
+      "还没有服务器。": "No servers yet.",
+      "点右上角「添加服务器」，填写操作系统类型、地址、用户名和密码即可。":
+        "Click \"+ Add server\" at the top right, then fill in OS type, address, username and password.",
+      "密码已设置": "Password set",
+      "未设置密码": "No password",
+      "用户：": "User: ",
+      "部署到：": "Deploy to: ",
+      "AI 部署对话": "AI Deployment Chat",
+      "选好目标服务器，直接说「把当前项目部署上去，验证能访问」":
+        "Pick a target server, then just say: deploy this project and verify it is reachable.",
+      "例如：把当前项目部署到这台服务器，启动后验证能访问（Enter 发送，Shift+Enter 换行）":
+        "e.g. Deploy this project to this server and verify it is reachable (Enter to send, Shift+Enter for newline)",
+      "部署记录": "Deployment history",
+      "展开全部": "Show all",
+      "暂无部署记录": "No deployments yet",
+      "还没有部署记录。在下面跟 AI 说一句就开始。":
+        "No deployments yet. Just tell the AI below to start.",
+      "点一条看结果": "Click a row to see the result",
+      "正在部署": "Deploying",
+
+      // ---- 服务器弹窗 ----
+      "添加服务器": "Add server",
+      "编辑服务器": "Edit server",
+      "服务器名称": "Server name",
+      "操作系统类型": "Operating system",
+      "服务器地址": "Server address",
+      "端口": "Port",
+      "用户名": "Username",
+      "密码": "Password",
+      "备注（可选）": "Note (optional)",
+      "留空表示不修改": "Leave blank to keep current",
+      "登录密码": "Login password",
+      "例如 生产-Tomcat01": "e.g. prod-tomcat01",
+      "例如 测试环境 / 只跑 Tomcat": "e.g. test environment / Tomcat only",
+      "密码会加密存储在本机，不会明文保存，也不会显示出来。":
+        "The password is encrypted on this machine - never stored or shown in plain text.",
+      "请填写服务器名称、地址和用户名": "Please fill in server name, address and username",
+      "端口需在 1-65535 之间": "Port must be between 1 and 65535",
+      "请填写登录密码": "Please enter the login password",
+      "保存中…": "Saving…",
+      "请先在左上角选择或新建项目，再添加发布服务器。":
+        "Select or create a project first (top left), then add a server.",
+
+      // ---- 项目空间 / 模型 / Agent ----
+      "工作路径": "Working directory",
+      "当前：": "Current: ",
+      "尚未设置工作路径": "No working directory set",
+      "浏览…": "Browse…",
+      "请输入路径": "Enter a path",
+      "已配置模型": "Configured models",
+      "暂无模型配置，请添加。": "No models yet.",
+      "已配置 Agent": "Configured agents",
+      "暂无 Agent 配置，请添加。": "No agents yet.",
+      "项目基础信息": "Project basics",
+      "基础信息面板": "Project basics"
+    };
+
+    // ---- 批量翻译（子 Agent 生成，原文 -> 英文；未命中时再查这里）----
+    var I18N_EN_EXTRA = {
+      "(无日志)": "(No logs)",
+      "AI 开发": "AI Development",
+      "AI 部署成功": "AI deployment succeeded",
+      "AI 部署结束（见对话）": "AI deployment finished (see conversation)",
+      "AI 部署进行中…": "AI deployment in progress…",
+      "Agent 执行出错：": "Agent execution error: ",
+      "Agent 流程梳理": "Agent flow analysis",
+      "Agent 生成中...": "Agent generating...",
+      "Agent 连接测试": "Agent connection test",
+      "Agent 错误：": "Agent error: ",
+      "IP 或域名，例如 192.168.1.10": "IP or domain, e.g. 192.168.1.10",
+      "Language / 语言": "Language",
+      "Tauri 不可用": "Tauri unavailable",
+      "Tauri 不可用（未连接）": "Tauri unavailable (not connected)",
+      "Tauri 环境不可用": "Tauri environment unavailable",
+      "WSL 写法：": "WSL format: ",
+      "WebSocket 创建失败：": "Failed to create WebSocket: ",
+      "agent_stream 处理异常": "agent_stream processing error",
+      "一、找出业务对象": "1. Identify business objects",
+      "一键跑完剩下的": "Run all remaining in one click",
+      "上次执行被中断（已完成": "Last run was interrupted (completed ",
+      "不可用": "Unavailable",
+      "业务功能": "Business function",
+      "业务流程图": "Business flow diagram",
+      "业务流程：": "Business flow: ",
+      "业务细节（照这个做，不要自行发挥）：": "Business details (follow these; do not improvise): ",
+      "业务逻辑描述": "Business logic description",
+      "个「正在处理」，只保留第": "\"in progress\" entries, keeping only the ",
+      "个业务功能": "business functions",
+      "个主阶段": "main stages",
+      "个已完成步骤，保留了": "completed steps, kept ",
+      "个节点、": "nodes, ",
+      "中": "In progress",
+      "主色：accent": "Primary color: accent",
+      "主阶段原名": "Original stage name",
+      "主阶段名/二级节点名": "Main stage name / sub-node name",
+      "产出：": "Output: ",
+      "代码字体：": "Code font: ",
+      "你只负责从第": "You only handle steps from ",
+      "例如 DeepSeek 主模型": "e.g. DeepSeek main model",
+      "例如 Hermes-Hulk": "e.g. Hermes-Hulk",
+      "例如：外贸流程 v1.0 定稿": "e.g. Foreign trade flow v1.0 final",
+      "例如：简洁现代、适合工具类软件的界面风格": "e.g. Clean and modern, suited to tool-style software",
+      "保存中...": "Saving...",
+      "保存失败": "Save failed",
+      "保存失败：": "Save failed: ",
+      "保留已完成的步骤，只重新生成没做的部分": "Keep completed steps and regenerate only the rest",
+      "保留已完成（": "Keep completed (",
+      "信息": "Info",
+      "做权限校验": "Add permission checks",
+      "做用户注册和登录": "Implement user registration and login",
+      "先停下，我自己看看": "Stop here; I'll take a look myself",
+      "全部完成": "All done",
+      "全部重新生成": "Regenerate all",
+      "写入数据库": "Write to database",
+      "准备": "Prepare",
+      "准备失败：": "Preparation failed: ",
+      "准备开始…": "Preparing to start…",
+      "准备数据库": "Prepare database",
+      "准备运行环境": "Prepare runtime environment",
+      "出错了": "Something went wrong",
+      "分": " min",
+      "切项目要跟着换": "Switch along with the project",
+      "创建时间：": "Created: ",
+      "创建项目目录": "Create project directory",
+      "初始化中…": "Initializing…",
+      "删除失败：": "Delete failed: ",
+      "删除失败：未找到该服务器": "Delete failed: server not found",
+      "删除失败：未找到该项目": "Delete failed: project not found",
+      "删除该节点及所有子节点": "Delete this node and all child nodes",
+      "前端": "Frontend",
+      "前端报错，这一步没发出去：": "Frontend error; this step was not sent: ",
+      "前）": " before)",
+      "动效：": "Motion: ",
+      "单步执行第": "Run single step ",
+      "单步执行：第": "Single step: step ",
+      "卡片": "Card",
+      "原始描述已保存：": "Original description saved: ",
+      "去执行第 7 步": "Go run step 7",
+      "反模式": "Anti-patterns",
+      "发现已有流程文档：": "Existing flow document found: ",
+      "另一个 Agent 正在执行（": "Another Agent is running (",
+      "只在真卡死时用：强制释放 Agent 锁": "Use only when truly stuck: force-release the Agent lock",
+      "只重新生成剩下的": "Regenerate only the rest",
+      "可选": "Optional",
+      "名称：": "Name: ",
+      "后端": "Backend",
+      "后）": " after)",
+      "和": "and",
+      "回退内容无法解析": "Unable to parse rollback content",
+      "回退失败：": "Rollback failed: ",
+      "圆角：": "Radius: ",
+      "在线": "Online",
+      "增加前置节点（同级）": "Add preceding node (same level)",
+      "增加后置节点（同级）": "Add following node (same level)",
+      "增加子节点（下一级，追加末尾）": "Add child node (next level, append at end)",
+      "处理逻辑：": "Processing logic: ",
+      "处违规": " violations",
+      "处违规）": " violations)",
+      "处），清单已发回 Agent 自己改": "), list sent back to the Agent to fix",
+      "备份": "Backup",
+      "备份内容无法解析": "Unable to parse backup content",
+      "备份失败：": "Backup failed: ",
+      "备份说明": "Backup description",
+      "复制开发模板": "Copy dev template",
+      "字号（px）：": "Font size (px): ",
+      "字重：": "Font weight: ",
+      "完成": "Done",
+      "密钥": "Key",
+      "展开全部（": "Expand all (",
+      "工作路径已保存": "Work path saved",
+      "工具": "Tools",
+      "工具已完成，Agent 处理中…": "Tool finished; Agent processing…",
+      "已从项目目录加载": "Loaded from project directory",
+      "已保存": "Saved",
+      "已保存项目：": "Project saved: ",
+      "已保存：": "Saved: ",
+      "已停止：第": "Stopped: step ",
+      "已删除服务器：": "Server deleted: ",
+      "已删除节点：": "Node deleted: ",
+      "已删除项目：": "Project deleted: ",
+      "已判定中断：": "Marked as interrupted: ",
+      "已加载（上次生成）": "Loaded (last generated)",
+      "已加载：": "Loaded: ",
+      "已取消重新生成": "Regeneration cancelled",
+      "已取消：这一步等你安排": "Cancelled: this step is left for you",
+      "已回退到上一个版本": "Rolled back to previous version",
+      "已填写": "Filled in",
+      "已增加前置节点（": "Preceding node added (",
+      "已增加后置节点（": "Following node added (",
+      "已增加子节点（": "Child node added (",
+      "已就绪": "Ready",
+      "已就绪（": "Ready (",
+      "已强制解锁": "Force-unlocked",
+      "已强制解锁 Agent": "Agent force-unlocked",
+      "已恢复备份": "Backup restored",
+      "已断开": "Disconnected",
+      "已暂停": "Paused",
+      "已暂停（这步还有": "Paused (this step has ",
+      "已暂停，点「继续执行」接着做": "Paused. Click \"Resume\" to continue.",
+      "已暂停：做完第": "Paused: finish step ",
+      "已更新服务器：": "Server updated: ",
+      "已添加 Agent：": "Agent added: ",
+      "已添加服务器：": "Server added: ",
+      "已添加模型：": "Model added: ",
+      "已移动节点：": "Node moved: ",
+      "已跳过": "Skipped",
+      "已连接 Agent（": "Agent connected (",
+      "已配置属性": "Properties configured",
+      "帮我生成开发计划": "Generate a development plan for me",
+      "开始": "Start",
+      "开始吧": "Let's start",
+      "开始吧（一键跑完）": "Let's start (run all at once)",
+      "开工流程": "Kickoff flow",
+      "强调": "Emphasis",
+      "强调悬停": "Emphasis hover",
+      "强调按下": "Emphasis pressed",
+      "强边框": "Strong border",
+      "待开始": "Not started",
+      "快": "Fast",
+      "快好了…": "Almost there…",
+      "成功": "Success",
+      "手动确认完成": "Mark as done manually",
+      "执行": "Run",
+      "执行中…": "Running…",
+      "执行回退操作...": "Rolling back...",
+      "执行工具": "Run tool",
+      "技术栈": "Tech stack",
+      "按": "by",
+      "控件：": "Control: ",
+      "搭好项目骨架": "Set up project skeleton",
+      "数据库": "Database",
+      "数据库初始化失败：": "Database initialization failed: ",
+      "文件对话框不可用（非 Tauri 环境）": "File dialog unavailable (non-Tauri environment)",
+      "断点：": "Breakpoint: ",
+      "新前置节点": "New preceding node",
+      "新后置节点": "New following node",
+      "新子节点": "New child node",
+      "新节点": "New node",
+      "无地址": "No address",
+      "无法解析为结构化流程，已保存原始描述": "Could not parse into a structured flow; original description saved",
+      "无法连接": "Unable to connect",
+      "无项目": "No project",
+      "既定技术栈": "Defined tech stack",
+      "暂无专题备份": "No topic backups yet",
+      "有": "Yes",
+      "有违规，已暂停": "Violations found; paused",
+      "未找到，将使用默认约定": "Not found; default conventions will be used",
+      "未知场景:": "Unknown scenario:",
+      "未知错误": "Unknown error",
+      "未设工作路径": "No work path set",
+      "未设置工作路径": "Work path not set",
+      "未配置 Agent": "Agent not configured",
+      "末尾）": " end)",
+      "构建": "Build",
+      "查看/编辑 doc/data-model.md": "View/edit doc/data-model.md",
+      "梳理失败：": "Analysis failed: ",
+      "检查地基是否稳": "Check whether the foundation is solid",
+      "检测到流程文档更新，自动加载：": "Flow document update detected; auto-loading: ",
+      "模板": "Template",
+      "次级面": "Secondary surface",
+      "次要字": "Secondary text",
+      "次返工": " reworks",
+      "次返工：": " reworks: ",
+      "正在做第": "Working on step ",
+      "正在执行：": "Running: ",
+      "正在连接": "Connecting",
+      "正文": "Body",
+      "步": "step",
+      "步不动）": " step unchanged)",
+      "步全部做完了 🎉": " steps all done 🎉",
+      "步出错": " step error",
+      "步出错：": " step error: ",
+      "步启动失败": " step failed to start",
+      "步完成": " step completed",
+      "步完成（": " step completed (",
+      "步已处理完（单步模式，没往下走）": " step processed (single-step mode; did not continue)",
+      "步已完成的原样保留（不重做），其余": " completed steps kept as-is (not redone); the rest ",
+      "步已手动标为完成（": " step marked as done manually (",
+      "步手动标为完成": " step marked as done manually",
+      "步是固定的：": " steps are fixed: ",
+      "步没过校验，": " step failed validation, ",
+      "步的产物": " step outputs",
+      "步第": " step ",
+      "步返工 2 次仍没过": " step still failing after 2 reworks",
+      "步（": " steps (",
+      "步（共": " steps (of ",
+      "步：": " step: ",
+      "流程名称：": "Flow name: ",
+      "流程描述.md": "flow-description.md",
+      "测试中…": "Testing…",
+      "点了「重新生成」，正在检查当前进度…": "\"Regenerate\" clicked; checking current progress…",
+      "点了重新生成没反应": "Clicked Regenerate but nothing happened",
+      "现在只做开发计划的第": "Now only doing step ",
+      "现在有一步正在跑（第": "A step is currently running (step ",
+      "现在正在执行第": "Currently running step ",
+      "生成失败": "Generation failed",
+      "生成失败：": "Generation failed: ",
+      "生成完成（未设工作路径，未保存）": "Generated (no work path set; not saved)",
+      "生成完成，保存失败：": "Generated, but save failed: ",
+      "生成完成，已保存到项目 theme 目录": "Generated and saved to the project's theme directory",
+      "生成完成，正在保存...": "Generated; saving...",
+      "生成项目说明": "Generate project description",
+      "用户需求：": "User requirements: ",
+      "界面字体：": "UI font: ",
+      "登录账号": "Login account",
+      "目录": "Directory",
+      "看看第": "Check step ",
+      "确定": "OK",
+      "确定删除 Agent「": "Delete Agent \"",
+      "确定删除服务器「": "Delete server \"",
+      "确定删除模型「": "Delete model \"",
+      "确定删除节点「": "Delete node \"",
+      "确定删除项目「": "Delete project \"",
+      "禁止执行构建、打包、部署命令": "Do not run build, package, or deploy commands",
+      "秒": "s",
+      "秒无响应（本轮已跑": "s with no response (this run has been going for ",
+      "秒零响应，已自动解锁": "s with zero response; auto-unlocked",
+      "秒），可能卡住了": "s); it may be stuck",
+      "程序运行需要的服务": "Services required by the app",
+      "第": "Step ",
+      "等": "etc.",
+      "等待你回答弹窗里的问题…": "Waiting for you to answer the dialog…",
+      "类型：": "Type: ",
+      "索引字段：": "Index field: ",
+      "约定文件：": "Convention files: ",
+      "约束上下文加载失败（不影响对话）": "Failed to load constraint context (conversation unaffected)",
+      "终端写法（本机 Git Bash）：": "Terminal format (local Git Bash): ",
+      "终端写法：": "Terminal format: ",
+      "缓动": "Easing",
+      "缓存": "Cache",
+      "编码失败：": "Encoding failed: ",
+      "编辑中...": "Editing...",
+      "聚焦环": "Focus ring",
+      "背景": "Background",
+      "自检清单": "Self-check list",
+      "节点不存在": "Node not found",
+      "节点名称": "Node name",
+      "节点属性已保存：": "Node properties saved: ",
+      "节点：": "Node: ",
+      "行高：": "Line height: ",
+      "表单：": "Form: ",
+      "装好": "Set up",
+      "解锁失败：": "Unlock failed: ",
+      "警告": "Warning",
+      "计划列好了：前 6 步是地基和骨架，后面": "Plan ready: the first 6 steps are the foundation and skeleton; the rest ",
+      "计划里的": "In the plan, step ",
+      "设计数据结构": "Design data structures",
+      "该页还未实现": "This page is not implemented yet",
+      "语义色（浅色）：": "Semantic colors (light): ",
+      "说明": "Description",
+      "说明：": "Description: ",
+      "说清做什么": "State clearly what to do",
+      "说清做完能看到什么": "State clearly what you'll see when done",
+      "请为项目": "For project ",
+      "请先在「基础信息」选择或新建项目": "Select or create a project in \"Basic Info\" first",
+      "请先在「基础信息」选择项目": "Select a project in \"Basic Info\" first",
+      "请先在项目空间页设定工作路径": "Set the work path on the Project Space page first",
+      "请先添加并选择一台服务器": "Add and select a server first",
+      "请先生成流程": "Generate a flow first",
+      "请先选择项目": "Select a project first",
+      "请填写 Agent 名称与接入地址": "Enter the Agent name and endpoint URL",
+      "请填写全部字段": "Fill in all fields",
+      "请输入": "Enter ",
+      "请输入主题描述": "Enter a theme description",
+      "请输入备份名称": "Enter a backup name",
+      "请选择备份": "Select a backup",
+      "读取 Agent 配置失败": "Failed to read Agent configuration",
+      "读取失败": "Read failed",
+      "读取失败：": "Read failed: ",
+      "读取日志失败：": "Failed to read logs: ",
+      "读取配置失败：": "Failed to read configuration: ",
+      "跳过这一步，接着往下做": "Skip this step and continue",
+      "辅助字": "Support text",
+      "输入内容描述": "Input content description",
+      "输入或选择索引字段": "Enter or select an index field",
+      "输入或选择表单名": "Enter or select a form name",
+      "输入：": "Input: ",
+      "输出内容描述": "Output content description",
+      "边框": "Border",
+      "返工 2 次仍未通过": "Still failing after 2 reworks",
+      "还在处理，稍等一下…": "Still processing; please wait…",
+      "还没有数据结构文档": "No data structure document yet",
+      "还没设置工作路径，请先到「项目空间」设置": "Work path not set yet; set it in \"Project Space\" first",
+      "这一步其实已经做完了？手动标为已完成": "Already done with this step? Mark it as done manually",
+      "这一步没做成：": "This step failed: ",
+      "这一步跳过了": "This step was skipped",
+      "这份计划的第 1 到": "Steps 1 to ",
+      "连接中…": "Connecting…",
+      "连接失败": "Connection failed",
+      "连接已断开": "Connection lost",
+      "连接测试：": "Connection test: ",
+      "部分步骤失败：": "Some steps failed: ",
+      "部署助手": "Deployment assistant",
+      "重做这一步（会重跑一次）": "Redo this step (runs it once more)",
+      "重新生成开发计划": "Regenerate development plan",
+      "重新试一次这一步": "Retry this step",
+      "重试": "Retry",
+      "错误": "Error",
+      "间距：": "Spacing: ",
+      "需要你确认一下": "Needs your confirmation",
+      "项目切换后重建失败:": "Rebuild after project switch failed:",
+      "项目开发计划": "Project development plan",
+      "项目标识：": "Project ID: ",
+      "项目：": "Project: ",
+      "风格：": "Style: ",
+      "（WSL 写法": "(WSL format",
+      "（已完成）": "(done)",
+      "（无回复）": "(no reply)",
+      "（无）": "(none)",
+      "（未设置）": "(not set)",
+      "（正在做）": "(in progress)",
+      "（流程过长已截断）": "(flow too long; truncated)",
+      "（返工后通过）": "(passed after rework)",
+      "（还没做）": "(not started)",
+      "（间距基准": "(spacing baseline",
+    };
+
+    // ---- 页面内部补充词条（手写）----
+    var I18N_EN_UI = {
+      "Agent 思考中...（可能需要 1-3 分钟）": "Agent is thinking… (may take 1-3 minutes)",
+      "…这一轮结束了，没收到完成事件": "…run ended without a completion event",
+      "✓ 单步完成：": "✓ Step done: ",
+      "✓ 数据结构文档已更新": "✓ Data model doc updated",
+      "✗ 前端异常：": "✗ Frontend error: ",
+      "✗ 启动失败：": "✗ Startup failed: ",
+      "✗ 失败": "✗ Failed",
+      "✗ 已强制解锁（前后端两把锁一起放）": "✗ Force-unlocked (both locks released)",
+      "✗ 未处理的 Promise 拒绝：": "✗ Unhandled promise rejection: ",
+      "✗ 校验没过（": "✗ Validation failed (",
+      "✗ 测试失败：": "✗ Test failed: ",
+      "✗ 返工 2 次仍未过，停下等卢Sir 定夺": "✗ Still failing after 2 retries - stopping for your decision",
+      "只在 Agent 真的卡死（长时间无任何反应）时才强制解锁。确定？": "Force unlock only when the agent is really stuck (no activity for a long time). Continue?",
+      "在线与 Agent 沟通聊天（对接 Hermes Dashboard）": "Chat with the agent (Hermes Dashboard)",
+      "已强制解锁。如果刚才确实有任务在跑，它的结果可能没写完 —— 做之前先看一眼代码状态。": "Force-unlocked. If a task was running, its output may be incomplete - check the code first.",
+      "已暂停。点「继续执行」从下一个没做完的步骤接着做。": "Paused. Click \"Continue\" to resume from the next unfinished step.",
+      "已自动复位：上一次执行没有正常结束（可以直接点「重新生成」或某一步的「执行」）": "Auto-reset: the last run did not finish cleanly (you can click Regenerate, or Run on a step).",
+      "已连接 Hermes API Server（会话按项目隔离），可直接发送消息": "Connected to Hermes API Server (sessions isolated per project). You can send messages now.",
+      "已选择「先不做」，等我安排。": "You chose \"skip for now\". Waiting for your plan.",
+      "当前计划里没有「设计数据结构」这一步，先重新生成计划。": "The current plan has no \"Design data model\" step - regenerate the plan first.",
+      "数据结构文档已保存（旧版在 doc/versions 里）。后续步骤都以这份为准。": "Data model doc saved (old versions under doc/versions). Later steps follow this file.",
+      "数据结构设计 · doc/data-model.md": "Data model design · doc/data-model.md",
+      "无法解析为结构化流程，已保存原始描述到 doc 目录": "Could not parse into a flow; raw description saved under doc/",
+      "未设工作路径": "No working directory set",
+      "未设置工作路径": "No working directory set",
+      "正在检查项目状态…": "Checking project status…",
+      "正在读取服务器…": "Loading servers…",
+      "请先在「基础信息」选择或新建项目": "Please select or create a project in Project Info first",
+      "请先在「基础信息」选择项目": "Please select a project in Project Info first",
+      "还没有数据结构文档（第 7 步做完才会有）。点第 7 步的「执行」让 Agent 先设计数据结构。": "No data model doc yet (it is created at step 7). Run step 7 first.",
+      "连接失败，请确认 Dashboard 已启动（dashboard.bat）": "Connection failed - make sure the dashboard is running (dashboard.bat)",
+      "通用开发助手：回答技术问题、读写当前项目 workspace 下的文件。": "General dev assistant: answers technical questions, reads/writes files in the project workspace.",
+    };
+    Object.assign(I18N_EN, I18N_EN_UI);
+
+    // ---- 页面内部补充（按采集到的缺失清单补齐）----
+    var I18N_EN_SWEEP = {
+      "根据你的描述和主题色，让 Agent 基于参考模板生成交互定义": "Describe your idea and pick a primary color - the agent generates the full theme from the template",
+      "主题描述": "Theme description",
+      "主题色": "Primary color",
+      "选择项目 UI 主色，Agent 将围绕它生成完整色板": "Pick the UI primary color; the agent derives the full palette from it",
+      "参考模板": "Reference template",
+      "生成主题": "Generate theme",
+      "保存到项目目录": "Save to project folder",
+      "开发规范与红线约束（基于 devStandard 模板）": "Coding standards and red lines (devStandard template)",
+      "规范文件": "Rule files",
+      "Agent 开工必读：技术栈硬约束 + 目录落位 + 三条致命反模式 + 流程": "Required reading before coding: tech stack, layout, top anti-patterns, workflow",
+      "分层边界、依赖方向、数据库/Redis 设计规范": "Layering, dependency direction, database/Redis rules",
+      "代码/SQL/前端规范 + 交付自检清单": "Code/SQL/frontend standards + delivery checklist",
+      "技术栈速查（硬约束）": "Tech stack (hard constraints)",
+      "规定": "Allowed",
+      "禁止": "Forbidden",
+      "反模式速查（禁止，违反即返工）": "Anti-patterns (forbidden - rework if violated)",
+      "交付自检清单（CODING-STANDARDS）": "Delivery self-check (CODING-STANDARDS)",
+      "与 Agent 沟通梳理业务流程，生成可交互流程图并保存到项目 doc 目录": "Work with the agent to map the business flow into an interactive chart saved under doc/",
+      "折叠全部": "Collapse all",
+      "专题备份": "Saved snapshots",
+      "载入备份": "Load snapshot",
+      "在左侧描述业务流程，Agent 将在这里生成流程图": "Describe the business flow on the left; the flow chart appears here",
+      "（先添加服务器）": "(add a server first)",
+      "AI 按业务流程生成项目源码（场景隔离：不可修改流程与主题数据）": "The agent writes project source code from the business flow (isolated: cannot modify flow or theme data)",
+      "💬 AI 开发对话": "💬 AI Coding Chat",
+      "已接入": "Connected",
+      "AI 开发对话": "AI Coding Chat",
+      "右侧先看计划，点「生成开发计划」开始": "Check the plan on the right, then click \"Generate plan\"",
+      "📋 开发计划": "📋 Development plan",
+      "步骤状态": "Step status",
+      "尚未开始": "Not started",
+      "业务流程：还没梳理，建议先到「业务流程」梳理一遍": "Business flow: not mapped yet - start with the Business Flow page",
+      "开发约定：已就绪": "Dev conventions: ready",
+      "生成开发计划": "Generate plan",
+      "设定 TDev 工具的主要工作路径": "Set the main working directory for TDev",
+      "选择一个系统硬盘路径作为 TDev 的主要工作目录，项目文件、配置与产出将存放于此。": "Pick a disk path as the TDev working directory - project files, config and output live here.",
+      "配置大模型接入参数（支持 OpenAI / DeepSeek / 通义 / 方舟 / Anthropic / Gemini 等）": "Configure LLM endpoints (OpenAI / DeepSeek / Qwen / Ark / Anthropic / Gemini, etc.)",
+      "新增模型": "New model",
+      "配置名称": "Profile name",
+      "提供商": "Provider",
+      "火山方舟 (Volcengine Ark)": "Volcengine Ark",
+      "阿里通义 (DashScope)": "Alibaba Qwen (DashScope)",
+      "Ollama (本地)": "Ollama (local)",
+      "自定义 (OpenAI 兼容)": "Custom (OpenAI-compatible)",
+      "模型 URL 地址": "Model URL",
+      "模型名称": "Model name",
+      "添加模型": "Add model",
+      "火山模型": "Volcengine model",
+      "Agent 配置": "Agent Config",
+      "配置 OpenClaw / Hermes 等 Agent 接入参数，支撑在线沟通": "Configure agent endpoints (OpenClaw / Hermes) for online chat",
+      "新增 Agent": "New agent",
+      "Agent 名称": "Agent name",
+      "Agent 类型": "Agent type",
+      "自定义": "Custom",
+      "接入地址 (Base URL)": "Base URL",
+      "会话标识 / 附加参数": "Session ID / extra params",
+      "添加 Agent": "Add agent",
+      "重新连接": "Reconnect",
+    };
+    Object.assign(I18N_EN, I18N_EN_SWEEP);
+
+    // ---- 第二轮采集补齐（流程/备份/计划等）----
+    var I18N_EN_SWEEP2 = {
+      "编辑后自动保存（Ctrl+S 立即保存）": "Auto-saved while editing (Ctrl+S saves immediately)",
+      "备份名称": "Snapshot name",
+      "生成时间（自动）": "Created at (auto)",
+      "保存到数据库（关联当前项目）": "Save to database (linked to current project)",
+      "保存备份": "Save snapshot",
+      "备份类型（二选一）": "Snapshot type (choose one)",
+      "自动备份（versions 目录）": "Auto backup (versions folder)",
+      "专题备份（数据库）": "Snapshot (database)",
+      "选择备份": "Choose a snapshot",
+      "备份信息": "Snapshot info",
+      "自动备份": "Auto backup",
+      "时间：": "Time: ",
+      "位置：": "Location: ",
+      "恢复将覆盖当前编辑版本": "Restoring will overwrite the current draft",
+      "恢复备份": "Restore snapshot",
+      "确认恢复": "Confirm restore",
+      "确认恢复该备份？将覆盖当前编辑版本。": "Restore this snapshot? The current draft will be overwritten.",
+      "正在读业务流程，稍等…": "Reading the business flow…",
+      "重做": "Redo",
+      "重新生成": "Regenerate",
+      "📐 数据结构文档": "📐 Data model",
+      "前+": "Before +",
+      "后+": "After +",
+      "子+": "Child +",
+      "删除该节点及所有子节点": "Delete this node and all children",
+      "编辑备份说明": "Snapshot description",
+      "备份说明": "Snapshot description",
+      "正在生成…": "Generating…",
+      "计划生成中…": "Planning…",
+      "跑完剩下的": "Run the rest",
+      "继续执行": "Continue",
+      "开始吧": "Start",
+      "生成中…": "Generating…",
+    };
+    Object.assign(I18N_EN, I18N_EN_SWEEP2);
+
+
+    // 带变量的句子：正则 -> 英文模板（$1、$2 为捕获组）
+    var I18N_RULES = [
+      [/^已添加服务器：(.+)$/, "Server added: $1"],
+      [/^已更新服务器：(.+)$/, "Server updated: $1"],
+      [/^已删除服务器：(.+)$/, "Server deleted: $1"],
+      [/^已保存：(.+)$/, "Saved: $1"],
+      [/^保存失败：(.+)$/, "Save failed: $1"],
+      [/^删除失败：(.+)$/, "Delete failed: $1"],
+      [/^读取服务器失败：(.+)$/, "Failed to load servers: $1"],
+      [/^读取失败：(.+)$/, "Failed to read: $1"],
+      [/^连接测试：(.+)$/, "Connection test: $1"],
+      [/^正连在连接 (.+) …$/, "Connecting to $1 …"],
+      [/^正在连接 (.+) …$/, "Connecting to $1 …"],
+      [/^端口 (\d+) 可达$/, "Port $1 is reachable"],
+      [/^连接失败：(.+)（检查地址、端口、防火墙）$/, "Connection failed: $1 (check address, port and firewall)"],
+      [/^测试失败：(.+)$/, "Test failed: $1"],
+      [/^展开全部（(\d+)）$/, "Show all ($1)"],
+      [/^确定删除服务器「(.+)」？删除后需重新填写密码。$/, "Delete server \"$1\"? You will need to re-enter its password."],
+      [/^Agent 执行出错：(.+)$/, "Agent error: $1"],
+      [/^准备失败：(.+)$/, "Preparation failed: $1"],
+      [/^AI 部署进行中…$/, "AI deployment in progress…"],
+      [/^AI 部署成功$/, "AI deployment succeeded"],
+      [/^AI 部署结束（见对话）$/, "AI deployment finished (see chat)"],
+      [/^请先选择项目$/, "Please select a project first"],
+      [/^请先添加并选择一台服务器$/, "Please add and select a server first"],
+      [/^请先添加服务器$/, "Please add a server first"],
+      [/^Tauri 不可用$/, "Tauri is not available"],
+      [/^已停止：第/, "Stopped at step "],
+      [/^确定删除项目「(.+)」？此操作不可撤销。$/, "Delete project \"$1\"? This cannot be undone."],
+      [/^已保存项目：(.+)$/, "Project saved: $1"],
+      [/^展开查看 (\d+) 项自检$/, "Show all $1 checks"],
+      [/^项目：(.+)$/, "Project: $1"],
+      [/^当前：(.+)$/, "Current: $1"],
+      [/^(\d+)\/(\d+) 完成$/, "$1/$2 done"],
+      [/^正在执行：(.+)$/, "Running: $1"],
+      [/^已加载：(.+)$/, "Loaded: $1"],
+      [/^发现已有流程文档：(.+)（重新生成将覆盖）$/, "Existing flow doc: $1 (regenerating overwrites it)"],
+      [/^已保存专题备份：(.+) @ (.+)$/, "Snapshot saved: $1 @ $2"],
+      [/^计划列好了：(.+)$/, "Plan ready: $1"]
+    ];
+
+    function tr(s) {
+      if (LANG !== "en" || s == null) return s;
+      var str = String(s);
+      var key = str.trim();
+      if (!key) return str;
+      if (Object.prototype.hasOwnProperty.call(I18N_EN, key)) {
+        return str.replace(key, I18N_EN[key]);
+      }
+      if (Object.prototype.hasOwnProperty.call(I18N_EN_EXTRA, key)) {
+        return str.replace(key, I18N_EN_EXTRA[key]);
+      }
+      for (var i = 0; i < I18N_RULES.length; i++) {
+        var m = key.match(I18N_RULES[i][0]);
+        if (m) return key.replace(I18N_RULES[i][0], I18N_RULES[i][1]);
+      }
+      return str;
+    }
+
+    function i18nLocalizeText(n) {
+      if (!n || !n.parentNode) return;
+      var tag = n.parentNode.nodeName;
+      if (tag === "SCRIPT" || tag === "STYLE" || tag === "TEXTAREA" || tag === "OPTION" && false) return;
+      var orig = LANG_ORIG.get(n);
+      if (orig === undefined) { orig = n.nodeValue; LANG_ORIG.set(n, orig); }
+      var want = LANG === "en" ? tr(orig) : orig;
+      if (n.nodeValue !== want) n.nodeValue = want;
+    }
+
+    function i18nLocalizeAttrs(el) {
+      if (!el || !el.getAttribute) return;
+      var rec = LANG_ATTR.get(el);
+      if (!rec) { rec = {}; LANG_ATTR.set(el, rec); }
+      ["placeholder", "title"].forEach(function(a) {
+        var cur = el.getAttribute(a);
+        if (cur == null) return;
+        if (rec[a] === undefined) { rec[a] = cur; }
+        var want = LANG === "en" ? tr(rec[a]) : rec[a];
+        if (cur !== want) el.setAttribute(a, want);
+      });
+    }
+
+    function i18nLocalizeTree(root) {
+      if (!root || !root.nodeType) return;
+      I18N_BUSY = true;
+      try {
+        if (root.nodeType === 3) { i18nLocalizeText(root); return; }
+        if (root.nodeType === 1) i18nLocalizeAttrs(root);
+        var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null);
+        var n;
+        while ((n = w.nextNode())) {
+          if (n.nodeType === 3) i18nLocalizeText(n);
+          else if (n.nodeType === 1) i18nLocalizeAttrs(n);
+        }
+      } finally { I18N_BUSY = false; }
+    }
+
+    function i18nApply(lang) {
+      LANG = (lang === "en") ? "en" : "zh";
+      try { localStorage.setItem("tdev_lang", LANG); } catch (e) {}
+      document.documentElement.setAttribute("lang", LANG === "en" ? "en" : "zh-CN");
+      i18nLocalizeTree(document.body);
+      var sel = document.getElementById("langSel");
+      if (sel) sel.value = LANG;
+      setTimeout(i18nCollectMissing, 800);
+    }
+
+    function i18nWatch() {
+      if (I18N_OBS || !window.MutationObserver) return;
+      I18N_OBS = new MutationObserver(function(muts) {
+        if (I18N_BUSY || LANG !== "en") return;
+        for (var i = 0; i < muts.length; i++) {
+          var m = muts[i];
+          if (m.type === "childList") {
+            for (var j = 0; j < m.addedNodes.length; j++) i18nLocalizeTree(m.addedNodes[j]);
+          } else if (m.type === "characterData") {
+            i18nLocalizeText(m.target);
+          } else if (m.type === "attributes") {
+            i18nLocalizeAttrs(m.target);
+          }
+        }
+        _i18nScanSoon();
+      });
+      var _i18nScanTimer = null;
+      function _i18nScanSoon() {
+        if (_i18nScanTimer) return;
+        _i18nScanTimer = setTimeout(function() { _i18nScanTimer = null; i18nCollectMissing(); }, 1200);
+      }
+      I18N_OBS.observe(document.body, {
+        childList: true, subtree: true, characterData: true,
+        attributes: true, attributeFilter: ["placeholder", "title"]
+      });
+    }
+
+    // ---- 缺失文案采集：英文模式下把仍是中文的文本上报，便于精确补齐词典 ----
+    var I18N_MISS = {};
+    var I18N_MISS_TIMER = null;
+    function i18nCollectMissing() {
+      if (LANG !== "en") return;
+      try {
+        var w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null), n, added = 0;
+        while ((n = w.nextNode())) {
+          var p = n.parentNode;
+          if (!p) continue;
+          var pn = p.nodeName;
+          if (pn === "SCRIPT" || pn === "STYLE" || pn === "TEXTAREA") continue;
+          if (p.id === "langSel") continue;
+          var t = (n.nodeValue || "").trim();
+          if (t.length < 2 || t.length > 200 || !/[一-龥]/.test(t)) continue;
+          if (t.indexOf("//") >= 0 || t.indexOf(String.fromCharCode(10)) >= 0) continue;
+          if (I18N_MISS[t]) continue;
+          I18N_MISS[t] = 1; added++;
+        }
+        if (added) i18nReportMissing();
+      } catch (e) {}
+    }
+    function i18nReportMissing() {
+      if (I18N_MISS_TIMER) clearTimeout(I18N_MISS_TIMER);
+      I18N_MISS_TIMER = setTimeout(function() {
+        try {
+          var arr = Object.keys(I18N_MISS);
+          localStorage.setItem("tdev_i18n_missing", JSON.stringify(arr));
+          if (window.__TAURI__ && window.__TAURI__.core) {
+            window.__TAURI__.core.invoke("cfg_save", {
+              category: "i18n_missing",
+              payload: JSON.stringify({ lang: LANG, count: arr.length, keys: arr.slice(0, 800) })
+            });
+          }
+        } catch (e) {}
+      }, 2000);
+    }
+
+    // alert / confirm 也走词典（否则英文界面里弹窗还是中文）
+    (function() {
+      var _alert = window.alert, _confirm = window.confirm;
+      window.alert = function(msg) { return _alert.call(window, tr(msg)); };
+      window.confirm = function(msg) { return _confirm.call(window, tr(msg)); };
+    })();
     // ===== 五大菜单面板内容 =====
     var MODULES = {
       0: { t: "基础信息", s: "所选项目的基础信息", body: [] },
@@ -487,13 +1354,9 @@
       2: { t: "项目约束", s: "开发规范与红线约束（模板：devStandard）", body: [], dynamic: "constraints" },
       3: { t: "业务流程", s: "AI 梳理业务流程，生成可交互流程图", body: [], dynamic: "process" },
       9: { t: "AI开发", s: "AI 按开发计划生成项目代码", body: [], dynamic: "ui" },
-      // ⚠️ 部署发布：当前是静态说明、无任何功能。后续接功能时必须跟随项目切换：
-//    构建/发布记录按 prjKey("deploy") 存取，并在 PRJ_REFRESH 登记表里补 4: renderDeploy。
-4: { t: "部署发布", s: "构建、打包与发布", body: [
-            "构建：cargo build --manifest-path src-tauri/Cargo.toml",
-            "发布：cargo build --release（无黑窗），产物 target/release/tdev.exe",
-            "打包安装器：cargo tauri build（NSIS/MSI）。"
-          ]},
+      // 部署发布：服务器登记 + 端口连通性测试（设计见 docs/deploy-module.md）
+      // 后续接构建/上传时：发布记录按 prjKey("deploy") 存取，继续在 PRJ_REFRESH[4] 重建。
+      4: { t: "部署发布", s: "构建、打包与发布", body: [], dynamic: "deploy" },
       5: { t: "项目空间", s: "设定 TDev 工具的工作路径", body: [], dynamic: "workspace" },
       6: { t: "模型配置", s: "大模型接入参数配置（URL / API Key / 模型名）", body: [], dynamic: "models" },
       7: { t: "Agent配置", s: "OpenClaw / Hermes 等 Agent 接入参数", body: [], dynamic: "agents" },
@@ -575,7 +1438,7 @@
       2: function () { renderConstraints(); },                  // 项目约束
       3: function () { renderProcess(); },                      // 业务流程
       9: function () { renderUi(); },                           // AI开发
-      4: null                                                   // 部署发布：待实现，实现后填 renderDeploy
+      4: function () { renderDeploy(); }                         // 部署发布
     };
     // 当前页若属于项目工作分组，按新项目重建
     function prjRefreshCurrent() {
@@ -791,6 +1654,388 @@
           cfgSave("agents", { list: list }).then(function(){ renderAgents(); });
         });
       });
+    }
+
+    // ================= 部署发布：服务器管理 + AI 对话式部署 =================
+    var depServers = [];
+    var depPreferredServerId = 0;
+    var depRelExpanded = false;
+
+    function depOsLabel(t) { return t === "windows" ? "Windows" : "Linux"; }
+
+    function renderDeploy() {
+      if (!currentProject) {
+        content.innerHTML =
+          '<div class="page-title">部署发布</div>' +
+          '<div class="page-sub">跟 AI 说一声，它自己构建、上传、启动并验证</div>' +
+          '<div class="panel"><div class="dep-empty">请先在左上角选择或新建项目，再添加发布服务器。</div></div>';
+        return;
+      }
+      content.innerHTML =
+        '<div class="page-title">部署发布</div>' +
+        '<div class="page-sub">跟 AI 说一声，它自己构建、上传、启动并验证</div>' +
+        '<div class="panel">' +
+          '<div class="dep-head"><h4>服务器</h4>' +
+            '<button class="btn btn-secondary" id="depAdd">＋ 添加服务器</button></div>' +
+          '<div id="depList"><div class="dep-empty">正在读取服务器…</div></div>' +
+        '</div>' +
+        '<div class="panel dep-chat-panel" style="margin-top:16px">' +
+          '<div class="ui-chat">' +
+            '<div class="ui-chat-head"><span>💬 AI 部署对话</span>' +
+              '<span class="dep-srv-pick">部署到：<select id="depSrvSel"></select></span>' +
+            '</div>' +
+            '<div class="ui-chat-body" id="depAiMsgs" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;justify-content:flex-start">' +
+              '<div class="ui-empty" id="depAiEmpty">' +
+                '<div class="ui-empty-icon">🚀</div>' +
+                '<p>AI 部署对话</p>' +
+                '<p class="ui-empty-sub">选好目标服务器，直接说「把当前项目部署上去，验证能访问」</p>' +
+              '</div>' +
+            '</div>' +
+            '<div class="ai-tool-panel" id="aiToolPanel">' +
+              '<div class="ai-tool-head" id="aiToolHead">' +
+                '<span class="ai-tool-title">🛠 执行过程</span>' +
+                '<span class="ai-tool-state" id="aiToolState">空闲</span>' +
+                '<span class="ai-tool-unlock" id="aiToolUnlock" title="只在真卡死时用：强制释放 Agent 锁">强制解锁</span>' +
+                '<span class="ai-tool-toggle" id="aiToolToggle">收起</span>' +
+              '</div>' +
+              '<div class="ai-tool-body" id="aiToolBody"></div>' +
+            '</div>' +
+            '<div class="ui-chat-input">' +
+              '<textarea id="depAiInput" rows="1" placeholder="例如：把当前项目部署到这台服务器，启动后验证能访问（Enter 发送，Shift+Enter 换行）"></textarea>' +
+              '<button id="depAiSendBtn">发送</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="panel" style="margin-top:16px">' +
+          '<div class="dep-head"><h4>部署记录</h4>' +
+            '<span class="dep-hint" id="depRelToggle" style="cursor:pointer;color:var(--p700)">展开全部</span></div>' +
+          '<div id="depRelList"><div class="dep-empty">暂无部署记录</div></div>' +
+        '</div>';
+
+      document.getElementById("depAdd").addEventListener("click", function(){ depOpenModal(null); });
+      document.getElementById("depAiSendBtn").addEventListener("click", depSend);
+      bindComposer(document.getElementById("depAiInput"), "deploy", depSend);
+      var depThead = document.getElementById("aiToolHead");
+      if (depThead) depThead.onclick = function () {
+        var p = document.getElementById("aiToolPanel");
+        if (!p) return;
+        p.classList.toggle("collapsed");
+        var tg = document.getElementById("aiToolToggle");
+        if (tg) tg.textContent = p.classList.contains("collapsed") ? "展开" : "收起";
+      };
+      var depUnlock = document.getElementById("aiToolUnlock");
+      if (depUnlock) depUnlock.onclick = function (ev) {
+        if (ev && ev.stopPropagation) ev.stopPropagation();
+        if (!window.confirm("只在 Agent 真的卡死（长时间无任何反应）时才强制解锁。确定？")) return;
+        window.__TAURI__.core.invoke("agent_force_unlock").then(function() {
+          try { agentBusyClear(); } catch (e) {}
+          document.getElementById("statusText").textContent = "已强制解锁 Agent";
+        }).catch(function(e){ alert("解锁失败：" + e); });
+      };
+      var depRelTg = document.getElementById("depRelToggle");
+      if (depRelTg) depRelTg.addEventListener("click", function() {
+        depRelExpanded = !depRelExpanded;
+        depLoadReleases();
+      });
+      ensureAgentStreamListener();
+      depLoadList();
+      depLoadReleases();
+    }
+
+    function depLoadList() {
+      var box = document.getElementById("depList");
+      if (!box) return;
+      if (!window.__TAURI__ || !window.__TAURI__.core) {
+        box.innerHTML = '<div class="dep-empty">Tauri 环境不可用，无法读取服务器。</div>';
+        return;
+      }
+      window.__TAURI__.core.invoke("deploy_server_list", { prjGuid: currentProject.prjGUID })
+        .then(function(list) {
+          depServers = list || [];
+          depRenderList();
+          depFillServerSelect(depPreferredServerId);
+        })
+        .catch(function(e) {
+          box.innerHTML = '<div class="dep-empty">读取服务器失败：' + escHtml(e) + '</div>';
+        });
+    }
+
+    function depFillServerSelect(selected) {
+      var sel = document.getElementById("depSrvSel");
+      if (!sel) return;
+      if (!depServers.length) {
+        sel.innerHTML = '<option value="">（先添加服务器）</option>';
+        return;
+      }
+      var cur = selected || depPreferredServerId || parseInt(sel.value, 10) || 0;
+      sel.innerHTML = depServers.map(function(s) {
+        return '<option value="' + s.id + '"' + (s.id === cur ? " selected" : "") + '>' +
+          escHtml(s.name) + ' · ' + depOsLabel(s.os_type) + ' · ' + escHtml(s.host) + '</option>';
+      }).join("");
+      depPreferredServerId = parseInt(sel.value, 10) || 0;
+    }
+
+    function depRenderList() {
+      var box = document.getElementById("depList");
+      if (!box) return;
+      if (!depServers.length) {
+        box.innerHTML =
+          '<div class="dep-empty">还没有服务器。<br>' +
+          '点右上角「添加服务器」，填写操作系统类型、地址、用户名和密码即可。</div>';
+        return;
+      }
+      box.innerHTML = depServers.map(function(s) {
+        return '<div class="dep-item" data-id="' + s.id + '">' +
+          '<div class="dep-main">' +
+            '<div class="dep-name">' + escHtml(s.name) +
+              '<span class="os-badge ' + escHtml(s.os_type) + '">' + depOsLabel(s.os_type) + '</span></div>' +
+            '<div class="dep-meta"><span>' + escHtml(s.host) + ':' + s.port + '</span>' +
+              '<span>用户：' + escHtml(s.username) + '</span>' +
+              '<span>' + (s.has_password ? '密码已设置' : '未设置密码') + '</span>' +
+              (s.remark ? '<span>' + escHtml(s.remark) + '</span>' : '') + '</div>' +
+            '<div class="dep-test" id="depTest-' + s.id + '"></div>' +
+          '</div>' +
+          '<div class="dep-actions">' +
+            '<button class="btn-xs" data-act="test" data-id="' + s.id + '">测试连接</button>' +
+            '<button class="btn-xs" data-act="edit" data-id="' + s.id + '">编辑</button>' +
+            '<button class="btn-xs" data-act="del" data-id="' + s.id + '">删除</button>' +
+          '</div>' +
+        '</div>';
+      }).join("");
+      box.querySelectorAll("button[data-act]").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+          var id = +btn.dataset.id;
+          if (btn.dataset.act === "test") depTest(id, btn);
+          else if (btn.dataset.act === "edit") depOpenModal(id);
+          else if (btn.dataset.act === "del") depDelete(id);
+        });
+      });
+    }
+
+    function depFind(id) {
+      for (var i = 0; i < depServers.length; i++) if (depServers[i].id === id) return depServers[i];
+      return null;
+    }
+
+    function depOpenModal(id) {
+      var s = id ? depFind(id) : null;
+      var old = document.getElementById("depModal");
+      if (old) old.remove();
+      var wrap = document.createElement("div");
+      wrap.className = "modal show";
+      wrap.id = "depModal";
+      wrap.innerHTML =
+        '<div class="modal-box" style="width:640px;max-width:94vw">' +
+          '<h4>' + (s ? "编辑服务器" : "添加服务器") + '</h4>' +
+          '<div class="dep-grid">' +
+            '<div class="field"><label>服务器名称</label><input id="depName" placeholder="例如 生产-Tomcat01" value="' + (s ? escHtml(s.name) : "") + '" /></div>' +
+            '<div class="field"><label>操作系统类型</label><select id="depOs">' +
+              '<option value="linux"' + (s && s.os_type === "linux" ? " selected" : "") + '>Linux</option>' +
+              '<option value="windows"' + (s && s.os_type === "windows" ? " selected" : "") + '>Windows</option>' +
+            '</select></div>' +
+            '<div class="field"><label>服务器地址</label><input id="depHost" placeholder="IP 或域名，例如 192.168.1.10" value="' + (s ? escHtml(s.host) : "") + '" /></div>' +
+            '<div class="field"><label>端口</label><input id="depPort" type="number" min="1" max="65535" value="' + (s ? s.port : 22) + '" /></div>' +
+            '<div class="field"><label>用户名</label><input id="depUser" placeholder="登录账号" value="' + (s ? escHtml(s.username) : "") + '" /></div>' +
+            '<div class="field"><label>密码</label><input id="depPwd" type="password" placeholder="' + (s && s.has_password ? "留空表示不修改" : "登录密码") + '" /></div>' +
+            '<div class="field" style="grid-column:1 / -1"><label>备注（可选）</label><input id="depRemark" placeholder="例如 测试环境 / 只跑 Tomcat" value="' + (s && s.remark ? escHtml(s.remark) : "") + '" /></div>' +
+          '</div>' +
+          '<div class="dep-note">密码会加密存储在本机，不会明文保存，也不会显示出来。</div>' +
+          '<div class="modal-actions">' +
+            '<button class="btn btn-secondary" id="depCancel">取消</button>' +
+            '<button class="btn btn-primary" id="depSave">保存</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(wrap);
+      var osSel = document.getElementById("depOs");
+      osSel.addEventListener("change", function() {
+        var p = document.getElementById("depPort");
+        if (!p.value || p.value === "22" || p.value === "445") p.value = osSel.value === "windows" ? 445 : 22;
+      });
+      document.getElementById("depCancel").addEventListener("click", function(){ wrap.remove(); });
+      document.getElementById("depSave").addEventListener("click", function(){ depSave(s ? s.id : null, wrap); });
+      wrap.addEventListener("click", function(e){ if (e.target === wrap) wrap.remove(); });
+      document.getElementById("depName").focus();
+    }
+
+    function depSave(id, wrap) {
+      var name = document.getElementById("depName").value.trim();
+      var os = document.getElementById("depOs").value;
+      var host = document.getElementById("depHost").value.trim();
+      var port = parseInt(document.getElementById("depPort").value, 10);
+      var user = document.getElementById("depUser").value.trim();
+      var pwd = document.getElementById("depPwd").value;
+      var remark = document.getElementById("depRemark").value.trim();
+      if (!name || !host || !user) { alert("请填写服务器名称、地址和用户名"); return; }
+      if (!port || port < 1 || port > 65535) { alert("端口需在 1-65535 之间"); return; }
+      if (!id && !pwd) { alert("请填写登录密码"); return; }
+      var btn = document.getElementById("depSave");
+      btn.disabled = true; btn.textContent = "保存中…";
+      window.__TAURI__.core.invoke("deploy_server_save", {
+        id: id, prjGuid: currentProject.prjGUID, name: name, osType: os,
+        host: host, port: port, username: user, password: pwd, remark: remark
+      }).then(function() {
+        wrap.remove();
+        document.getElementById("statusText").textContent = (id ? "已更新服务器：" : "已添加服务器：") + name;
+        depLoadList();
+        modSet("deploy", true);
+      }).catch(function(e) {
+        btn.disabled = false; btn.textContent = "保存";
+        alert("保存失败：" + e);
+      });
+    }
+
+    function depDelete(id) {
+      var s = depFind(id);
+      if (!s) return;
+      if (!window.confirm("确定删除服务器「" + s.name + "」？删除后需重新填写密码。")) return;
+      window.__TAURI__.core.invoke("deploy_server_delete", { prjGuid: currentProject.prjGUID, id: id })
+        .then(function(ok) {
+          if (!ok) { alert("删除失败：未找到该服务器"); return; }
+          document.getElementById("statusText").textContent = "已删除服务器：" + s.name;
+          depLoadList();
+          if (depServers.length <= 1) modSet("deploy", false);
+        })
+        .catch(function(e){ alert("删除失败：" + e); });
+    }
+
+    function depTest(id, btn) {
+      var box = document.getElementById("depTest-" + id);
+      var s = depFind(id);
+      btn.disabled = true; btn.textContent = "测试中…";
+      if (box) { box.className = "dep-test"; box.textContent = "正在连接 " + s.host + ":" + s.port + " …"; }
+      window.__TAURI__.core.invoke("deploy_server_test", { prjGuid: currentProject.prjGUID, id: id })
+        .then(function(r) {
+          if (box) {
+            box.textContent = (r.ok ? "✓ " : "✗ ") + r.msg + (r.ok ? "（" + r.latency_ms + " ms）" : "");
+            box.className = "dep-test " + (r.ok ? "ok" : "fail");
+          }
+          document.getElementById("statusText").textContent = "连接测试：" + r.msg;
+        })
+        .catch(function(e) {
+          if (box) { box.textContent = "✗ 测试失败：" + e; box.className = "dep-test fail"; }
+        })
+        .then(function() { btn.disabled = false; btn.textContent = "测试连接"; });
+    }
+
+    // ---------- 对话式部署：用户说话 → Agent 自己构建/上传/启动/验证 ----------
+    function depAddUserMsg(text) {
+      var box = document.getElementById("depAiMsgs");
+      if (!box) return;
+      var empty = document.getElementById("depAiEmpty");
+      if (empty) empty.remove();
+      var div = document.createElement("div");
+      div.className = "chat-msg me";
+      div.innerHTML = '<div class="chat-bubble">' + escHtml(text) + '</div>';
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function depAddSysMsg(text) {
+      var box = document.getElementById("depAiMsgs");
+      if (!box) return;
+      var empty = document.getElementById("depAiEmpty");
+      if (empty) empty.remove();
+      var div = document.createElement("div");
+      div.className = "chat-msg bot";
+      div.innerHTML = '<div class="chat-bubble-wrap"><div class="chat-bubble chat-reply">' + escHtml(text) + '</div></div>';
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function depSend() {
+      if (!currentProject) { alert("请先选择项目"); return; }
+      var input = document.getElementById("depAiInput");
+      var text = (input.value || "").trim();
+      if (!text) return;
+      var sel = document.getElementById("depSrvSel");
+      var serverId = sel ? (parseInt(sel.value, 10) || 0) : 0;
+      if (!serverId) { alert("请先添加并选择一台服务器"); return; }
+      var serverName = (sel.selectedOptions && sel.selectedOptions[0]) ? sel.selectedOptions[0].textContent : "";
+      var btn = document.getElementById("depAiSendBtn");
+      input.value = "";
+      try { taGrow(input); } catch (e) {}
+      try { draftClear("deploy"); } catch (e) {}
+      depAddUserMsg(text);
+      btn.disabled = true; btn.textContent = "执行中…";
+      document.getElementById("statusText").textContent = "AI 部署进行中…";
+
+      window.__TAURI__.core.invoke("deploy_agent_prepare", { prjGuid: currentProject.prjGUID, serverId: serverId })
+        .then(function(ctx) {
+          var prompt = ctx.context + "\n\n【用户要求】" + text +
+            "\n按上面的部署铁律执行，先把现状看清楚，再动手。";
+          return cfgLoad("workspace").then(function(ws) {
+            if (ws && ws.path) aiDetect.ws = ws.path;
+            return agentRun("deploy", prompt, {
+              tag: "部署助手",
+              onDone: function(txt) {
+                btn.disabled = false; btn.textContent = "发送";
+                var ok = /部署结果\s*[:：]\s*成功/.test(txt || "");
+                document.getElementById("statusText").textContent = ok ? "AI 部署成功" : "AI 部署结束（见对话）";
+                window.__TAURI__.core.invoke("deploy_release_note", {
+                  prjGuid: currentProject.prjGUID,
+                  serverId: serverId,
+                  serverName: serverName,
+                  success: ok,
+                  message: (txt || "").slice(0, 300),
+                  log: (txt || "").slice(0, 20000)
+                }).then(function() {
+                  depLoadReleases();
+                  if (ok) modSet("deploy", true);
+                }).catch(function(){});
+              },
+              onError: function(e) {
+                btn.disabled = false; btn.textContent = "发送";
+                depAddSysMsg("Agent 执行出错：" + e);
+              }
+            });
+          });
+        })
+        .catch(function(e) {
+          btn.disabled = false; btn.textContent = "发送";
+          depAddSysMsg("准备失败：" + e);
+        });
+    }
+
+    function depStatusBadge(s) {
+      if (s === "success") return '<span class="dep-badge ok">成功</span>';
+      if (s === "failed") return '<span class="dep-badge fail">失败</span>';
+      return '<span class="dep-badge run">进行中</span>';
+    }
+
+    function depLoadReleases() {
+      if (!currentProject || !window.__TAURI__ || !window.__TAURI__.core) return;
+      window.__TAURI__.core.invoke("deploy_release_list", { prjGuid: currentProject.prjGUID })
+        .then(function(list) {
+          var box = document.getElementById("depRelList");
+          if (!box) return;
+          var tg = document.getElementById("depRelToggle");
+          if (!list || !list.length) {
+            box.innerHTML = '<div class="dep-empty">还没有部署记录。在下面跟 AI 说一句就开始。</div>';
+            if (tg) tg.style.display = "none";
+            return;
+          }
+          if (tg) {
+            tg.style.display = "";
+            tg.textContent = depRelExpanded ? "收起" : ("展开全部（" + list.length + "）");
+          }
+          // 默认只露最近 1 行，点右上「展开全部」看历史
+          var show = depRelExpanded ? list : list.slice(0, 1);
+          box.innerHTML = show.map(function(r) {
+            return '<div class="dep-rel" data-id="' + r.id + '">' +
+              depStatusBadge(r.status) +
+              '<span class="dep-rel-main">' + escHtml(r.message || r.step || "") + '</span>' +
+              '<span class="dep-rel-meta">' + escHtml(r.server_name || "") + ' · ' + escHtml(r.started_at || "") + '</span>' +
+            '</div>';
+          }).join("");
+          box.querySelectorAll(".dep-rel").forEach(function(el) {
+            el.addEventListener("click", function() {
+              var id = +el.dataset.id;
+              window.__TAURI__.core.invoke("deploy_release_log", { id: id }).then(function(txt) {
+                alert(txt ? txt.slice(-1500) : "(无日志)");
+              }).catch(function(e){ alert("读取日志失败：" + e); });
+            });
+          });
+        }).catch(function(e) { console.warn("deploy_release_list:", e); });
     }
 
     // ================= Agent 连接测试：在线聊天（QQ 风格） =================
@@ -1065,6 +2310,19 @@ function doConnect(baseUrl, token) {
         forbid: [
           "禁止做「生产环境部署上线」类操作，如：发布到线上地址、改生产环境配置；但是本地开发环境无此限制",
           "禁止启动浏览器验证页面渲染效果（browser_navigate / browser_click / browser_console / 截图等一律不用）—— 界面效果由用户人工验收；前端只在代码层面核对逻辑与设计是否一致"
+        ]
+      },
+      deploy: {
+        title: "部署助手",
+        listId: "depAiMsgs",
+        sessionPrefix: "module:deploy",
+        freshSession: true,
+        scope: "把当前项目构建后部署到目标服务器：构建 → 上传 → 重启服务 → 启动验证（HTTP 2xx 或端口可通才算成功）。只做部署与环境诊断，不改业务源码。",
+        forbid: [
+          "禁止操作服务器上与本项目无关的服务：不要碰 Docker 容器、Dify、80/443 端口",
+          "禁止 sudo（账号无免密 sudo）、禁止改系统目录、禁止 rm -rf 非本项目目录",
+          "禁止改动项目源码来掩盖环境问题（缺库/缺表/连不上数据库要如实报告）",
+          "禁止只上传文件就宣称部署成功：必须完成启动并验证可访问"
         ]
       }
     };
@@ -1431,6 +2689,7 @@ function doConnect(baseUrl, token) {
       if (!s) return "";
       var L = [];
       L.push("【场景隔离】当前场景：" + s.title + "（scene=" + sceneId + "）");
+      if (LANG === "en") L.push("【Language】Reply to the user in English (the UI is in English). Keep command output and file paths as-is.");
       L.push("【职责范围】" + s.scope);
       if (currentProject) {
         L.push("【当前项目】" + currentProject.prjName + "（GUID " + currentProject.prjGUID + "）");
@@ -1445,32 +2704,16 @@ function doConnect(baseUrl, token) {
         var _pubDir = _wsDir ? (_wsDir + _sepPub + "Public") : "";
         L.push("【项目工作目录（绝对路径）】" + (_prjDir || ("workspace/" + currentProject.prjName)));
         if (_prjDir) {
-          L.push("　　终端写法（两种不通用，先跑 uname -s 判断用哪种）：");
-          L.push("　　　· 输出含 MINGW / MSYS → Git Bash，用：" + toMsysPath(_prjDir));
-          L.push("　　　· 输出 Linux → WSL，用：" + toWslPath(_prjDir));
+          L.push("　　终端写法（本机 Git Bash）：" + toMsysPath(_prjDir));
         }
         if (_pubDir) {
           L.push("【公共目录（绝对路径）】" + _pubDir + "（多个项目共用的运行时、依赖缓存放这里，只装一份）");
-          L.push("　　终端写法：Git Bash 用 " + toMsysPath(_pubDir) + "；WSL 用 " + toWslPath(_pubDir));
+          L.push("　　终端写法：" + toMsysPath(_pubDir));
         }
-        L.push("【落盘硬性规则（违反即返工）】");
-        L.push("1. 新建、修改、删除任何文件，路径必须写全（从盘符开始）。禁止用 ./ ../ 或任何相对路径，禁止依赖当前工作目录——当前工作目录不在项目里。");
-        L.push("2. 本项目自己的代码、脚本、配置、SQL，全部只写进上面的项目工作目录，不许写到项目目录之外。");
-        L.push("3. 多个项目能共用的东西（数据库程序、JDK、Web 服务、依赖缓存）装进公共目录，只装一份。");
-        L.push("4. 运行期数据、上传文件放项目下的 data，日志放 logs，构建产物放 build。");
-        L.push("5. 项目配置文件里不许写死盘符绝对路径，用相对路径或配置项，换台机器也能跑。");
-        L.push("6. terminal 里的路径要和 shell 类型匹配：先跑 uname -s —— 含 MINGW/MSYS 就是 Git Bash（/e/xxx），输出 Linux 就是 WSL（/mnt/e/xxx）。上面两种写法都给了，用通的那个，不要反复试。其他工具（execute_code / wf）直接用盘符路径 E:\\xxx。");
-        L.push("7. 读写文件的正确姿势（用错工具会假失败，白折腾）：");
-        L.push("   · 读：不要用 read_file（读 Windows 盘报 File not found）。用 execute_code 读，或 terminal 里 cat /mnt/e/...");
-        L.push("   · 写：不要用 write_file —— 本机它走 WSL 通道，wsl.exe 的代理警告会混进返回值，文件明明写成功了也报 Failed to write file，然后你以为失败去换路径重试，越搞越乱。");
-        L.push("   · 首选 execute_code（Python 直接写，参数走 JSON，最稳）；要命令行写就用 wf 工具：");
-        L.push("       wf write <路径>            ← 内容走 stdin，原子写 + 自动备份 .bak");
-        L.push("       wf replace <路径> <旧> <新> [--all]   ← 字面量替换，默认要求恰好命中 1 处");
-        L.push("       wf read <路径>  /  wf stat <路径>");
-        L.push("   · 路径写 E:\\... 或 /mnt/e/... 都行，wf 会自动转换。");
-        L.push("8. terminal 输出开头那段 wsl: 乱码是环境警告，不是命令失败，真实结果在它后面。不要因为它反复重跑同一条命令，也不要为查一个信息连续换五六种写法试探。");
-        L.push("9. 不许探测数据库 root 密码、不许翻软件自己的配置目录、不许访问项目工作目录和公共目录以外的任何路径。缺凭据就停下来问，不要猜。");
-        L.push('10. 需要我提供密码、密钥或做方案选择时，必须单独输出一行 [[ASK:{"title":"标题","body":"说明","options":[{"v":"值","label":"说明"}],"field":{"key":"键","label":"输入框标题","secret":true}}]]，界面会弹窗收集；不许只在正文里提问，更不许自己猜。');
+        L.push("【工作区硬标准（细则见技能 tdev-dev-rules，开工前先加载一次）】");
+        L.push("· 路径一律写绝对路径、只写项目目录；禁止相对路径、禁止碰项目/公共目录以外的文件。");
+        L.push("· 界面按「节约版面 / 整齐秩序 / 审美 / 菜单≤2级」四条标准，先读 css/app.css 复用已有类。");
+        L.push("· 缺凭据停下问、不许猜；需要我输入密码或做选择时，用 [[ASK:{...}]] 单行格式。");
       } else {
         L.push("【当前项目】未选择项目，无法写入任何项目文件");
       }
@@ -1504,16 +2747,7 @@ function doConnect(baseUrl, token) {
         var _th = agentThemeDelta();
         for (var _ti = 0; _ti < _th.length; _ti++) L.push(_th[_ti]);
       }
-      // UI 布局三条硬标准：卢Sir 要求「每次新增或修改 UI 都要关注节约版面、秩序、审美」，
-      // 所以这段必须每轮常驻（不像主题摘要可以省成一行提醒）——
-      // 只写规范文件没用，Agent 不会主动去读；不常驻就必然写成一片散乱控件。
-      L.push("");
-      L.push("【界面布局四条硬标准】");
-      L.push("① 节约版面：短字段一行 3~4 个、中等 2 个、长文本整行独占；列表首屏至少能看到 10 行；弹窗按内容取 480/640/800 三档。");
-      L.push("② 整齐秩序：间距只用 --space-xs|sm|md|lg|xl|xxl（4/8/12/16/24/32），禁止随意像素值；同一表单 label 字号一致、输入框和按钮统一 var(--control-height)；主按钮在右下、新增在右上、删除类单独放；一屏只有一个实心主按钮。");
-      L.push("③ 审美：留白优先不许挤；层级靠字号+灰度+加粗+加色；主色只用于主操作和选中态；空状态/加载态/错误态三态必须画全，不许白屏。");
-      L.push("④ 菜单层级：功能菜单深度不超过 2 级 —— 不论左侧主导航，还是右侧功能页内的功能菜单/分组，最多「一级 + 二级」两层。需要第三层时重新归并到同级，或改成页内 tab/分区，不要做三级下拉、三级导航。");
-      L.push("动手前先读 css/app.css 和同类页面，已有类直接复用，禁止重新定义。细则见 CODING-STANDARDS.md 第 4.9 章。");
+
       // A+ 常驻：项目铁律（唯一来源 ARCHITECTURE.md 第10章）+ 规范文件路径指引
       if (currentProject && AGENT_CONST && AGENT_CONST.ironlaws) {
         L.push("");
@@ -1524,15 +2758,12 @@ function doConnect(baseUrl, token) {
         var P = AGENT_CONST.paths || {};
         if (P["ARCHITECTURE.md"]) {
           L.push("- 架构决策 " + P["ARCHITECTURE.md"] + "：分层边界(1-2章)、交付策略与YAGNI边界(7章)、四个接缝(8章)、认证预留(9章)、自检清单(11章)、后期改造地图(12章)");
-          L.push("　　WSL 写法：" + toWslPath(P["ARCHITECTURE.md"]));
         }
         if (P["CODING-STANDARDS.md"]) {
           L.push("- 代码写法 " + P["CODING-STANDARDS.md"] + "：Java命名、异常、SQL、Redis、前端、交付自检清单");
-          L.push("　　WSL 写法：" + toWslPath(P["CODING-STANDARDS.md"]));
         }
         if (P["AGENTS.md"]) {
           L.push("- 协作流程 " + P["AGENTS.md"] + "：目录落位、技术栈、开工流程");
-          L.push("　　WSL 写法：" + toWslPath(P["AGENTS.md"]));
         }
         L.push("【硬性要求】涉及表结构、新增模块、认证/权限的改动，动手前必须先读上述文件对应章节。读这些文件用 execute_code 或 terminal cat，别用 read_file。");
       }
@@ -4135,7 +5366,7 @@ function doConnect(baseUrl, token) {
         var ws = "";
         try { ws = JSON.parse(v || "{}").path || ""; } catch(e) {}
         if (!ws) { procAddSys("未设置工作路径"); return; }
-        var wsMnt = ws.replace(/^[A-Za-z]:/, function(m){ return "/mnt/" + m[0].toLowerCase(); }).split("\\").join("/");
+        var wsMnt = ws.split("\\").join("/");
         var docDirMnt = wsMnt + "/" + currentProject.prjName + "/doc";
         var fileName = currentProject.prjName + "_flow.json";
         var q = String.fromCharCode(34);
@@ -4148,7 +5379,7 @@ function doConnect(baseUrl, token) {
         }).then(function(c){ currentJson = c; }).catch(function(){ currentJson = ""; });
         loadProm.then(function(){
           var prompt = "请把以下业务流程描述整理为结构化流程图 JSON，并用 terminal 工具（python 命令）直接写入文件：" + docDirMnt + "/" + fileName + "。" +
-          "注意：当前是 WSL 环境。写文件用 wf 工具（wf write <路径>，内容走 stdin，原子写+自动备份，会自动转换 E:/ 与 /mnt/e/ 两种路径）；没有 wf 就用 terminal 执行 python3 写入。不要用 write_file（Windows 上会因 WSL 警告误报失败）。目录不存在 wf 会自动创建。" +
+          "注意：本机是 Windows + Git Bash，路径用 E:/... 这种带盘符的写法。写文件优先用 write_file 工具；要用命令行写就在 terminal 里跑 python。目录不存在时自己先建。" +
           "JSON 格式严格为：{" + q + "flow_name" + q + ":流程名称," + q + "steps" + q + ":[{" + q + "name" + q + ":主流程节点1," + q + "children" + q + ":[{" + q + "name" + q + ":子流程节点a," + q + "children" + q + ":[{" + q + "name" + q + ":三级节点," + q + "children" + q + ":[]}]}]}]}。" +
           "主流程节点从上到下排列（steps 数组顺序即主流程顺序）；children 数组每个元素是对象 {name, children}，无下级则 children 为空数组；支持无限层级嵌套。" +
           "当前已有流程文件内容（未修改的节点必须原样保留，只按用户要求增删改指定节点，禁止丢失或改写其他节点）：" +
@@ -5087,6 +6318,7 @@ function doConnect(baseUrl, token) {
       else if (kind === "theme") renderTheme();
       else if (kind === "process") renderProcess();
       else if (kind === "ui") renderUi();
+      else if (kind === "deploy") renderDeploy();
       else if (kind === "chat") renderChat();
     }
 
@@ -5239,6 +6471,13 @@ function doConnect(baseUrl, token) {
     }
 
     bindProjSel();
+    // 多语言：先按上次选择渲染一遍，再开监听兜住后续动态渲染
+    var _langSel = document.getElementById("langSel");
+    if (_langSel) {
+      _langSel.addEventListener("change", function() { i18nApply(_langSel.value); });
+    }
+    i18nApply(LANG);
+    i18nWatch();
     render(0);
     initDb();
     loadProjects();
