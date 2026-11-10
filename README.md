@@ -56,6 +56,13 @@
   - **模型配置**：配置大模型接入（名称/提供商/URL/API Key/模型名），支持 OpenAI/DeepSeek/火山方舟/通义/Anthropic/Gemini/Ollama/自定义，Key 脱敏显示。
   - **Agent配置**：配置 Agent 接入（名称/类型/地址/Key/附加参数），支持 Hermes/OpenClaw/OpenAI Agent/自定义。
 - **测试模块 → Agent连接测试**：QQ 风格在线聊天（气泡消息、输入框、发送按钮、连接状态），对接 Hermes API Server，X-Hermes-Session-Id 按项目隔离会话；消息历史 + 思考状态 localStorage 持久化。
+- **部署发布**（2026-11-10）：
+  - **服务器管理**：按项目维护服务器（名称 / Linux|Windows / 地址 / 端口 / 用户名 / 密码 / 备注），密码用 **Windows DPAPI** 加密入库，界面只显示「密码已设置」；支持端口连通性测试。
+  - **AI 对话式部署**：选好目标服务器，直接对 Agent 说「把当前项目部署上去，验证能访问」，Agent 自己完成 **构建 → 上传（scp）→ 重启服务 → 启动验证（HTTP 2xx 或端口通）**，失败会读日志定位并如实报告；执行过程在独立面板，不混进聊天。
+  - **免密通道**：TDev 自动生成专用 SSH 密钥（`~/.ssh/tdev_deploy_ed25519`）并写入服务器 `authorized_keys`，Agent 用 `ssh -i … -o IdentitiesOnly=yes` 操作服务器。
+  - **部署记录**：默认显示最近 1 条，可展开全部，点开看结果摘要。
+  - 另有**手动固定流程**（后端确定性管道）作为兜底：`deploy_run` 构建→上传→启动→验证，事件流式回传。
+- **多语言（中文 / English）**：顶栏语言切换，选择持久化。实现为「原文即键」的词典 + DOM 自动翻译（记得原文，可 100% 切回中文）+ MutationObserver 兜动态渲染 + alert/confirm 覆盖；新增文案只需加词条，无需改调用处。文档内容（技术栈表、自检清单）暂不翻译。
 
 ## 快速开始
 
@@ -70,7 +77,17 @@ cd src-tauri; cargo run
 # 发布构建（Release：无控制台黑窗，正式形态）
 cd src-tauri; cargo build --release
 # 产物：src-tauri\target\release\tdev.exe
+
+# 单元测试（服务器 CRUD / DPAPI / 配置 / 产物解析 / TCP 探测）
+cd src-tauri; cargo test --lib
+
+# 部署引擎真机探针（可选，需要库里有可用服务器）
+cd src-tauri; cargo run --release --bin probe            # 完整管道
+cd src-tauri; cargo run --release --bin probe -- prepare # 只验证 SSH 免密
+cd src-tauri; cargo run --release --bin probe -- ssh "uname -a"
 ```
+
+> 编译前先关掉正在运行的 `tdev.exe`，否则会报「failed to remove file … 拒绝访问」。
 
 ## 目录结构
 
@@ -112,6 +129,8 @@ TDev/
 | `theme/tokens.json` | 机器可读设计令牌，色值一律由此引用 |
 | `theme/ui-preview.html` | 全组件视觉示意页 |
 | `docs/ARCHITECTURE.md` | 架构决策说明 |
+| `docs/deploy-module.md` | 部署发布模块设计与数据模型（服务器/手动管道/Agent 部署） |
+| `docs/i18n.md` | 多语言设计与词条维护（中/英） |
 
 ---
 
@@ -142,6 +161,8 @@ TDev is a Tauri v2 desktop application designed as an AI-collaborative engineeri
 | Business Process | AI flow modeling + infinite-level flowchart + node properties + drag-drop + backup |
 | Tool Settings | Workspace / Model config / Agent config |
 | Agent Chat | Hermes API Server chat with per-project session isolation |
+| Deploy | Server registry (DPAPI-encrypted passwords) + agent-driven deployment (build → upload → restart → verify) + deployment history |
+| i18n | Chinese / English UI switch (dictionary + DOM scanning, persisted choice) |
 
 ### Milestones
 
@@ -150,3 +171,6 @@ TDev is a Tauri v2 desktop application designed as an AI-collaborative engineeri
 - v0.3.0 - Agent integration (CLI to API Server, session isolation)
 - v0.4.0 - Business-process module (AI + infinite flowchart + properties + drag)
 - v0.4.1 - Backup system (auto versions capped at 100 + snapshot backup/restore)
+- v0.5.0 - AI coding module (plan-driven single-step execution)
+- v0.6.0 - Deployment module (servers, deterministic pipeline, agent-driven deploy with start verification)
+- v0.6.1 - Bilingual UI (Chinese / English)
