@@ -23,3 +23,9 @@ Thumbs.db
 *.bak4-*
 *.bak5-*
 dist/*.bak*
+
+# 本地临时备份目录（改前快照，不入库）
+backup_tune/
+
+# 白窗检测截图（运行时生成）
+scripts/shot_main.png
