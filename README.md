@@ -28,12 +28,15 @@
 │    主题风格   │     右侧展示/操作区         │
 │    项目约束   │     （随菜单切换内容）      │
 │    业务流程   │                          │
+│    业务表单   │                          │
+│    AI开发     │                          │
 │    部署发布   │                          │
 │              │                          │
 │ 工具设置      │                          │
 │    项目空间   │                          │
 │    模型配置   │                          │
 │    Agent配置  │                          │
+│    微调模式   │                          │
 │ 测试模块      │                          │
 │    Agent连接  │                          │
 ├──────────────┴──────────────────────────┤
@@ -43,8 +46,8 @@
 
 - **菜单顶部为项目条**：项目下拉选择框（列出 SQLite `projects` 表已有项目）+ 「＋」按钮弹出**新增项目**弹窗（字段：项目名称 / 项目类型（web / windows program / Tauri）/ 项目说明；`prjGUID` 自动生成）。
 - 左侧菜单为**三分类**，均带**线性 SVG 图标**（配合主题色）：
-  - **项目工作**：基础信息、主题风格、项目约束、业务流程、部署发布
-  - **工具设置**：项目空间（工作路径）、模型配置（大模型接入）、Agent配置（Hermes/OpenClaw 接入）
+  - **项目工作**：基础信息、主题风格、项目约束、业务流程、业务表单、AI开发、部署发布
+  - **工具设置**：项目空间（工作路径）、模型配置（大模型接入）、Agent配置（Hermes/OpenClaw 接入）、微调模式（浮窗式细节调整）
   - **测试模块**：Agent连接测试（QQ 风格在线聊天，对接 Hermes API Server）
 
 ## 已实现功能
@@ -62,6 +65,18 @@
   - **免密通道**：TDev 自动生成专用 SSH 密钥（`~/.ssh/tdev_deploy_ed25519`）并写入服务器 `authorized_keys`，Agent 用 `ssh -i … -o IdentitiesOnly=yes` 操作服务器。
   - **部署记录**：默认显示最近 1 条，可展开全部，点开看结果摘要。
   - 另有**手动固定流程**（后端确定性管道）作为兜底：`deploy_run` 构建→上传→启动→验证，事件流式回传。
+- **业务表单**（2026-11-13，从 AI 开发计划里抽出的独立模块）：
+  - **前提**：必须先有业务流程；无流程时「生成业务表单」禁用，并引导去「业务流程」。
+  - **生成**：Agent 读完整业务流程，按业务视角设计业务对象（表单）、字段与表单之间的关系，只输出 `[[FORMS]]…[[/FORMS]]` 结构化 JSON。
+  - **真源**：`doc/forms.json`（表单 / 字段 / 关系 / 关键决策）；`doc/data-model.md` 由前端从它**自动生成**（四节结构不变），所以 AI 编码每一步读到的永远是界面上的最新字段。
+  - **界面**：右侧统计「N 张表单 · M 个字段 · K 条关系」；表单卡片可折叠，字段表（字段名 / 中文名 / 类型 / 长度 / 必填 / 唯一 / 说明）逐格可编辑、可增删；表单关系（1:1 / 1:N / N:M + 外键 + 业务含义）可编辑。
+  - **保存**：自动写两份文件并进 `doc/versions/` 备份；完成后菜单亮绿灯。
+- **AI 开发前置闸门**（2026-11-13）：生成计划 / 开始执行 / 单步执行前，检查「基础信息 → 主题风格 → 项目约束 → 业务流程 → 业务表单」是否全部亮绿灯；缺项弹「前序模块未完成」并可直接跳转到缺的模块。
+- **微调模式**（2026-11-13，工具设置分组）：
+  - 项目完成第一轮开发后，点「微调模式」→ **主窗口自动最小化**，弹出始终置顶的极简浮窗：只有对话输入框 + 可调透明度的执行日志。
+  - **窗体透明**：标题栏滑块控制整个窗体 10%–100% 不透明度（透出后面的程序），**输入区始终不透明**，保证能看清能点。
+  - **交互**：回车换行、必须点「执行」才发送（防误发）；Agent 需要确认时按 `[[ASK:{…}]]` 弹阻塞式确认框，答案作为下一轮发回。
+  - **与 AI开发 共享**：聊天记录 `ai_hist_<项目>` 与执行输出 `ai_log_<项目>` 同一份真源，两个窗口互通；标题栏「主窗口」按钮关闭浮窗并恢复主窗口。
 - **多语言（中文 / English）**：顶栏语言切换，选择持久化。实现为「原文即键」的词典 + DOM 自动翻译（记得原文，可 100% 切回中文）+ MutationObserver 兜动态渲染 + alert/confirm 覆盖；新增文案只需加词条，无需改调用处。文档内容（技术栈表、自检清单）暂不翻译。
 
 ## 快速开始
@@ -130,6 +145,8 @@ TDev/
 | `theme/ui-preview.html` | 全组件视觉示意页 |
 | `docs/ARCHITECTURE.md` | 架构决策说明 |
 | `docs/deploy-module.md` | 部署发布模块设计与数据模型（服务器/手动管道/Agent 部署） |
+| `docs/forms-module.md` | 业务表单模块设计与数据契约（`forms.json` → `data-model.md`、AI 开发前置闸门） |
+| `docs/tune-mode.md` | 微调模式（浮窗、窗体透明度、与 AI 开发共享聊天/日志、`[[ASK]]` 确认交互） |
 | `docs/i18n.md` | 多语言设计与词条维护（中/英） |
 
 ---
@@ -148,6 +165,9 @@ TDev is a Tauri v2 desktop application designed as an AI-collaborative engineeri
 - AI-Native Workflow: Agents (via Hermes API Server) generate themes, business-process flows, and project constraints from natural-language requirements.
 - Standardized Development: " + bt + "AGENTS.md" + bt + " + devStandard templates enforce architecture, code style, and red lines for every AI contribution.
 - Process Modeling: interactive flowcharts with unlimited nesting, node property editing, drag-and-drop restructuring, and snapshot backup/restore (SQLite).
+- Business Forms: Agent designs business objects (forms), fields and relations from the process; every cell is editable in the right panel; `doc/forms.json` is the single source of truth and `doc/data-model.md` is generated from it for AI coding steps.
+- Guarded AI Coding: plan generation / run / single-step execution is gated on all upstream modules being complete (basic info → theme → constraints → process → business forms).
+- Fine-tune Mode: after the first development round, an always-on-top minimal window (opaque input area, adjustable 10–100% window opacity) that shares chat history and execution log with the AI Coding module.
 - Tooling: workspace management, LLM model configuration, and Agent connection settings.
 - Tech Stack: Pure static frontend (no framework) | Rust + Tauri v2 | SQLite (rusqlite).
 
@@ -159,6 +179,9 @@ TDev is a Tauri v2 desktop application designed as an AI-collaborative engineeri
 | Theme Studio | AI-generated theme tokens (palette / preview / save) |
 | Project Constraints | devStandard templates, editable with auto-save |
 | Business Process | AI flow modeling + infinite-level flowchart + node properties + drag-drop + backup |
+| Business Forms | Agent-generated business objects / fields / relations, inline editing, `forms.json` → `data-model.md`, menu green light |
+| AI Coding | Plan-driven single-step execution, gated on all upstream modules being complete |
+| Fine-tune Mode | Always-on-top floating window: opaque input area, 10–100% window opacity, shares chat + log with AI Coding, `[[ASK]]` confirm dialog |
 | Tool Settings | Workspace / Model config / Agent config |
 | Agent Chat | Hermes API Server chat with per-project session isolation |
 | Deploy | Server registry (DPAPI-encrypted passwords) + agent-driven deployment (build → upload → restart → verify) + deployment history |
@@ -174,3 +197,4 @@ TDev is a Tauri v2 desktop application designed as an AI-collaborative engineeri
 - v0.5.0 - AI coding module (plan-driven single-step execution)
 - v0.6.0 - Deployment module (servers, deterministic pipeline, agent-driven deploy with start verification)
 - v0.6.1 - Bilingual UI (Chinese / English)
+- v0.7.0 - Business Forms module (forms/fields/relations editing, forms.json → data-model.md), AI-coding upstream gate, Fine-tune Mode floating window

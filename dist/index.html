@@ -53,7 +53,8 @@
     .mi-dot.on { background:#2e9e6b; box-shadow:0 0 4px rgba(46,158,107,.6); }
     /* 右侧功能展示、操作区 */
     .content { flex:1; overflow-y:auto; padding:24px; }
-    .content.chat-page { overflow:hidden; padding-bottom:12px; }
+    /* 连接测试 + 记忆测试双面板同屏，外层允许滚动（矮屏不至于被裁掉下半页） */
+    .content.chat-page { overflow-y:auto; padding-bottom:12px; }
     .content.theme-page { overflow:hidden; padding-bottom:12px; }
     .content.constr-page { overflow:hidden; padding-bottom:12px; }
     .content.process-page { overflow:hidden; padding-bottom:12px; }
@@ -217,6 +218,13 @@
     .chat-input { flex:1; min-height:36px; padding:0 14px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:14px; font-family:inherit; color:var(--ink900); background:var(--surface); }
     textarea.chat-input { padding:8px 14px; line-height:1.5; resize:none; max-height:120px; overflow-y:auto; }
     .chat-input:focus { outline:none; border-color:var(--p500); box-shadow:0 0 0 2px rgba(26,108,179,.25); }
+    /* ===== Agent 连接测试 / 记忆测试：同页双面板 ===== */
+    .chat-panel.is-half { height:calc(50vh - 150px); min-height:300px; }
+    .chat-panel.is-half + .chat-panel.is-half { margin-top:16px; }
+    .mem-head-title { font-size:13px; font-weight:600; color:var(--ink900); }
+    .mem-badge { font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(26,108,179,.12); color:var(--p700); font-weight:600; }
+    .mem-sid { font-size:11px; color:var(--ink500); font-family:Consolas,monospace; }
+    .mem-note { font-size:11px; color:var(--ink500); line-height:1.5; padding:6px 16px; background:var(--surface); border-bottom:1px solid var(--line300); }
     /* ===== 主题风格页 ===== */
     .theme-panel { display:flex; flex-direction:column; gap:16px; max-width:1204px; height:calc(100vh - 190px); min-height:440px; background:var(--surface); border:1px solid var(--line300); border-radius:var(--r-lg); padding:24px; overflow:hidden; }
     .theme-row { display:flex; align-items:center; gap:12px; }
@@ -460,7 +468,36 @@
       .ui-plan-ghead.g-done { border-left-color: #16a34a; background: #f0fdf4; }
       .ui-plan-gname { font-weight: 600; font-size: 13px; color: #1e293b; }
       .ui-plan-gcount { margin-left: auto; font-size: 11px; color: #64748b; font-variant-numeric: tabular-nums; }
-  </style>
+    /* ===== 业务表单模块（原「数据结构设计」抽出来的独立模块）===== */
+  .fm-actions{flex:none;display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--line300);background:var(--surface);}
+  .fm-hint{flex:1;font-size:12px;color:var(--ink500);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .fm-hint.dirty{color:var(--warning);font-weight:600;}
+  .fm-stats{font-size:12px;color:var(--ink500);font-weight:400;}
+  .fm-card{border:1px solid var(--line300);border-radius:var(--r-lg);background:var(--surface);margin-bottom:12px;overflow:hidden;}
+  .fm-card-head{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;background:var(--sunken);}
+  .fm-card-head:hover{background:var(--p050);}
+  .fm-caret{width:12px;color:var(--ink500);font-size:11px;}
+  .fm-name{font-weight:600;color:var(--p900);font-size:13px;}
+  .fm-table{font-family:Consolas,monospace;font-size:12px;color:var(--ink500);}
+  .fm-badge{font-size:11px;color:var(--p700);background:var(--p050);border:1px solid var(--p100);border-radius:999px;padding:1px 8px;white-space:nowrap;}
+  .fm-mod{font-size:11px;color:var(--ink500);margin-left:auto;white-space:nowrap;}
+  .fm-card-body{padding:12px;border-top:1px solid var(--line300);}
+  .fm-tr{display:grid;grid-template-columns:1.1fr 1fr .8fr .5fr .42fr .42fr 1.35fr 26px;gap:6px;align-items:center;margin-bottom:6px;}
+  .fm-th{font-size:11px;color:var(--ink500);margin-bottom:2px;}
+  .fm-tr input[type=text],.fm-tr input[type=number],.fm-tr select{height:28px;padding:0 6px;border:1px solid var(--line300);border-radius:var(--r-sm);font-size:12px;font-family:inherit;background:var(--surface);color:var(--ink900);min-width:0;width:100%;}
+  .fm-tr input:focus,.fm-tr select:focus{outline:none;border-color:var(--p500);box-shadow:0 0 0 2px rgba(26,108,179,.12);}
+  .fm-tr input[type=checkbox]{width:15px;height:15px;accent-color:var(--p500);justify-self:center;}
+  .fm-x{border:none;background:transparent;color:var(--ink300);cursor:pointer;font-size:13px;line-height:1;padding:2px;}
+  .fm-x:hover{color:var(--danger);}
+  .fm-add{border:1px dashed var(--line300);background:transparent;color:var(--ink500);border-radius:var(--r-sm);height:28px;font-size:12px;cursor:pointer;font-family:inherit;width:100%;}
+  .fm-add:hover{border-color:var(--p300);color:var(--p700);background:var(--p050);}
+  .fm-rel-head{margin:14px 0 6px;font-size:12px;font-weight:600;color:var(--ink700);display:flex;align-items:center;gap:8px;}
+  .fm-rel{display:grid;grid-template-columns:84px 1fr 1fr 1.5fr 26px;gap:6px;align-items:center;margin-bottom:6px;}
+  .fm-rel select,.fm-rel input{height:28px;padding:0 6px;border:1px solid var(--line300);border-radius:var(--r-sm);font-size:12px;font-family:inherit;background:var(--surface);color:var(--ink900);min-width:0;width:100%;}
+  .fm-empty{padding:44px 24px;text-align:center;color:var(--ink500);font-size:13px;line-height:1.9;}
+  .fm-empty b{display:block;font-size:15px;color:var(--ink700);margin-bottom:6px;}
+  .fm-empty .btn{margin-top:12px;}
+</style>
 </head>
 <body>
   <!-- 顶部标题栏 -->
@@ -488,12 +525,14 @@
       <div class="mi active" data-m="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11v5"/></svg>基础信息<span class="mi-dot"></span></div>
       <div class="mi" data-m="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 0 0 0 18h1.5a2 2 0 0 0 1.6-3.2A2 2 0 0 1 14 15.6H19a2 2 0 0 0 2-2A9 9 0 0 0 12 3z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg>主题风格<span class="mi-dot"></span></div>
       <div class="mi" data-m="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9.5 12l2 2 3.5-3.5"/></svg>项目约束<span class="mi-dot"></span></div>
-      <div class="mi" data-m="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="5" rx="1"/><rect x="14" y="15" width="7" height="5" rx="1"/><path d="M6.5 9v3a3 3 0 0 0 3 3h4.5"/></svg>业务流程<span class="mi-dot"></span></div>      <div class="mi" data-m="9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>AI开发<span class="mi-dot"></span></div>
+      <div class="mi" data-m="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="5" rx="1"/><rect x="14" y="15" width="7" height="5" rx="1"/><path d="M6.5 9v3a3 3 0 0 0 3 3h4.5"/></svg>业务流程<span class="mi-dot"></span></div>
+      <div class="mi" data-m="11"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/><path d="M12 14h6M12 17h4"/></svg>业务表单<span class="mi-dot"></span></div>      <div class="mi" data-m="9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>AI开发<span class="mi-dot"></span></div>
       <div class="mi" data-m="4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>部署发布<span class="mi-dot"></span></div>
       <div class="menu-title" style="margin-top:24px">工具设置</div>
       <div class="mi" data-m="5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 12h18"/></svg>项目空间</div>
       <div class="mi" data-m="6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M6 6l1.8 1.8M16.2 16.2L18 18M18 6l-1.8 1.8M7.8 16.2L6 18"/></svg>模型配置</div>
       <div class="mi" data-m="7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 3v5"/><circle cx="9" cy="13" r="0.6"/><circle cx="15" cy="13" r="0.6"/></svg>Agent配置</div>
+      <div class="mi" data-m="10"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></svg>微调模式</div>
       <div class="menu-title" style="margin-top:24px">测试模块</div>
       <div class="mi" data-m="8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Agent连接测试</div>
     </aside>
@@ -558,6 +597,13 @@
       "模型配置": "Models",
       "Agent配置": "Agent Config",
       "Agent连接测试": "Agent Chat",
+      "Agent 记忆测试": "Agent Memory Test",
+      "🧠 Agent 记忆测试": "🧠 Agent Memory Test",
+      "固定提示 0 字": "0 fixed prompt",
+      "待发送": "Ready",
+      "实验：会话 ID 写死，不下发任何固定提示词、不叠加会话历史，每次只发输入框里的原文 —— 用来看 Agent 自带记忆够不够用。":
+        "Experiment: fixed session ID, no fixed prompt, no stacked history — each send carries only the text you typed, to test the agent's own memory.",
+      "只发送这句话本身，Enter 发送，Shift+Enter 换行…": "Sends only this sentence. Enter to send, Shift+Enter for a new line…",
       "所选项目的基础信息": "Basic information of the selected project",
       "AI 生成主题交互定义（基于模板）": "AI generates theme tokens from a template",
       "开发规范与红线约束（模板：devStandard）": "Coding standards and red lines (devStandard)",
@@ -1353,6 +1399,8 @@
       1: { t: "主题风格", s: "AI 生成主题交互定义（基于模板）", body: [], dynamic: "theme" },
       2: { t: "项目约束", s: "开发规范与红线约束（模板：devStandard）", body: [], dynamic: "constraints" },
       3: { t: "业务流程", s: "AI 梳理业务流程，生成可交互流程图", body: [], dynamic: "process" },
+      // 业务表单：从 AI 开发计划里抽出来的「数据结构设计」，业务视角叫业务表单
+      11: { t: "业务表单", s: "按业务流程生成业务表单（字段 / 关系），供 AI 开发调用", body: [], dynamic: "forms" },
       9: { t: "AI开发", s: "AI 按开发计划生成项目代码", body: [], dynamic: "ui" },
       // 部署发布：服务器登记 + 端口连通性测试（设计见 docs/deploy-module.md）
       // 后续接构建/上传时：发布记录按 prjKey("deploy") 存取，继续在 PRJ_REFRESH[4] 重建。
@@ -1360,7 +1408,9 @@
       5: { t: "项目空间", s: "设定 TDev 工具的工作路径", body: [], dynamic: "workspace" },
       6: { t: "模型配置", s: "大模型接入参数配置（URL / API Key / 模型名）", body: [], dynamic: "models" },
       7: { t: "Agent配置", s: "OpenClaw / Hermes 等 Agent 接入参数", body: [], dynamic: "agents" },
-      8: { t: "Agent连接测试", s: "在线与 Agent 沟通聊天（对接 Hermes Dashboard）", body: [], dynamic: "chat" }
+      8: { t: "Agent连接测试", s: "在线与 Agent 沟通聊天（对接 Hermes Dashboard）", body: [], dynamic: "chat" },
+      // 微调模式：不是页面，点菜单直接开独立浮窗（流程完整后再提细节调整）
+      10: { t: "微调模式", s: "浮窗式细节调整：输入框 + 半透明执行日志，边看边改", body: [], dynamic: "tune" }
     };
 
     var content = document.getElementById("content");
@@ -1437,6 +1487,7 @@
       1: function () { thUpdateStatus(); thRestore(); },        // 主题风格
       2: function () { renderConstraints(); },                  // 项目约束
       3: function () { renderProcess(); },                      // 业务流程
+      11: function () { renderForms(); },                         // 业务表单
       9: function () { renderUi(); },                           // AI开发
       4: function () { renderDeploy(); }                         // 部署发布
     };
@@ -2270,6 +2321,62 @@ function doConnect(baseUrl, token) {
       }).catch(function () {});
     }
 
+    // ================= Agent 记忆测试：干净请求（固定会话 / 零常驻提示 / 零历史） =================
+    var MEM_SID = "tdev-memory-test";
+    function memList() { return document.getElementById("memMsgList"); }
+    function memSys(text) {
+      var list = memList();
+      if (!list) return;
+      var row = document.createElement("div");
+      row.className = "chat-sys";
+      row.textContent = text;
+      list.appendChild(row);
+      list.scrollTop = list.scrollHeight;
+    }
+    function memSetState(text, cls) {
+      var el = document.getElementById("memState");
+      if (!el) return;
+      el.textContent = text;
+      el.className = "chat-status " + cls;
+    }
+    function memUserBubble(text) {
+      var list = memList();
+      if (!list) return;
+      var row = document.createElement("div");
+      row.className = "chat-msg me";
+      row.innerHTML = '<div class="chat-bubble">' + escHtml(text) + '</div>';
+      list.appendChild(row);
+      list.scrollTop = list.scrollHeight;
+    }
+    function memSend() {
+      var input = document.getElementById("memInput");
+      if (!input) return;
+      var text = input.value.trim();
+      if (!text) return;
+      if (!window.__TAURI__ || !window.__TAURI__.core) { memSys("Tauri 不可用"); return; }
+      memUserBubble(text);
+      agentHistPush("memory", text, true);
+      input.value = "";
+      draftClear("memory");
+      taGrow(input);
+      // 实验留痕：这一轮到底发了什么，跟连接测试的常驻提示量做个对照
+      var cmp = "";
+      try {
+        var last = JSON.parse(localStorage.getItem("tdev_last_instr") || "null");
+        if (last && last.len) cmp = "；对照：" + last.title + " 上一轮固定提示 " + last.len + " 字";
+      } catch (e) {}
+      memSys("本轮只发送 " + text.length + " 字（固定提示 0 字、历史 0 条、会话 " + MEM_SID + "）" + cmp);
+      memSetState("思考中…", "pending");
+      agentRun("memory", text, {
+        onDone: function () { memSetState("已回复", "on"); },
+        onError: function (msg) { memSetState("出错", "off"); memSys("Agent 错误：" + msg); }
+      }).catch(function (e) {
+        // 全局同一时刻只允许一个 Agent run：被挡下时别让状态条永远停在「思考中」
+        memSetState("忙（另一个 Agent 在跑）", "pending");
+        memSys("没发出去：" + (String(e) === "busy" ? "另一个 Agent 还在跑，等它结束再发" : String(e)));
+      });
+    }
+
     // 创建聊天气泡容器（流式填充）
     // ==================== Agent 聊天组件（场景化复用） ====================
     // 一套流式 UI/逻辑，多场景挂载。每个场景：
@@ -2286,6 +2393,23 @@ function doConnect(baseUrl, token) {
         scope: "通用开发助手：回答技术问题、读写当前项目 workspace 下的文件。",
         forbid: []
       },
+      memory: {
+        // 记忆测试（实验）：复制连接测试的聊天能力，但
+        //   1) 会话 ID 固定 —— 每次都落在同一个 Hermes 会话里
+        //   2) instructions 恒为空 —— 不追加任何固定提示词/项目摘要/铁律
+        //   3) conversation_history 恒为空 —— 不主动叠加历史（Rust 侧固定 []）
+        //   4) 不传 cwd，payload 就是输入框里的原文
+        // 用来验证：Agent 自带会话记忆是否够用，固定提示词是否纯属重复付费。
+        title: "Agent 记忆测试",
+        listId: "memMsgList",
+        inputId: "memInput",
+        btnId: "memSendBtn",
+        sessionPrefix: "tdev-memory",
+        fixedSession: "tdev-memory-test",
+        clean: true,
+        scope: "",
+        forbid: []
+      },
       process: {
         title: "Agent 流程梳理",
         listId: "procMsgList",
@@ -2294,6 +2418,22 @@ function doConnect(baseUrl, token) {
         sessionPrefix: "module:process",
         freshSession: true,
         scope: "业务流程梳理：分析需求、整理步骤、生成或更新流程 JSON（doc/<项目>_flow.json）。",
+        forbid: [
+          "禁止修改 workspace/<项目>/src/ 下的项目源码",
+          "禁止修改 theme/tokens.json 主题文件",
+          "禁止执行构建、打包、部署命令"
+        ]
+      },
+      forms: {
+        // 业务表单（原「设计数据结构」第 7 步抽出来的独立模块）
+        // 只在生成/改写表单结构时用，产物是 doc/forms.json + doc/data-model.md
+        title: "业务表单",
+        listId: "fmMsgList",
+        inputId: "fmInput",
+        btnId: "fmSendBtn",
+        sessionPrefix: "module:forms",
+        freshSession: true,   // 每次生成带上完整流程全文，是一次性重任务，不带历史更省
+        scope: "业务表单设计：按业务流程设计业务对象（表单）、字段与表单之间的关系，产出 doc/forms.json（唯一真源）与 doc/data-model.md。",
         forbid: [
           "禁止修改 workspace/<项目>/src/ 下的项目源码",
           "禁止修改 theme/tokens.json 主题文件",
@@ -2388,6 +2528,8 @@ function doConnect(baseUrl, token) {
     var AGENT_RUN_SEQ = 0;
     function agentSid(sceneId, opts) {
       var s = agentScene(sceneId);
+      // 记忆测试：会话 ID 写死，不按项目/时间分叉 —— 换项目、重开页面都还是同一个会话
+      if (s && s.fixedSession) return s.fixedSession;
       var prefix = s ? s.sessionPrefix : String(sceneId);
       var tag = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "noproject";
       var sid = prefix + ":" + tag;
@@ -2403,7 +2545,9 @@ function doConnect(baseUrl, token) {
     function agentHistKey(sceneId) {
       var guid = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "";
       if (sceneId === "chat") return "chat_hist_" + (guid || "tdev-chat");
+      if (sceneId === "memory") return "mem_hist_global";   // 记忆测试是全局实验，会话不随项目分叉，显示也跟着全局
       if (sceneId === "process") return "proc_hist_" + (guid || "tdev-proc");
+      if (sceneId === "forms") return "forms_hist_" + (guid || "tdev-forms");
       return "ai_hist_" + (guid || "tdev-ai");
     }
     function agentHistLoad(sceneId) {
@@ -2864,10 +3008,21 @@ function doConnect(baseUrl, token) {
       var _toolName = "";
       var _toolT0 = 0;
       var _toolTimer = null;
+      // 执行类护栏：工具调用次数就是 token 账单（每次调用 = 重新发一遍全部上下文）。
+      // td 实测：单步中位 12 次、最大 146 次；超过 40 次的步骤都在烧钱，必须让用户看见。
+      var _toolCount = 0;
+      var _runT0 = Date.now();
       var _thinkRow = null;   // 当前这段思考在过程面板里的那一行
       var _toolRow = null;    // 当前这个工具调用在过程面板里的那一行
       function _stopToolTick() {
         if (_toolTimer) { clearInterval(_toolTimer); _toolTimer = null; }
+      }
+      // 一轮收尾时把「工具次数 + 耗时」写进过程日志：这一步到底贵不贵，用户当场能看见。
+      function _toolStats() {
+        if (!_toolCount) return;
+        var mins = ((Date.now() - _runT0) / 60000).toFixed(1);
+        aiToolLog("dim", "📊 本轮工具 " + _toolCount + " 次，耗时 " + mins + " 分钟" +
+          (_toolCount > 40 ? "（偏大：建议把这步拆小）" : ""));
       }
       function cleanup() {
         agentBusyClear();   // 任何收尾路径都要放锁，否则后续所有 Agent 都被挡住
@@ -2916,9 +3071,15 @@ function doConnect(baseUrl, token) {
           _thinkRow = null;
           _toolName = d.text || "执行工具";
           _toolT0 = Date.now();
+          _toolCount++;
+          // 40 / 60 次各提醒一次：不做硬中断（代码正写到一半，掐断更亏），
+          // 只把「这步太大」这件事摆到台面上，让用户决定做完后拆不拆步。
+          if (_toolCount === 40 || _toolCount === 60) {
+            aiToolLog("err", "⚠ 本步工具调用已 " + _toolCount + " 次 —— 这步太大，token 会翻倍；做完建议把这一步拆小");
+          }
           if (_panel) {
-            _toolRow = aiToolLog("run", "🔧 " + _toolName);
-            aiToolState("正在执行：" + _toolName, "on");
+            _toolRow = aiToolLog("run", "🔧 " + _toolName + "  ·  第 " + _toolCount + " 次");
+            aiToolState("正在执行：" + _toolName + "（本步第 " + _toolCount + " 次工具）", "on");
           } else if (thinkEl) {
             thinkEl.style.display = "block";
             var tl = thinkEl.querySelector(".chat-think-label");
@@ -2953,12 +3114,14 @@ function doConnect(baseUrl, token) {
         } else if (d.type === "done") {
           finished = true;
           _stopToolTick();
+          _toolStats();
           cleanup();
           agentHistPush(sceneId, fullText, false);
           if (hooks.onDone) hooks.onDone(fullText);
         } else if (d.type === "error") {
           finished = true;
           _stopToolTick();
+          _toolStats();
           cleanup();
           if (hooks.onError) hooks.onError(d.text || "");
         }
@@ -2969,15 +3132,24 @@ function doConnect(baseUrl, token) {
       var payload = text;
       if (hooks.beforeSend) { try { payload = hooks.beforeSend(text) || text; } catch (e) { console.warn(e); } }
       if (hooks.onStart) hooks.onStart();
-      // 先确保常驻约束就绪再发请求（首次多一次本地读文件，约 10ms）
-      return agentConstEnsure().then(function () {
+      // 记忆测试（clean）：完全不下发常驻提示词，也不预热项目约束 ——
+      // 发出去的只有输入框里的那句话本身。
+      var instr = s.clean ? "" : agentInstructions(sceneId);
+      // 给记忆测试留一份「对照组」数据：连接测试上一轮实际带了多少字的固定提示
+      if (!s.clean) {
+        try { localStorage.setItem("tdev_last_instr", JSON.stringify({ len: instr.length, ts: Date.now(), title: s.title || sceneId })); } catch (e) {}
+      }
+      var ready = s.clean ? Promise.resolve(null) : agentConstEnsure();
+      return ready.then(function () {
         return window.__TAURI__.core.invoke("agent_ask_stream", {
           question: payload,
           sessionId: sid,
-          instructions: agentInstructions(sceneId),
+          instructions: instr,
           // 把工作目录钉在项目里：不传的话 Agent 跑在 Hermes 自己的目录（E:\HermesMinimal），
-          // 相对路径会生成到那儿，终端 pwd 也是错的。
-          cwd: aiProjectDir() || undefined
+          // 相对路径会生成到那儿，终端 pwd 也是错的。记忆测试不传 cwd，保持请求干净。
+          cwd: s.clean ? undefined : (aiProjectDir() || undefined),
+          // 只有记忆测试把会话 ID 放进请求体（/v1/runs 不认请求头），其它场景维持原样
+          sessionMemory: !!s.clean
         });
       }).then(function (reply) {
         if (!finished) {
@@ -3001,7 +3173,7 @@ function doConnect(baseUrl, token) {
       content.innerHTML =
         '<div class="page-title">Agent连接测试</div>' +
         '<div class="page-sub">在线与 Agent 沟通聊天（对接 Hermes Dashboard /api/pty）</div>' +
-        '<div class="chat-panel">' +
+        '<div class="chat-panel is-half">' +
           '<div class="chat-head">' +
             '<span class="chat-agent-label">Agent：</span>' +
             '<select id="chatAgentSel" class="chat-sel"></select>' +
@@ -3013,6 +3185,21 @@ function doConnect(baseUrl, token) {
             '<textarea id="chatInput" class="chat-input" rows="1" placeholder="输入消息，Enter 发送，Shift+Enter 换行…"></textarea>' +
             '<button class="btn btn-primary" id="chatSendBtn">发送</button>' +
           '</div>' +
+        '</div>' +
+        // ===== 记忆测试：固定 Session + 零固定提示 + 零历史，只发当前输入 =====
+        '<div class="chat-panel is-half">' +
+          '<div class="chat-head">' +
+            '<span class="mem-head-title">🧠 Agent 记忆测试</span>' +
+            '<span class="mem-badge">固定提示 0 字</span>' +
+            '<span class="mem-sid">Session：' + MEM_SID + '（固定）</span>' +
+            '<span id="memState" class="chat-status off" style="margin-left:auto">待发送</span>' +
+          '</div>' +
+          '<div class="mem-note">实验：会话 ID 写死，不下发任何固定提示词、不叠加会话历史，每次只发输入框里的原文 —— 用来看 Agent 自带记忆够不够用。</div>' +
+          '<div class="chat-msg-list" id="memMsgList"></div>' +
+          '<div class="chat-input-row">' +
+            '<textarea id="memInput" class="chat-input" rows="1" placeholder="只发送这句话本身，Enter 发送，Shift+Enter 换行…"></textarea>' +
+            '<button class="btn btn-secondary" id="memSendBtn">发送</button>' +
+          '</div>' +
         '</div>';
       document.getElementById("chatSendBtn").addEventListener("click", chatSend);
       bindComposer(document.getElementById("chatInput"), "chat", chatSend);
@@ -3021,6 +3208,11 @@ function doConnect(baseUrl, token) {
         chatConnect();
       });
       chatRestoreHist();
+      // 记忆测试面板
+      document.getElementById("memSendBtn").addEventListener("click", memSend);
+      bindComposer(document.getElementById("memInput"), "memory", memSend);
+      var memN = agentHistRender("memory");
+      if (!memN) memSys("先发一句「我叫卢Sir，记住」，再发「我叫什么名字？」—— 第二句里没有任何提示词，它答得出来就说明记忆是自带的。");
       // 恢复思考中状态（上轮未完成）
       var pending = false;
       try { pending = localStorage.getItem("chat_pending_" + chatSid()) === "1"; }
@@ -3687,11 +3879,11 @@ function doConnect(baseUrl, token) {
       }
       // 数据结构文档入口：任何状态都能打开看/改（业务流程与代码之间的桥，要能随时查）
       L.push('<div class="ui-plan-actions" style="margin-top:10px">');
-      L.push('<button class="btn btn-sm" id="aiPlanDataModel" title="查看/编辑 doc/data-model.md">📐 数据结构文档</button>');
+      L.push('<button class="btn btn-sm" id="aiPlanDataModel" title="打开「业务表单」模块（doc/forms.json → data-model.md）">📐 业务表单</button>');
       L.push('</div>');
       el.innerHTML = L.join("");
       var dmBtn = document.getElementById("aiPlanDataModel");
-      if (dmBtn) dmBtn.onclick = aiViewDataModel;
+      if (dmBtn) dmBtn.onclick = function () { render(11); };
       var go = document.getElementById("aiPlanGo");
       if (go) go.onclick = aiPlanStart;
       var pz = document.getElementById("aiPlanPause");
@@ -3876,13 +4068,60 @@ function doConnect(baseUrl, token) {
         { name: "检查地基是否稳", desc: "确认数据库连得上、服务起得来、目录都齐了。地基不稳，后面全白做。" },
         { name: "搭好项目骨架", desc: "按 " + (be || "既定技术栈") + " 建好分层目录、启动入口和公共配置，程序先有个能跑起来的空架子。" },
         { name: "做用户注册和登录", desc: "建用户表，做完能注册、能登录，登录状态能一直保持。" },
-        { name: "做权限校验", desc: "做完后不同角色能看到的菜单、能改的东西都不一样。" },
-        { name: "设计数据结构", desc: "站在业务流程全局，先把询盘单、SKU、目录册这些对象之间是什么关系、各自有哪些表哪些字段定清楚，落成 doc/data-model.md。做完能一眼看到整套数据怎么长、谁引用谁，后面所有建表和代码都照它来。" }
+        { name: "做权限校验", desc: "做完后不同角色能看到的菜单、能改的东西都不一样。" }
       ];
     }
 
+    // ===== AI开发前置闸门（2026-11-13 卢Sir 要求）=====
+    // AI 开发要求前序菜单全部亮绿灯，顺序：基础信息 → 主题风格 → 项目约束 → 业务流程 → 业务表单。
+    // 缺哪个就拦住，并把用户送到那个模块；读不到状态时不拦人（fail-open，别把人锁死）。
+    var AI_GATE = [
+      { key: "basic", name: "基础信息", m: 0 },
+      { key: "theme", name: "主题风格", m: 1 },
+      { key: "constraints", name: "项目约束", m: 2 },
+      { key: "process", name: "业务流程", m: 3 },
+      { key: "forms", name: "业务表单", m: 11 }
+    ];
+    function aiGateCheck(cb) {
+      if (!currentProject) { cb(AI_GATE[0]); return; }
+      if (!window.__TAURI__ || !window.__TAURI__.core) { cb(null); return; }
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function (v) {
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch (e) {}
+        return window.__TAURI__.core.invoke("module_state_get", {
+          prjGuid: currentProject.prjGUID,
+          prjName: currentProject.prjName,
+          workspace: ws
+        });
+      }).then(function (json) {
+        var st = {};
+        try { st = JSON.parse(json || "{}"); } catch (e) {}
+        for (var i = 0; i < AI_GATE.length; i++) {
+          if (!st[AI_GATE[i].key]) { cb(AI_GATE[i]); return; }
+        }
+        cb(null);
+      }).catch(function () { cb(null); });
+    }
+    function aiGateBlock(miss) {
+      if (!currentProject) { aiAddMsg("请先在左上角选择项目。", false); return; }
+      aiAddMsg("现在还不能进 AI 开发：「" + (miss ? miss.name : "前序模块") + "」还没完成（菜单没亮绿灯）。先把前序做齐再来。", false);
+      aiConfirmBox("前序模块未完成",
+        "AI 开发要求前序菜单全部亮绿灯，顺序是：<br>基础信息 → 主题风格 → 项目约束 → 业务流程 → 业务表单。<br><br>" +
+        "现在缺的是 <b>" + escHtml(miss ? miss.name : "前序模块") + "</b>。",
+        "去「" + escHtml(miss ? miss.name : "前序") + "」",
+        function () { if (miss) render(miss.m); },
+        "先不去了");
+    }
+
     // ---- 生成计划（用户点击才调用模型）----
-    function aiGenPlan(retry) {
+    function aiGenPlan(retry, gated) {
+      if (gated !== true) {
+        aiGateCheck(function (miss) {
+          if (miss) { aiGateBlock(miss); return; }
+          aiGenPlan(retry, true);
+        });
+        return;
+      }
       if (!currentProject) { aiAddMsg("请先在「基础信息」选择项目", false); return; }
       // 正在执行时不允许重新生成：新计划会立刻被正在跑的 Agent 打乱，而且那一轮还在烧 token
       if (aiPlan && aiPlan.status === "running") {
@@ -4171,8 +4410,15 @@ function doConnect(baseUrl, token) {
     // 以前靠 Agent 自己输出 [[STEP_START:n]] 上报进度，模型跑长了就漏标、错标，
     // 结果聊天说第 9 步做完了、卡片还停在第 6 步。现在程序自己知道在第几步，
     // Agent 只负责「做好这一步」，状态再也不会对不上。
-    function aiPlanStart() {
+    function aiPlanStart(gated) {
       if (!aiPlan || !aiPlan.steps || !aiPlan.steps.length) return;
+      if (gated !== true) {
+        aiGateCheck(function (miss) {
+          if (miss) { aiGateBlock(miss); return; }
+          aiPlanStart(true);
+        });
+        return;
+      }
       if (aiPlan.status === "running") return;   // 防重入：连点也只跑一份
       // 清掉上次中断残留的 doing：以前靠 Agent 上报，会出现第 6 步和第 8 步同时「正在处理」。
       // 现在同一时间只允许一步在做，由 aiPlanStepNext 自己设置。
@@ -4191,8 +4437,15 @@ function doConnect(baseUrl, token) {
 
     // 单独执行某一步（按钮下沉到步骤上）：只跑这一步，跑完停住不往下走。
     // 已完成的步骤点「重做」也走这里 —— 先把状态退回未完成再跑。
-    function aiPlanRunStep(n) {
+    function aiPlanRunStep(n, gated) {
       if (!aiPlan || !aiPlan.steps || !aiPlan.steps.length) return;
+      if (gated !== true) {
+        aiGateCheck(function (miss) {
+          if (miss) { aiGateBlock(miss); return; }
+          aiPlanRunStep(n, true);
+        });
+        return;
+      }
       if (aiPlan.status === "running") {
         aiAddMsg("现在有一步正在跑（第 " + (aiPlan.cur || "?") + " 步），等它结束，或先点那一步的「暂停」。", false);
         return;
@@ -4265,41 +4518,8 @@ function doConnect(baseUrl, token) {
         L.push("业务细节（照这个做，不要自行发挥）：");
         String(st.detail).split(String.fromCharCode(10)).forEach(function (dl) { L.push("  " + dl); });
       }
-      // 第 7 步「设计数据结构」专属方法论：只在一步出现，约 900 字符。
-      // 卢Sir 要求「AI 先站在业务流程全局把数据结构想清楚，再动手写代码」——
-      // 这一步的产物是 doc/data-model.md，后面建表、写 DAO 全照它来。
-      if (String(st.name || "").indexOf("设计数据结构") >= 0) {
-        L.push("");
-        L.push("【这一步只做数据结构设计：只出文档，不写一行代码】");
-        L.push("先通读上面的完整业务流程，按下面五件事依次想清楚，结论全部写进 doc/data-model.md。");
-        L.push("");
-        L.push("一、找出业务对象");
-        L.push("  判别标准：有独立生命周期、需要单独列表/详情的才算一个对象。");
-        L.push("  典型：询盘单、询盘产品行、SKU、产品目录册、样品采购单、样品档案、报价单、销售订单、采购单、物流单。");
-        L.push("");
-        L.push("二、定关系 —— 下面每一对都必须明确回答，不许含糊带过：");
-        L.push("  · 询盘单 ↔ 询盘产品行：一个询盘单下有几行？客户当初提的「要什么」记在哪张表？");
-        L.push("  · 询盘产品行 ↔ SKU：同一张表还是两张表？客户的需求 → 寻源后定下的具体货，中间靠什么连起来？");
-        L.push("      （这是本项目最容易搞混的一处，必须写清是两层还是一层，以及怎么从需求走到 SKU）");
-        L.push("  · SKU ↔ 产品目录册：一个 SKU 只能进一个目录册吗？同一个 SKU 进多个目录册怎么算？");
-        L.push("  · 目录册 ↔ 客户：一个客户能有几本目录册？重新生成算新版本还是覆盖旧版？");
-        L.push("  · 样品采购单 / 报价单 / 销售订单 / 采购单：金额和数量记在单头还是行上？父子怎么串？");
-        L.push("");
-        L.push("三、定字段与约束：主键、业务编号规则（如 CUS20261106-001）、必填项、唯一约束、状态枚举及流转；");
-        L.push("  四尾字段 id / created_at / created_by / org_id 必须齐。");
-        L.push("");
-        L.push("四、快照还是引用（最容易埋雷）：凡是发给客户或供应商、需要留档的单据（目录册 / 报价单 / 订单），");
-        L.push("  一律用复制快照，不许按 id 实时查 —— 否则改一次价格，历史单据全跟着变。每张这类单据都要写明选哪种。");
-        L.push("");
-        L.push("五、落文档 doc/data-model.md，必须含四节：");
-        L.push("  ① 业务对象清单（名称 / 说明 / 生命周期）");
-        L.push("  ② 关系说明（每个一对一 / 一对多 / 多对多都写清外键落在哪张表）");
-        L.push("  ③ 每张表的字段（字段名 / 类型 / 约束 / 说明）");
-        L.push("  ④ 关键设计决策（每条写：问题 → 选择 → 为什么不选另一个）");
-        L.push("");
-        L.push("交活前自查：每个一对多 / 多对多都写明了；每张对外单据都定了快照还是引用；四尾字段齐全；");
-        L.push("文档写完后它就是后续所有步骤的唯一依据，后面建表、写 DAO 一律照它，发现不一致先改文档再改代码。");
-      }
+      // 「设计数据结构」已从计划里抽出，做成独立的「业务表单」模块（doc/forms.json + doc/data-model.md）。
+      // 方法论提示词搬到了 renderForms 附近的 fmPrompt()，这里不再单独处理那一步。
       L.push("");
       var doneNames = [];
       aiPlan.steps.forEach(function (s) { if (s.state === "done") doneNames.push(s.n + ". " + s.name); });
@@ -4337,7 +4557,7 @@ function doConnect(baseUrl, token) {
       L.push("【要求】");
       // 卢Sir 2026-11-09：数据结构文档必须每步开工前先读 —— 它容错具于「常驻一句路径」，
       // 纯前端步骤会被模型自行判为「不用建表」而跳过，所以固定写进单步提示词第 0 条。
-      L.push("0. 开工前先读项目目录下 doc/data-model.md（不存在就说明「还没设计数据结构」并跳过）；凡涉及表、字段、接口的改动，一律照它来，不许自己另设计一套。");
+      L.push("0. 开工前先读项目目录下 doc/data-model.md（由「业务表单」模块按业务流程生成；文件不存在就说明「还没生成业务表单，请先去『业务表单』模块生成」并跳过表结构相关改动）；凡涉及表、字段、接口的改动，一律照它来，不许自己另设计一套。");
       L.push("1. 只做第 " + st.n + " 步，做完就停，不要顺手做下一步。");
       L.push("2. 做完后单独输出一行：[[STEP_DONE:" + st.n + "]] 一句话说明产出了什么");
       L.push("3. 需要密码 / 端口 / 方案选择时，单独输出一行 ASK（格式见常驻规则），然后停下等我。");
@@ -4349,6 +4569,11 @@ function doConnect(baseUrl, token) {
       L.push("   · 前端只做代码级核对，不打开浏览器渲染验证。对照业务流程和 doc/data-model.md，逐项确认字段名对得上、接口路径和参数对得上、交互和跳转逻辑符合设计、空/加载/错误三态都写了。有不一致就改代码。");
       L.push("   · 同一步里先后改了好几处，攒到最后一起验证，不要每处都跑一轮。");
       L.push("7. 交活时说明：改了哪些文件、后端接口验证结果（真实返回）、前端核对结论（哪几条对上了）。不要承诺「页面上能看到什么」——界面效果由用户自己打开验收。");
+      L.push("8. 省着用工具（每次工具调用 = 把全部上下文再发一遍，调用次数直接等于成本）：");
+      L.push("   · 读文件先用 wc -l 看行数，超过 400 行就按 offset/limit 只读需要的段落，不要整文件通读；同一个文件不要反复全文读。");
+      L.push("   · 改文件用 patch 定点替换，不要整篇重写；只有新建文件才用 write。");
+      L.push("   · 一条命令里合并多个检查（编译 + 验证一次跑完），不要一个命令只问一件事。");
+      L.push("   · 同一个 skill / 文档只加载一次，已经读过的内容直接引用，不要重读。");
       L.push("");
       L.push("【交活前先自查：铁律 6 条 + 界面 5 条，不过会被打回重做】");
       L.push("  角色/身份不许写字面量；DAO 查询必须带 DataScope；前端只能走 api.js；建表必须有 id/created_at/created_by/org_id；样式不许裸色值；不许 DriverManager 直连。");
@@ -4735,7 +4960,40 @@ function doConnect(baseUrl, token) {
     }
 
     // ---- 执行过程日志：工具调用 / 思考 / 耗时，独立面板，永远滚到最新一条 ----
+    // 2026-11-13 卢Sir 要求「微调模式和 AI开发 共享执行输出」：
+    //   DOM 只是投影，真源是 localStorage 的 ai_log_<prjGUID>（微调浮窗读写同一份）。
+    //   以前切页面日志就没了，现在持久化，两个窗口看到的是同一条流水。
+    function aiLogKey() {
+      var guid = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "tdev-ai";
+      return "ai_log_" + guid;
+    }
+    function aiLogRead() {
+      try { var a = JSON.parse(localStorage.getItem(aiLogKey()) || "[]"); return Array.isArray(a) ? a : []; }
+      catch (e) { return []; }
+    }
+    function aiLogWrite(arr) {
+      try { localStorage.setItem(aiLogKey(), JSON.stringify(arr.slice(-300))); } catch (e) {}
+    }
+    function aiLogPush(cls, text) {
+      var arr = aiLogRead();
+      arr.push({ c: cls || "", m: String(text), t: Date.now() });
+      aiLogWrite(arr);
+    }
+    function aiLogRowHtml(row) {
+      var n = new Date(row.t || Date.now());
+      var hm = ("0" + n.getHours()).slice(-2) + ":" + ("0" + n.getMinutes()).slice(-2) + ":" + ("0" + n.getSeconds()).slice(-2);
+      return '<div class="ai-tool-row' + (row.c ? " " + row.c : "") + '">' + escHtml(hm + "  " + String(row.m || "")) + '</div>';
+    }
+    // 从共享日志重建面板（切页面 / 切回窗口时调用；执行中不调用，免得打断流式行）
+    function aiLogRender() {
+      var b = document.getElementById("aiToolBody");
+      if (!b) return;
+      var arr = aiLogRead().slice(-300);
+      b.innerHTML = arr.map(aiLogRowHtml).join("");
+      b.scrollTop = b.scrollHeight;
+    }
     function aiToolLog(cls, text) {
+      aiLogPush(cls, text);
       var b = document.getElementById("aiToolBody");
       if (!b) return null;
       var d = document.createElement("div");
@@ -4947,6 +5205,7 @@ function doConnect(baseUrl, token) {
     function aiToolClear() {
       var b = document.getElementById("aiToolBody");
       if (b) b.innerHTML = "";
+      aiLogWrite([]);
     }
 
     // ---- 阻塞式询问：Agent 需要密码 / 方案选择时必须弹窗，不能只在聊天里问 ----
@@ -5170,7 +5429,577 @@ function doConnect(baseUrl, token) {
         if (tg) tg.textContent = p.classList.contains("collapsed") ? "展开" : "收起";
       };
       aiRestoreHist();
+      aiLogRender();
       aiDetect();
+    }
+
+    // ==================== 业务表单（原「设计数据结构」第 7 步，2026-11-13 抽成独立模块）====================
+    // 真源 doc/forms.json（界面直接编辑它）；派生 doc/data-model.md（前端生成，AI 编码每一步第 0 条都读它）。
+    // 命名按业务视角：表单 = 业务对象，界面上不叫「表结构」。
+    var fmData = null;       // {version, project, flow, generatedAt, forms:[], decisions:[]}
+    var fmDirty = false;
+    var fmBusy = false;
+    var fmWs = "";
+    var fmFlowText = "";
+    var fmFlowNodes = 0;
+    var fmFlowMains = 0;
+    var fmProjGuid = "__init__";
+    var fmOpen = {};
+
+    function fmNow() {
+      var d = new Date();
+      function p(n) { return ("0" + n).slice(-2); }
+      return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " +
+        p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+    }
+    function fmNum(v) { var n = parseInt(v, 10); return isNaN(n) ? null : n; }
+
+    function fmEnsureWs(cb) {
+      if (fmWs) { cb(fmWs); return; }
+      if (aiDetect && aiDetect.ws) { fmWs = aiDetect.ws; cb(fmWs); return; }
+      window.__TAURI__.core.invoke("cfg_load", { category: "workspace" }).then(function (v) {
+        var ws = "";
+        try { ws = JSON.parse(v || "{}").path || ""; } catch (e) {}
+        fmWs = ws;
+        if (ws && aiDetect) aiDetect.ws = ws;
+        cb(ws);
+      }).catch(function () { cb(""); });
+    }
+
+    // 业务流程是否存在 —— 需求 4：表单生成的前提
+    function fmLoadFlow(cb) {
+      fmEnsureWs(function (ws) {
+        if (!ws || !currentProject) { fmFlowText = ""; fmFlowNodes = 0; fmFlowMains = 0; cb(false); return; }
+        aiDetect.ws = ws;
+        aiFlowFull(function (f) {
+          if (f && f.text) {
+            fmFlowText = f.text; fmFlowNodes = f.nodes || 0; fmFlowMains = f.mains || 0; cb(true);
+          } else {
+            fmFlowText = ""; fmFlowNodes = 0; fmFlowMains = 0; cb(false);
+          }
+        });
+      });
+    }
+
+    function fmLoadJson(cb) {
+      if (!currentProject || !fmWs) { fmData = null; cb(); return; }
+      window.__TAURI__.core.invoke("process_load", {
+        prjName: currentProject.prjName, workspace: fmWs, fileName: "forms.json"
+      }).then(function (raw) {
+        var d = null;
+        try { d = JSON.parse(String(raw || "")); } catch (e) { d = null; }
+        fmData = (d && Array.isArray(d.forms)) ? fmNormalize(d) : null;
+        if (fmData && fmData.forms.length) modSet("forms", true);   // 已有表单 → 补亮灯（老项目也认）
+        cb();
+      }).catch(function () { fmData = null; cb(); });
+    }
+
+    function fmNormalize(d) {
+      d.forms = d.forms || [];
+      d.decisions = Array.isArray(d.decisions) ? d.decisions : [];
+      d.forms.forEach(function (f) {
+        f.fields = Array.isArray(f.fields) ? f.fields : [];
+        f.relations = Array.isArray(f.relations) ? f.relations : [];
+        f.name = f.name || f.table || "未命名表单";
+        f.table = f.table || f.key || "";
+        f.key = f.key || String(f.table || "").replace(/^t_/, "");
+        f.module = f.module || "";
+        f.desc = f.desc || "";
+        f.fields.forEach(function (fd) {
+          fd.name = fd.name || "";
+          fd.label = fd.label || "";
+          fd.type = fd.type || "varchar";
+          fd.len = (fd.len === "" || fd.len === undefined) ? null : fd.len;
+          fd.required = !!fd.required;
+          fd.unique = !!fd.unique;
+          fd.note = fd.note || "";
+        });
+        f.relations.forEach(function (r) {
+          r.type = r.type || "1:N";
+          r.target = r.target || "";
+          r.via = r.via || "";
+          r.label = r.label || "";
+        });
+      });
+      return d;
+    }
+
+    // ---------- 页面 ----------
+    function renderForms() {
+      var g = (currentProject && currentProject.prjGUID) ? currentProject.prjGUID : "";
+      if (fmProjGuid !== g) { fmProjGuid = g; fmData = null; fmDirty = false; fmOpen = {}; fmWs = ""; }
+
+      content.classList.remove("chat-page", "theme-page", "constr-page");
+      content.innerHTML =
+        '<div class="page-title">业务表单</div>' +
+        '<div class="page-sub">按业务流程生成业务表单（字段 / 关系），AI 开发时按需调用</div>' +
+        '<div class="ui-layout">' +
+          '<div class="ui-chat">' +
+            '<div class="ui-chat-head"><span>💬 业务表单对话</span><span class="ui-badge">已接入</span></div>' +
+            '<div class="ui-chat-body" id="fmMsgList" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;justify-content:flex-start">' +
+              '<div class="ui-empty" id="fmEmpty">' +
+                '<div class="ui-empty-icon">🧾</div>' +
+                '<p>业务表单对话</p>' +
+                '<p class="ui-empty-sub">右侧点「生成业务表单」，或直接说「客户表再加手机号」</p>' +
+              '</div>' +
+            '</div>' +
+            '<div class="ui-chat-input">' +
+              '<textarea id="fmInput" rows="1" placeholder="例如：客户表再加手机号和税号；加一张询盘跟进记录（Enter 发送，Shift+Enter 换行）"></textarea>' +
+              '<button id="fmSendBtn">发送</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="ui-canvas">' +
+            '<div class="ui-canvas-head"><span id="fmTitle">📋 业务表单</span><span class="fm-stats" id="fmStats">—</span></div>' +
+            '<div class="ui-canvas-body ui-canvas-pad" id="fmBody"><div class="fm-empty">正在读取…</div></div>' +
+            '<div class="fm-actions">' +
+              '<span class="fm-hint" id="fmHint"></span>' +
+              '<button class="btn" id="fmSaveBtn">保存</button>' +
+              '<button class="btn btn-primary" id="fmGenBtn">生成业务表单</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      document.getElementById("fmSendBtn").addEventListener("click", fmSend);
+      bindComposer(document.getElementById("fmInput"), "forms", fmSend);
+      var body = document.getElementById("fmBody");
+      body.addEventListener("input", fmOnEdit);
+      body.addEventListener("change", fmOnEdit);
+      body.addEventListener("click", fmOnClick);
+      document.getElementById("fmSaveBtn").addEventListener("click", function () { fmSave(true); });
+      document.getElementById("fmGenBtn").addEventListener("click", fmGen);
+
+      agentHistRender("forms");
+      fmRefresh();
+    }
+
+    function fmRefresh() {
+      fmRenderPanel(true);
+      fmLoadFlow(function () {
+        fmLoadJson(function () { fmRenderPanel(); });
+      });
+    }
+
+    function fmStats() {
+      var d = fmData;
+      if (!d || !d.forms.length) return "0 张表单 · 0 个字段 · 0 条关系";
+      var f = 0, r = 0;
+      d.forms.forEach(function (x) { f += (x.fields || []).length; r += (x.relations || []).length; });
+      return d.forms.length + " 张表单 · " + f + " 个字段 · " + r + " 条关系";
+    }
+
+    function fmHint(text, dirty) {
+      var el = document.getElementById("fmHint");
+      if (!el) return;
+      el.textContent = text || "";
+      el.className = "fm-hint" + (dirty ? " dirty" : "");
+    }
+
+    function fmRenderPanel(loading) {
+      var body = document.getElementById("fmBody");
+      if (!body) return;
+      var st = document.getElementById("fmStats");
+      if (st) st.textContent = fmStats();
+      var genBtn = document.getElementById("fmGenBtn");
+      var saveBtn = document.getElementById("fmSaveBtn");
+      var hasFlow = !!fmFlowText;
+
+      if (genBtn) {
+        genBtn.disabled = fmBusy || !hasFlow || !currentProject;
+        genBtn.textContent = fmBusy ? "生成中…" : "生成业务表单";
+      }
+      if (saveBtn) saveBtn.disabled = fmBusy || !fmData;
+      if (fmBusy) fmHint("Agent 正在按业务流程设计表单，完成后自动保存…");
+      else if (fmDirty) fmHint("有未保存的修改", true);
+      else if (fmData) fmHint("已保存：doc/forms.json + doc/data-model.md（供 AI 开发读取）");
+      else fmHint("");
+
+      if (loading) { body.innerHTML = '<div class="fm-empty">正在读取业务流程与表单…</div>'; return; }
+      if (!currentProject) {
+        body.innerHTML = '<div class="fm-empty"><b>还没有选择项目</b>先在左上角选择项目，再回来生成业务表单。</div>';
+        return;
+      }
+      if (!hasFlow) {
+        body.innerHTML = '<div class="fm-empty"><b>还没有业务流程</b>' +
+          '业务表单是按业务流程推出来的，先到「业务流程」把流程梳理完，再回来生成。<br>' +
+          '<button class="btn" id="fmGoFlow">去业务流程</button></div>';
+        var go = document.getElementById("fmGoFlow");
+        if (go) go.addEventListener("click", function () { render(3); });
+        return;
+      }
+      if (!fmData || !fmData.forms.length) {
+        body.innerHTML = '<div class="fm-empty"><b>流程已就绪（' + fmFlowNodes + ' 个节点 / ' + fmFlowMains + ' 个主阶段）</b>' +
+          '点右上「生成业务表单」，Agent 会按业务流程把业务对象、字段和关系一次列出来。<br>' +
+          '生成后每个字段都能直接改。</div>';
+        return;
+      }
+
+      var H = [];
+      fmData.forms.forEach(function (f, i) {
+        H.push(fmCardHtml(f, i));
+      });
+      body.innerHTML = H.join("");
+    }
+
+    function fmCardHtml(f, i) {
+      var open = !!fmOpen[i];
+      var H = [];
+      H.push('<div class="fm-card" data-i="' + i + '">');
+      H.push('<div class="fm-card-head" data-act="toggle" data-i="' + i + '">' +
+        '<span class="fm-caret">' + (open ? "▾" : "▸") + '</span>' +
+        '<span class="fm-name">' + escHtml(f.name || "未命名表单") + '</span>' +
+        '<span class="fm-table">' + escHtml(f.table || "") + '</span>' +
+        '<span class="fm-badge">字段 ' + (f.fields || []).length + '</span>' +
+        '<span class="fm-badge">关系 ' + (f.relations || []).length + '</span>' +
+        '<span class="fm-mod">' + escHtml(f.module || "未归模块") + '</span>' +
+        '<button class="btn btn-xs" data-act="delForm" data-i="' + i + '">删除</button>' +
+        '</div>');
+      if (!open) { H.push('</div>'); return H.join(""); }
+
+      H.push('<div class="fm-card-body">');
+      if (f.desc) H.push('<div style="font-size:12px;color:var(--ink500);margin-bottom:10px">' + escHtml(f.desc) + '</div>');
+      // 字段表
+      H.push('<div class="fm-tr fm-th"><span>字段名</span><span>中文名</span><span>类型</span><span>长度</span>' +
+        '<span style="text-align:center">必填</span><span style="text-align:center">唯一</span><span>说明</span><span></span></div>');
+      (f.fields || []).forEach(function (fd, k) {
+        H.push('<div class="fm-tr">' +
+          '<input type="text" data-f="name" data-i="' + i + '" data-k="' + k + '" value="' + escHtml(fd.name) + '" placeholder="customer_name">' +
+          '<input type="text" data-f="label" data-i="' + i + '" data-k="' + k + '" value="' + escHtml(fd.label) + '" placeholder="客户名称">' +
+          '<select data-f="type" data-i="' + i + '" data-k="' + k + '">' + fmTypeOptions(fd.type) + '</select>' +
+          '<input type="number" data-f="len" data-i="' + i + '" data-k="' + k + '" value="' + (fd.len == null ? "" : fd.len) + '" placeholder="64">' +
+          '<input type="checkbox" data-f="required" data-i="' + i + '" data-k="' + k + '"' + (fd.required ? " checked" : "") + '>' +
+          '<input type="checkbox" data-f="unique" data-i="' + i + '" data-k="' + k + '"' + (fd.unique ? " checked" : "") + '>' +
+          '<input type="text" data-f="note" data-i="' + i + '" data-k="' + k + '" value="' + escHtml(fd.note) + '" placeholder="说明">' +
+          '<button class="fm-x" data-act="delField" data-i="' + i + '" data-k="' + k + '" title="删除字段">✕</button>' +
+          '</div>');
+      });
+      H.push('<button class="fm-add" data-act="addField" data-i="' + i + '">＋ 添加字段</button>');
+
+      // 关系
+      H.push('<div class="fm-rel-head">表单之间的关系<span class="fm-badge">' + (f.relations || []).length + ' 条</span></div>');
+      (f.relations || []).forEach(function (r, k) {
+        H.push('<div class="fm-rel">' +
+          '<select data-f="type" data-i="' + i + '" data-k="' + k + '">' +
+            fmRelOptions(r.type) + '</select>' +
+          '<input type="text" data-f="target" data-i="' + i + '" data-k="' + k + '" value="' + escHtml(r.target) + '" placeholder="目标表单 key / 表名">' +
+          '<input type="text" data-f="via" data-i="' + i + '" data-k="' + k + '" value="' + escHtml(r.via) + '" placeholder="外键字段">' +
+          '<input type="text" data-f="label" data-i="' + i + '" data-k="' + k + '" value="' + escHtml(r.label) + '" placeholder="业务含义">' +
+          '<button class="fm-x" data-act="delRel" data-i="' + i + '" data-k="' + k + '" title="删除关系">✕</button>' +
+          '</div>');
+      });
+      H.push('<button class="fm-add" data-act="addRel" data-i="' + i + '">＋ 添加关系</button>');
+      H.push('</div></div>');
+      return H.join("");
+    }
+
+    function fmTypeOptions(cur) {
+      var types = ["bigint", "int", "varchar", "char", "text", "decimal", "datetime", "date", "tinyint", "json"];
+      return types.map(function (t) {
+        return '<option value="' + t + '"' + (t === cur ? " selected" : "") + '>' + t + '</option>';
+      }).join("");
+    }
+    function fmRelOptions(cur) {
+      var types = ["1:1", "1:N", "N:M"];
+      return types.map(function (t) {
+        return '<option value="' + t + '"' + (t === cur ? " selected" : "") + '>' + t + '</option>';
+      }).join("");
+    }
+
+    // 编辑：只改内存 + 标记 dirty，绝不重建面板（否则输入框失焦）
+    function fmOnEdit(e) {
+      var t = e.target;
+      if (!t || !t.getAttribute) return;
+      var fname = t.getAttribute("data-f");
+      if (!fname) return;
+      var i = +t.getAttribute("data-i"), k = +t.getAttribute("data-k");
+      if (!fmData || !fmData.forms[i]) return;
+      var form = fmData.forms[i];
+      var isField = t.closest(".fm-tr") && !t.closest(".fm-rel");
+      var obj = isField ? (form.fields || [])[k] : (form.relations || [])[k];
+      if (!obj) return;
+      var val = (t.type === "checkbox") ? !!t.checked : t.value;
+      if (fname === "len") val = fmNum(val);
+      obj[fname] = val;
+      fmDirty = true;
+      fmHint("有未保存的修改", true);
+      var st = document.getElementById("fmStats");
+      if (st) st.textContent = fmStats();
+    }
+
+    function fmNeedConfirm(btn) {
+      if (btn.getAttribute("data-confirm") === "1") return true;
+      btn.setAttribute("data-confirm", "1");
+      var old = btn.textContent;
+      btn.textContent = "再点一次";
+      setTimeout(function () { btn.removeAttribute("data-confirm"); btn.textContent = old; }, 4000);
+      return false;
+    }
+
+    function fmOnClick(e) {
+      var t = e.target;
+      var actEl = t && t.closest ? t.closest("[data-act]") : null;
+      if (!actEl) return;
+      var act = actEl.getAttribute("data-act");
+      var i = +actEl.getAttribute("data-i");
+      var k = +actEl.getAttribute("data-k");
+
+      if (act === "toggle") {
+        fmOpen[i] = !fmOpen[i];
+        fmRenderPanel();
+        return;
+      }
+      if (!fmData) return;
+      var form = fmData.forms[i];
+      if (!form) return;
+
+      if (act === "delForm") {
+        if (!fmNeedConfirm(actEl)) return;
+        fmData.forms.splice(i, 1);
+        fmOpen = {};
+        fmDirty = true;
+        fmRenderPanel();
+        fmHint("已删除 1 张表单，记得保存", true);
+      } else if (act === "addField") {
+        form.fields = form.fields || [];
+        form.fields.push({ name: "", label: "", type: "varchar", len: 64, required: false, unique: false, note: "" });
+        fmDirty = true;
+        fmRenderPanel();
+      } else if (act === "delField") {
+        if (!fmNeedConfirm(actEl)) return;
+        form.fields.splice(k, 1);
+        fmDirty = true;
+        fmRenderPanel();
+      } else if (act === "addRel") {
+        form.relations = form.relations || [];
+        form.relations.push({ type: "1:N", target: "", via: "", label: "" });
+        fmDirty = true;
+        fmRenderPanel();
+      } else if (act === "delRel") {
+        if (!fmNeedConfirm(actEl)) return;
+        form.relations.splice(k, 1);
+        fmDirty = true;
+        fmRenderPanel();
+      }
+    }
+
+    // ---------- 保存：forms.json（真源）+ data-model.md（派生，给 AI 编码读）----------
+    function fmSave(manual) {
+      if (!fmData || !currentProject) { if (manual) fmHint("还没有可保存的表单"); return; }
+      if (!fmWs) { if (manual) fmHint("请先到「项目空间」设置工作路径"); return; }
+      fmData.project = currentProject.prjName;
+      fmData.flow = currentProject.prjName + "_flow.json";
+      fmData.generatedAt = fmData.generatedAt || fmNow();
+      fmData.version = fmData.version || 1;
+      var json = JSON.stringify(fmData, null, 2);
+      var md = fmToMarkdown();
+      var base = { prjName: currentProject.prjName, workspace: fmWs };
+      var p1 = window.__TAURI__.core.invoke("process_save", Object.assign({}, base, { fileName: "forms.json", content: json }));
+      var p2 = window.__TAURI__.core.invoke("process_save", Object.assign({}, base, { fileName: "data-model.md", content: md }));
+      Promise.all([p1, p2]).then(function () {
+        fmDirty = false;
+        modSet("forms", true);          // 菜单亮绿灯：业务表单已就绪，AI 开发可以用了
+        fmHint(manual ? "已保存：doc/forms.json + doc/data-model.md" : "已自动保存：doc/forms.json + doc/data-model.md");
+      }).catch(function (e) {
+        fmHint("保存失败：" + String(e).slice(0, 80), true);
+      });
+    }
+
+    // ---------- 生成 ----------
+    function fmAddMsg(text, mine) {
+      var list = document.getElementById("fmMsgList");
+      if (!list) return;
+      var empty = document.getElementById("fmEmpty");
+      if (empty) empty.remove();
+      var row = document.createElement("div");
+      row.className = "chat-msg " + (mine ? "me" : "bot");
+      row.innerHTML = '<div class="chat-bubble">' + escHtml(text) + '</div>';
+      list.appendChild(row);
+      list.scrollTop = list.scrollHeight;
+      agentHistPush("forms", text, mine);
+    }
+
+    function fmGen() {
+      if (fmBusy) return;
+      if (!currentProject) { fmAddMsg("请先选择项目", false); return; }
+      if (fmData && fmData.forms && fmData.forms.length && !fmNeedConfirm(document.getElementById("fmGenBtn"))) {
+        fmHint("再点一次「生成业务表单」会整体重来（现有字段修改会丢），或先在对话里说怎么改", true);
+        return;
+      }
+      fmEnsureWs(function (ws) {
+        if (!ws) { fmAddMsg("请先到「项目空间」设置工作路径", false); return; }
+        fmLoadFlow(function (hasFlow) {
+          if (!hasFlow) { fmAddMsg("还没有业务流程，先去「业务流程」梳理完再回来生成表单。", false); return; }
+          fmAddMsg("按业务流程生成业务表单", true);
+          fmRun(fmPrompt(""));
+        });
+      });
+    }
+
+    function fmSend() {
+      var ta = document.getElementById("fmInput");
+      if (!ta) return;
+      var text = ta.value.trim();
+      if (!text) return;
+      if (fmBusy) { fmAddMsg("上一轮还在跑，等它结束。", false); return; }
+      if (!currentProject) { fmAddMsg("请先选择项目", false); return; }
+      fmEnsureWs(function (ws) {
+        if (!ws) { fmAddMsg("请先到「项目空间」设置工作路径", false); return; }
+        fmLoadFlow(function (hasFlow) {
+          if (!hasFlow) { fmAddMsg("还没有业务流程，先去「业务流程」梳理。", false); return; }
+          ta.value = ""; draftClear("forms"); taGrow(ta);
+          fmAddMsg(text, true);
+          fmRun(fmPrompt(text));
+        });
+      });
+    }
+
+    function fmRun(prompt) {
+      fmBusy = true;
+      fmRenderPanel();
+      agentRun("forms", prompt, {
+        onDone: function (full) {
+          fmBusy = false;
+          var d = fmParse(full);
+          if (d) {
+            fmData = d;
+            fmDirty = true;
+            fmOpen = {}; fmOpen[0] = true;
+            fmSave(false);
+            fmRenderPanel();
+            var nf = 0; d.forms.forEach(function (x) { nf += (x.fields || []).length; });
+            fmAddMsg("已生成 " + d.forms.length + " 张表单、共 " + nf + " 个字段，右侧可直接改。", false);
+          } else {
+            fmRenderPanel();
+            fmAddMsg("没解析到结构化表单（需要 [[FORMS]]…[[/FORMS]] 里的 JSON）。可以再说一次，或让它按格式重发。", false);
+          }
+        },
+        onError: function (msg) {
+          fmBusy = false;
+          fmRenderPanel();
+          fmAddMsg("生成失败：" + msg, false);
+        }
+      }).catch(function () { fmBusy = false; fmRenderPanel(); });
+    }
+
+    function fmPrompt(userText) {
+      var L = [];
+      L.push("你是 TDev 的「业务表单」设计 Agent。当前项目：" + (currentProject ? currentProject.prjName : "") + "。");
+      L.push("任务：按业务流程设计业务表单（业务对象）、字段、表单之间的关系，输出结构化 JSON。");
+      L.push("注意：业务人员叫它「表单」，不要用「表结构 / schema」这类词跟他们沟通。");
+      L.push("");
+      L.push("【完整业务流程】共 " + fmFlowNodes + " 个节点、" + fmFlowMains + " 个主阶段");
+      L.push(fmFlowText || "（无）");
+      L.push("");
+      if (fmData && fmData.forms && fmData.forms.length) {
+        L.push("【当前已有表单（在这份基础上改，用户没提到的表单必须原样保留）】");
+        L.push(JSON.stringify({ forms: fmData.forms, decisions: fmData.decisions || [] }));
+      } else {
+        L.push("【当前已有表单】无，从零设计一套完整的。");
+      }
+      L.push("");
+      L.push("【这一次要做】" + (userText ? userText : "按业务流程生成完整的一套业务表单"));
+      L.push("");
+      L.push("【设计方法，逐条落实】");
+      L.push("一、找出业务对象：有独立生命周期、需要单独列表/详情的才算一个表单。");
+      L.push("  典型：客户、询盘单、询盘产品行、SKU、产品目录册、样品采购单、样品档案、报价单、销售订单、采购单、物流单。");
+      L.push("二、定关系：每个一对一 / 一对多 / 多对多都要写清外键落在哪个字段（via），不许含糊。");
+      L.push("  必须明确回答：询盘单 ↔ 询盘产品行、询盘产品行 ↔ SKU 是一层还是两层、靠什么连起来；");
+      L.push("  SKU ↔ 目录册 是否多对多；目录册 ↔ 客户 一个客户几本、重生成算新版本还是覆盖；");
+      L.push("  各类单据的金额和数量记在单头还是行上、父子怎么串。");
+      L.push("三、定字段：主键、业务编号规则（如 CUS20261106-001）、必填、唯一、状态枚举及流转；");
+      L.push("  每张表单必须含四尾字段 id / created_at / created_by / org_id。");
+      L.push("四、快照还是引用：凡是发给客户或供应商、需要留档的单据（目录册 / 报价单 / 订单）一律复制快照，");
+      L.push("  不许按 id 实时查 —— 否则改一次价格，历史单据全跟着变。在 note 或 decisions 里写明。");
+      L.push("五、字段类型只用：bigint / int / varchar / char / text / decimal / datetime / date / tinyint / json；");
+      L.push("  varchar/char/decimal 必须给 len（decimal 给总位数）。");
+      L.push("");
+      L.push("【输出格式 —— 只输出下面两行之间的 JSON，前后不要任何解释，不要代码块标记】");
+      L.push("[[FORMS]]");
+      L.push('{"forms":[{"key":"customer","table":"t_customer","name":"客户","module":"客户询盘","desc":"一句话说明",');
+      L.push('"fields":[{"name":"customer_name","label":"客户名称","type":"varchar","len":64,"required":true,"unique":false,"note":""}],');
+      L.push('"relations":[{"type":"1:N","target":"order","via":"customer_id","label":"一个客户多张订单"}]}],');
+      L.push('"decisions":[{"q":"问题","choice":"选择","why":"为什么不选另一个"}]}');
+      L.push("[[/FORMS]]");
+      return L.join(aiNL());
+    }
+
+    function fmParse(full) {
+      var t = String(full || "");
+      var a = t.indexOf("[[FORMS]]"), b = t.indexOf("[[/FORMS]]");
+      var raw = (a >= 0 && b > a) ? t.slice(a + 9, b) : t;
+      var i = raw.indexOf("{"), j = raw.lastIndexOf("}");
+      if (i < 0 || j <= i) return null;
+      var d = null;
+      try { d = JSON.parse(raw.slice(i, j + 1)); } catch (e) { return null; }
+      if (!d || !Array.isArray(d.forms) || !d.forms.length) return null;
+      d.generatedAt = fmNow();
+      d.project = currentProject ? currentProject.prjName : "";
+      d.flow = currentProject ? (currentProject.prjName + "_flow.json") : "";
+      d.version = 1;
+      return fmNormalize(d);
+    }
+
+    // ---------- 派生 data-model.md（AI 编码每一步第 0 条读它）----------
+    function fmToMarkdown() {
+      var d = fmData;
+      if (!d || !d.forms) return "";
+      var L = [];
+      var pn = currentProject ? currentProject.prjName : "";
+      L.push("# " + pn + " 业务表单（数据模型 · 唯一依据）");
+      L.push("");
+      L.push("> 本文件由「业务表单」模块从 doc/forms.json 自动生成，不要手改；要改请回 TDev 的「业务表单」页面改。");
+      L.push("> 生成时间：" + (d.generatedAt || "") + "；依据流程：" + (d.flow || "") + "。");
+      L.push("");
+      L.push("## ① 业务对象清单");
+      L.push("");
+      L.push("| 表单 | 表名 | 所属模块 | 说明 | 字段数 |");
+      L.push("|---|---|---|---|---|");
+      d.forms.forEach(function (f) {
+        L.push("| " + (f.name || "") + " | `" + (f.table || "") + "` | " + (f.module || "-") + " | " +
+          String(f.desc || "").replace(/\|/g, "/") + " | " + (f.fields || []).length + " |");
+      });
+      L.push("");
+      L.push("## ② 关系说明");
+      L.push("");
+      var anyRel = false;
+      d.forms.forEach(function (f) {
+        (f.relations || []).forEach(function (r) {
+          anyRel = true;
+          L.push("- `" + (f.table || f.key) + "` " + r.type + " `" + (r.target || "") + "`（外键：" +
+            (r.via || "-") + "）—— " + (r.label || ""));
+        });
+      });
+      if (!anyRel) L.push("- （暂无跨表单关系）");
+      L.push("");
+      L.push("## ③ 每张表的字段");
+      d.forms.forEach(function (f) {
+        L.push("");
+        L.push("### " + (f.name || "") + "（`" + (f.table || "") + "`）" + (f.module ? " · " + f.module : ""));
+        L.push("");
+        L.push("| 字段名 | 中文名 | 类型 | 必填 | 唯一 | 说明 |");
+        L.push("|---|---|---|---|---|---|");
+        (f.fields || []).forEach(function (fd) {
+          var ty = fd.type || "";
+          if (fd.len != null && fd.len !== "") ty += "(" + fd.len + ")";
+          L.push("| `" + (fd.name || "") + "` | " + (fd.label || "") + " | " + ty + " | " +
+            (fd.required ? "是" : "") + " | " + (fd.unique ? "是" : "") + " | " +
+            String(fd.note || "").replace(/\|/g, "/") + " |");
+        });
+      });
+      L.push("");
+      L.push("## ④ 关键设计决策");
+      L.push("");
+      if ((d.decisions || []).length) {
+        d.decisions.forEach(function (x, i) {
+          L.push((i + 1) + ". **" + (x.q || "") + "** → " + (x.choice || "") + "（" + (x.why || "") + "）");
+        });
+      } else {
+        L.push("（暂无）");
+      }
+      L.push("");
+      L.push("---");
+      L.push("四条铁律：每张表含 `id / created_at / created_by / org_id`；跨表关系必须写外键落点；");
+      L.push("对外单据（目录册/报价单/订单）用复制快照而不是按 id 实时查；字段命名与上表逐字一致。");
+      return L.join("\n") + "\n";
     }
 
     function renderProcess() {
@@ -6266,11 +7095,12 @@ function doConnect(baseUrl, token) {
       var d2 = document.querySelector('.mi[data-m="2"] .mi-dot');
       var d3 = document.querySelector('.mi[data-m="3"] .mi-dot');
       var d9 = document.querySelector('.mi[data-m="9"] .mi-dot');
+      var d11 = document.querySelector('.mi[data-m="11"] .mi-dot');
       var d4 = document.querySelector('.mi[data-m="4"] .mi-dot');
       function setDot(d, on) { if (d) d.classList.toggle("on", !!on); }
       if (!currentProject) {
         setDot(d0,false); setDot(d1,false); setDot(d2,false);
-        setDot(d3,false); setDot(d9,false); setDot(d4,false);
+        setDot(d3,false); setDot(d11,false); setDot(d9,false); setDot(d4,false);
         return;
       }
       // 统一从 module_state 表读取（先取 workspace，一次查询整体判断）
@@ -6289,12 +7119,13 @@ function doConnect(baseUrl, token) {
         setDot(d1, !!st.theme);
         setDot(d2, !!st.constraints);
         setDot(d3, !!st.process);
+        setDot(d11, !!st.forms);
         setDot(d9, !!st.ai_code);
         setDot(d4, !!st.deploy);
       }).catch(function(){
         // 兜底：基础信息/约束亮
         setDot(d0, true); setDot(d2, true);
-        setDot(d1, false); setDot(d3, false); setDot(d9, false); setDot(d4, false);
+        setDot(d1, false); setDot(d3, false); setDot(d11, false); setDot(d9, false); setDot(d4, false);
       });
     }
 
@@ -6310,6 +7141,42 @@ function doConnect(baseUrl, token) {
     }
 
     // 动态页分发
+    // ---------- 微调模式：打开独立浮窗（输入框 + 半透明执行日志） ----------
+    // 不切页面：用户在哪个页面就留在哪个页面，浮窗盖在桌面最前端。
+    function openTuneMode() {
+      if (!window.__TAURI__ || !window.__TAURI__.core) { alert("Tauri 不可用（非桌面环境）"); return; }
+      if (!currentProject) { alert("请先在左上角选择项目，再进入微调模式。"); return; }
+      cfgLoad("workspace").then(function (cfg) {
+        var root = cfg && cfg.path ? String(cfg.path).replace(/[\/\\]+$/, "") : "";
+        if (!root) { alert("请先到「项目空间」设置工作路径，再进入微调模式。"); return; }
+        var cwd = root + "/" + currentProject.prjName;
+        window.__TAURI__.core.invoke("tune_open", {
+          prjGuid: currentProject.prjGUID,
+          prjName: currentProject.prjName,
+          cwd: cwd
+        }).catch(function (e) { alert("打开微调窗口失败：" + e); });
+      });
+    }
+
+    // 兜底页面（正常情况下菜单点击直接开浮窗，不会渲染到这里）
+    function renderTune() {
+      var pn = currentProject ? currentProject.prjName : "";
+      content.innerHTML =
+        '<div class="page-title">微调模式</div>' +
+        '<div class="page-sub">第一轮开发完成后，用浮在最前端的极简窗口提细节调整</div>' +
+        '<div class="panel">' +
+          '<h4>微调模式</h4>' +
+          '<p style="margin-bottom:12px;color:var(--ink700)">进入后会打开一个独立浮窗：只有聊天输入框和半透明的执行日志。' +
+          '你可以一边打开项目页面看效果，一边在浮窗里要求调整。</p>' +
+          (pn
+            ? '<p style="margin-bottom:12px;color:var(--ink500)">当前项目：' + escHtml(pn) + '</p>'
+            : '<p style="margin-bottom:12px;color:var(--danger)">当前未选择项目，请先在左上角选择项目。</p>') +
+          '<button class="btn btn-primary" id="tuneEnterBtn">进入微调模式</button>' +
+        '</div>';
+      var b = document.getElementById("tuneEnterBtn");
+      if (b) b.addEventListener("click", openTuneMode);
+    }
+
     function renderDynamic(idx, kind) {
       if (kind === "workspace") renderWorkspace();
       else if (kind === "models") renderModels();
@@ -6317,9 +7184,11 @@ function doConnect(baseUrl, token) {
       else if (kind === "constraints") renderConstraints();
       else if (kind === "theme") renderTheme();
       else if (kind === "process") renderProcess();
+      else if (kind === "forms") renderForms();
       else if (kind === "ui") renderUi();
       else if (kind === "deploy") renderDeploy();
       else if (kind === "chat") renderChat();
+      else if (kind === "tune") renderTune();
     }
 
     function render(idx) {
@@ -6350,7 +7219,22 @@ function doConnect(baseUrl, token) {
     }
 
     items.forEach(function(el){
-      el.addEventListener("click", function(){ render(+el.dataset.m); });
+      el.addEventListener("click", function(){
+        var idx = +el.dataset.m;
+        // 10 = 微调模式：不是页面，直接开浮窗，当前页面保持不变
+        if (idx === 10) { openTuneMode(); return; }
+        render(idx);
+      });
+    });
+
+    // 微调浮窗在另一个窗口里写同一份聊天 / 执行日志 → 切回本窗口时重新投影一次。
+    // 只在没跑 run 时重建，避免打断正在流的行。
+    window.addEventListener("focus", function () {
+      if (current !== 9) return;
+      if (typeof AGENT_CURRENT_HANDLE !== "undefined" && AGENT_CURRENT_HANDLE) return;
+      if (!document.getElementById("aiToolBody")) return;
+      aiRestoreHist();
+      aiLogRender();
     });
 
     // ===== 项目下拉框 + 新增项目 =====

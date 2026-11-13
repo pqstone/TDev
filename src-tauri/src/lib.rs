@@ -168,6 +168,11 @@ pub fn run() {
             cfg_load,
             agent_ask,
             agent_ask_stream,
+            tune_open,
+            tune_ctx,
+            tune_close,
+            tune_back_to_main,
+            tune_drag,
             agent_lock_state,
             agent_force_unlock,
             project_save_theme,
@@ -591,6 +596,10 @@ async fn agent_ask_stream(
     session_id: String,
     instructions: Option<String>,
     cwd: Option<String>,
+    // 记忆测试专用：/v1/runs 不认 X-Hermes-Session-Id 请求头（只有 /v1/chat/completions 认），
+    // 想让「固定 Session」真的续上历史，必须把 session_id 放进请求体。
+    // 默认 false —— 现有场景行为保持不变。
+    session_memory: Option<bool>,
 ) -> Result<String, String> {
     // 硬锁：同一时刻只允许一个 Agent run。守卫在任何 return / 出错路径都会自动释放。
     agent_lock_try()?;
@@ -614,6 +623,10 @@ async fn agent_ask_stream(
         if !dir.is_empty() {
             run_body["cwd"] = serde_json::Value::String(dir);
         }
+    }
+    // 记忆模式：把会话 ID 放进请求体，Hermes 才会按 session 加载历史 / 写回历史
+    if session_memory.unwrap_or(false) {
+        run_body["session_id"] = serde_json::Value::String(session_id.clone());
     }
     let resp = client.post(format!("{base}/v1/runs"))
         .header("Content-Type", "application/json")
@@ -722,6 +735,76 @@ async fn agent_ask_stream(
     }
     let _ = window.emit("agent_stream", serde_json::json!({"type": "done", "text": ""}));
     Ok(final_text.trim().to_string())
+}
+
+// ============================================================
+// 微调模式浮窗（独立窗口 label = "tune"，页面 dist/tune.html）
+// ------------------------------------------------------------
+// 场景：项目完成第一轮开发后，用户一边看效果，一边用浮在最前端的极简窗口
+//       提细节调整要求（输入框 + 半透明执行日志）。
+// 上下文（项目/工作目录）由 tune_open 存进静态变量，浮窗用 tune_ctx 取 ——
+// 不依赖 localStorage 跨窗口共享（两个 webview 的存储语义不可靠）。
+// ============================================================
+static TUNE_CTX: std::sync::Mutex<Option<serde_json::Value>> = std::sync::Mutex::new(None);
+
+#[tauri::command]
+async fn tune_open(app: tauri::AppHandle, prj_guid: String, prj_name: String, cwd: String) -> Result<(), String> {
+    let ctx = serde_json::json!({ "prjGuid": prj_guid, "prjName": prj_name, "cwd": cwd });
+    if let Ok(mut g) = TUNE_CTX.lock() { *g = Some(ctx); }
+
+    // 已开过就复用（切换项目后只更新上下文，不重复开窗）
+    if let Some(w) = app.get_webview_window("tune") {
+        let _ = w.set_always_on_top(true);
+        let _ = w.show();
+        let _ = w.unminimize();
+        let _ = w.set_focus();
+        // 主窗口收起，只留浮窗（卢Sir 要求：点「微调模式」→ 主窗口最小化）
+        if let Some(m) = app.get_webview_window("main") { let _ = m.minimize(); }
+        return Ok(());
+    }
+
+    let win = tauri::WebviewWindowBuilder::new(&app, "tune", tauri::WebviewUrl::App("tune.html".into()))
+        .title("TDev 微调模式")
+        .inner_size(560.0, 540.0)
+        .min_inner_size(420.0, 320.0)
+        .decorations(false)      // 极简：只有输入框 + 日志，自带标题栏
+        .transparent(true)       // 窗体透明：玻璃层透出桌面（Windows 上需配合无边框）
+        .always_on_top(true)     // 浮在桌面最前端，方便边看边改
+        .resizable(true)
+        .center()
+        .build()
+        .map_err(|e| format!("打开微调窗口失败: {e}"))?;
+    let _ = win.set_focus();
+    // 浮窗起来之后再收起主窗口：开窗失败时用户不会只剩一个最小化的空主界面
+    if let Some(m) = app.get_webview_window("main") { let _ = m.minimize(); }
+    Ok(())
+}
+
+/// 回到主窗口：关掉浮窗并把主窗口从最小化恢复（浮窗的「主窗口」按钮和 ✕ 都走这里，
+/// 避免用户关了浮窗之后主窗口还压在任务栏里，看起来像程序没了）。
+#[tauri::command]
+fn tune_back_to_main(app: tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window("tune") { let _ = w.close(); }
+    if let Some(m) = app.get_webview_window("main") {
+        let _ = m.unminimize();
+        let _ = m.show();
+        let _ = m.set_focus();
+    }
+}
+
+#[tauri::command]
+fn tune_ctx() -> serde_json::Value {
+    TUNE_CTX.lock().ok().and_then(|g| g.clone()).unwrap_or(serde_json::Value::Null)
+}
+
+#[tauri::command]
+fn tune_close(app: tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window("tune") { let _ = w.close(); }
+}
+
+#[tauri::command]
+fn tune_drag(window: tauri::Window) {
+    let _ = window.start_dragging();
 }
 
 /// 保存 AI 生成的主题三件套到项目目录（workspace/项目名/theme/：tokens.json + ui-preview.html + theme.md）
@@ -1466,11 +1549,15 @@ fn module_state_get(app: tauri::AppHandle, prj_guid: String, prj_name: String, w
             }
         }
         map.insert("process".to_string(), proc_ok);
+        // 探测业务表单：workspace/项目名/doc/forms.json 存在且不是空壳？
+        let forms_path = format!("{}/{}/doc/forms.json", workspace.trim_end_matches('/'), prj_name.trim());
+        let forms_ok = std::fs::metadata(&forms_path).map(|m| m.len() > 20).unwrap_or(false);
+        map.insert("forms".to_string(), forms_ok);
         map.insert("ai_code".to_string(), false);
         map.insert("deploy".to_string(), false);
         // 补写表（让后续读取稳定）
         let now0 = now_str();
-        for (m, f) in [("basic", true), ("constraints", true), ("theme", theme_ok), ("process", proc_ok), ("ai_code", false), ("deploy", false)] {
+        for (m, f) in [("basic", true), ("constraints", true), ("theme", theme_ok), ("process", proc_ok), ("forms", forms_ok), ("ai_code", false), ("deploy", false)] {
             let _ = conn.execute(
                 "INSERT OR REPLACE INTO module_state (prj_guid, module, filled, updated_at) VALUES (?1, ?2, ?3, ?4)",
                 rusqlite::params![prj_guid, m, if f { 1 } else { 0 }, now0],

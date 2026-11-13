@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>TDev 微调模式</title>
+<style>
+  :root{
+    --p900:#072B4E; --p700:#0A4D8C; --p500:#1A6CB3; --p300:#5C9FD6; --p100:#C9E2F5; --p050:#E8F3FB;
+    --ink900:#102A43; --ink700:#334E68; --ink500:#627D98; --ink300:#9FB3C8; --line300:#D2E0EC;
+    --bg:#F4F8FC; --surface:#FFFFFF; --sunken:#EAF2FA;
+    --success:#2E9E6B; --warning:#D9822B; --danger:#D64545;
+    --r-sm:4px; --r-md:6px; --r-lg:8px;
+    --space-xs:4px; --space-sm:8px; --space-md:12px; --space-lg:16px;
+    /* 窗体不透明度：10%–100%（滑块控制整个浮窗，除输入区外） */
+    --win-alpha:.90;
+    --sh-lg:0 10px 28px rgba(7,43,78,.22);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  /* 窗体透明：窗口本身 transparent，页面底色必须透明，玻璃层才透得出桌面 */
+  html,body{background:transparent}
+  body{
+    font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+    color:var(--ink900);overflow:hidden;
+    display:flex;flex-direction:column;
+  }
+  /* 玻璃层 = 标题栏 + 执行日志：跟随「窗体」滑块整体变透明（连文字一起淡出，和系统窗口透明度一致） */
+  .glass{
+    flex:1;min-height:0;display:flex;flex-direction:column;
+    opacity:var(--win-alpha);
+    border:1px solid var(--line300);border-bottom:none;border-radius:var(--r-lg) var(--r-lg) 0 0;
+    overflow:hidden;background:var(--bg);
+  }
+
+  /* ===== 顶部：拖拽区 + 透明度 + 关闭 ===== */
+  header{
+    height:42px;flex:none;display:flex;align-items:center;gap:var(--space-sm);
+    padding:0 var(--space-sm) 0 var(--space-md);
+    background:linear-gradient(180deg,#FFFFFF,#F0F7FD);
+    border-bottom:1px solid var(--line300);user-select:none;
+  }
+  .drag{flex:1;min-width:0;display:flex;align-items:center;gap:var(--space-sm);cursor:move;height:100%}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--success);flex:none}
+  .dot.busy{background:var(--warning);animation:pulse 1.2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .ttl{font-size:13px;font-weight:600;color:var(--p900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ttl em{font-style:normal;font-weight:400;color:var(--ink500)}
+  .ctl{flex:none;display:flex;align-items:center;gap:var(--space-xs)}
+  .ctl label{font-size:11px;color:var(--ink500)}
+  input[type=range]{width:74px;height:16px;accent-color:var(--p500);cursor:pointer}
+  .alpha-val{font-size:11px;color:var(--ink500);width:32px;text-align:right}
+  .ico{
+    width:24px;height:24px;border:none;border-radius:var(--r-sm);background:transparent;
+    color:var(--ink500);font-size:13px;line-height:1;cursor:pointer;
+  }
+  .ico:hover{background:var(--sunken);color:var(--p700)}
+  .ico.close:hover{background:#FDE8E8;color:var(--danger)}
+  /* 「回到主窗口」：常驻入口，点击关浮窗 + 恢复主窗口 */
+  .ico.back{
+    width:auto;padding:0 var(--space-md);height:26px;font-size:11px;font-weight:600;
+    color:var(--p700);background:var(--surface);border:1px solid var(--line300);
+  }
+  .ico.back:hover{background:var(--p050);border-color:var(--p300);color:var(--p900)}
+
+  /* ===== 执行日志（半透明、透明度可调；数据与 AI开发 共用一份） ===== */
+  #log{
+    flex:1;min-height:0;overflow-y:auto;
+    margin:var(--space-sm) var(--space-md) 0;
+    border-radius:var(--r-lg);padding:var(--space-md);
+    background:rgba(7,43,78,.92);
+    color:#E8F3FB;box-shadow:var(--sh-lg);
+    font:12px/1.65 "Cascadia Mono","Consolas","Microsoft YaHei",monospace;
+    transition:background .15s ease;
+  }
+  #log::-webkit-scrollbar{width:8px}
+  #log::-webkit-scrollbar-thumb{background:rgba(255,255,255,.22);border-radius:4px}
+  .ln{white-space:pre-wrap;word-break:break-word}
+  .ln.sys{color:#9FB3C8;font-style:italic}
+  .ln.hist{color:#8FB6D8}
+  .ln.me{color:#8FD3FF}
+  .ln.think{color:#A9BFD3;font-style:italic}
+  .ln.tool{color:#F0C070}
+  .ln.out{color:#EAF2FA}
+  .ln.err{color:#FF9B9B}
+  .ln.ok{color:#7FE0A8}
+  .ln.ask{color:#F2B8FF}
+
+  /* ===== 输入区 ===== */
+  /* 输入区不在玻璃层里：始终不透明，保证字清楚、按钮好点（卢Sir 明确要求） */
+  footer{
+    flex:none;padding:var(--space-sm) var(--space-md) var(--space-md);
+    background:var(--surface);
+    border:1px solid var(--line300);
+    border-radius:0 0 var(--r-lg) var(--r-lg);
+    box-shadow:var(--sh-lg);
+  }
+  .composer{display:flex;gap:var(--space-sm);align-items:flex-end}
+  textarea{
+    flex:1;min-height:58px;max-height:132px;resize:none;overflow-y:auto;
+    padding:var(--space-sm) var(--space-md);
+    border:1px solid var(--line300);border-radius:var(--r-md);
+    background:var(--surface);color:var(--ink900);
+    font:13px/1.5 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+  }
+  textarea:focus{outline:none;border-color:var(--p500);box-shadow:0 0 0 2px rgba(26,108,179,.14)}
+  textarea:disabled{background:var(--sunken);color:var(--ink500)}
+  button.exec{
+    flex:none;height:38px;padding:0 var(--space-lg);
+    border:none;border-radius:var(--r-md);
+    background:var(--p700);color:#fff;font-size:13px;font-weight:600;
+    font-family:inherit;cursor:pointer;transition:background .15s;
+  }
+  button.exec:hover{background:var(--p900)}
+  button.exec:disabled{background:var(--ink300);cursor:not-allowed}
+  .hint{
+    display:flex;justify-content:space-between;gap:var(--space-sm);
+    padding:var(--space-xs) 2px 0;font-size:11px;color:var(--ink500);
+  }
+  .hint b{color:var(--p700);font-weight:600}
+
+  /* ===== 确认弹窗：Agent 输出 [[ASK:{...}]] 时阻塞式收集答案 ===== */
+  .ask-mask{
+    position:fixed;inset:0;background:rgba(7,43,78,.42);
+    display:flex;align-items:center;justify-content:center;padding:var(--space-lg);z-index:50;
+  }
+  .ask-card{
+    width:100%;max-width:460px;max-height:100%;overflow:auto;
+    background:var(--surface);border:1px solid var(--line300);border-radius:var(--r-lg);
+    box-shadow:var(--sh-lg);padding:var(--space-lg);
+  }
+  .ask-title{font-size:14px;font-weight:600;color:var(--p900);margin-bottom:var(--space-sm)}
+  .ask-body{font-size:12px;line-height:1.7;color:var(--ink700);white-space:pre-wrap;margin-bottom:var(--space-md)}
+  .ask-opts{display:flex;flex-direction:column;gap:var(--space-sm);margin-bottom:var(--space-md)}
+  .ask-opt{
+    display:flex;align-items:flex-start;gap:var(--space-sm);font-size:13px;color:var(--ink900);
+    padding:var(--space-sm) var(--space-md);border:1px solid var(--line300);border-radius:var(--r-md);cursor:pointer;
+  }
+  .ask-opt:hover{background:var(--p050);border-color:var(--p300)}
+  .ask-opt input{margin-top:3px;accent-color:var(--p500)}
+  .ask-field{display:flex;flex-direction:column;gap:var(--space-xs);margin-bottom:var(--space-md)}
+  .ask-field label{font-size:12px;color:var(--ink500)}
+  .ask-field input{
+    height:34px;padding:0 var(--space-md);border:1px solid var(--line300);border-radius:var(--r-md);
+    font:13px "Segoe UI","Microsoft YaHei",system-ui,sans-serif;color:var(--ink900);background:var(--surface);
+  }
+  .ask-field input:focus{outline:none;border-color:var(--p500)}
+  .ask-actions{display:flex;justify-content:flex-end;gap:var(--space-sm)}
+  .ask-actions button{
+    height:34px;padding:0 var(--space-lg);border-radius:var(--r-md);font-size:13px;
+    font-family:inherit;cursor:pointer;
+  }
+  .ask-actions .primary{background:var(--p700);color:#fff;border:none;font-weight:600}
+  .ask-actions .primary:hover{background:var(--p900)}
+  .ask-actions .ghost{background:var(--surface);color:var(--ink700);border:1px solid var(--line300)}
+  .ask-actions .ghost:hover{background:var(--sunken)}
+</style>
+</head>
+<body>
+  <div class="glass">
+  <header>
+    <div class="drag" id="dragZone">
+      <span class="dot" id="dot"></span>
+      <span class="ttl">微调模式 <em id="prjName">—</em></span>
+    </div>
+    <div class="ctl">
+      <label for="alpha">窗体</label>
+      <input id="alpha" type="range" min="10" max="100" step="1" value="90" />
+      <span class="alpha-val" id="alphaVal">90%</span>
+      <button class="ico" id="clearBtn" title="清空日志（同时清 AI开发 的执行过程）">清</button>
+      <button class="ico back" id="backBtn" title="关闭浮窗并回到主窗口">主窗口</button>
+      <button class="ico close" id="closeBtn" title="关闭浮窗并回到主窗口">✕</button>
+    </div>
+  </header>
+
+  <div id="log"></div>
+  </div><!-- /.glass -->
+
+  <footer>
+    <div class="composer">
+      <textarea id="input" rows="1" placeholder="描述要调整的细节（回车换行，点「执行」发送）"></textarea>
+      <button class="exec" id="execBtn">执行</button>
+    </div>
+    <div class="hint">
+      <span id="status">就绪</span>
+      <span>回车换行 · <b>点击「执行」</b>发送</span>
+    </div>
+  </footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var CTX = { prjGuid: "", prjName: "", cwd: "" };
+  var RUNNING = false;
+  var ASK_OPEN = false;
+  var LAST_OUT = null;     // 当前正在追加的正文行
+  var LAST_THINK = null;   // 当前正在追加的思考行
+  var RUN_FULL = "";       // 本轮累计正文（扫 [[ASK:...]] 用）
+  var ASK_SHOWN = "";      // 已弹过的 ASK 原文，防重复弹
+
+  function $(id) { return document.getElementById(id); }
+  function scrollLog() { var l = $("log"); l.scrollTop = l.scrollHeight; }
+
+  // ---------- 与 AI开发 共用的两个真源 ----------
+  // 聊天记录：ai_hist_<prjGUID>（AI开发 同 key，格式 [{t, me, ts}]）
+  // 执行日志：ai_log_<prjGUID>（AI开发 aiToolLog 同 key，格式 [{c, m, t}]）
+  function histKey() { return "ai_hist_" + (CTX.prjGuid || "tdev-ai"); }
+  function logKey() { return "ai_log_" + (CTX.prjGuid || "tdev-ai"); }
+  function readJson(k) {
+    try { var a = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+  }
+  function writeJson(k, arr, cap) {
+    try { localStorage.setItem(k, JSON.stringify(cap ? arr.slice(-cap) : arr)); } catch (e) {}
+  }
+  function histPush(text, me) {
+    var arr = readJson(histKey());
+    arr.push({ t: String(text), me: !!me, ts: Date.now() });
+    writeJson(histKey(), arr, 200);
+  }
+  function logPush(cls, text) {
+    var arr = readJson(logKey());
+    arr.push({ c: cls || "", m: String(text), t: Date.now() });
+    writeJson(logKey(), arr, 300);
+  }
+  // 共享日志的 class（AI开发 的命名）→ 本窗口的 class
+  var CLS_MAP = { "": "out", "run": "tool", "ok": "ok", "err": "err", "dim": "think", "warn": "err", "me": "me", "sys": "sys" };
+
+  function logLine(cls, text, persist) {
+    var el = document.createElement("div");
+    el.className = "ln " + cls;
+    el.textContent = text;
+    $("log").appendChild(el);
+    scrollLog();
+    if (persist) logPush(cls, text);
+    return el;
+  }
+
+  function appendTo(el, text) {
+    if (!el) return;
+    el.textContent += text;
+    scrollLog();
+  }
+
+  function syncExecBtn() {
+    var b = $("execBtn");
+    b.disabled = RUNNING || ASK_OPEN;
+    b.textContent = RUNNING ? "执行中…" : "执行";
+  }
+  function setRunning(on) {
+    RUNNING = !!on;
+    syncExecBtn();
+    $("dot").classList.toggle("busy", RUNNING);
+    $("status").textContent = RUNNING ? "执行中：Agent 正在改代码，别重复点执行"
+      : (ASK_OPEN ? "等你确认" : "就绪");
+    LAST_OUT = null;
+    LAST_THINK = null;
+  }
+
+  // ---------- 窗体不透明度：10%–100%，只作用于玻璃层（标题栏 + 执行日志）；输入区始终不透明 ----------
+  function applyAlpha(v) {
+    v = Math.max(10, Math.min(100, parseInt(v, 10) || 90));
+    document.documentElement.style.setProperty("--win-alpha", (v / 100).toFixed(2));
+    $("alphaVal").textContent = v + "%";
+    try { localStorage.setItem("tune_win_alpha", String(v)); } catch (e) {}
+  }
+  $("alpha").addEventListener("input", function () { applyAlpha(this.value); });
+
+  // ---------- 窗口操作 ----------
+  $("dragZone").addEventListener("mousedown", function (e) {
+    if (e.button !== 0) return;
+    try { window.__TAURI__.core.invoke("tune_drag"); } catch (err) {}
+  });
+  // 回到主窗口：关浮窗 + 把主窗口从最小化恢复。
+  // ✕ 也走同一条路 —— 主窗口是进微调时被收起的，只关浮窗会让程序看起来"没了"。
+  function backToMain() {
+    try { window.__TAURI__.core.invoke("tune_back_to_main"); } catch (e) {}
+  }
+  $("backBtn").addEventListener("click", backToMain);
+  $("closeBtn").addEventListener("click", backToMain);
+  $("clearBtn").addEventListener("click", function () {
+    if (RUNNING) { logLine("sys", "执行中不清屏，等这一轮结束。"); return; }
+    $("log").innerHTML = "";
+    writeJson(logKey(), [], 300);        // 同步清掉 AI开发 页的执行过程
+    logLine("sys", "日志已清空（AI开发 的执行过程同步清空）。");
+  });
+
+  // ---------- 输入区：多行 + 草稿；回车只换行，不发送 ----------
+  var ta = $("input");
+  function autoGrow() {
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 132) + "px";
+  }
+  try {
+    var draft = localStorage.getItem("tune_draft");
+    if (draft) { ta.value = draft; autoGrow(); }
+  } catch (e) {}
+  ta.addEventListener("input", function () {
+    autoGrow();
+    try { localStorage.setItem("tune_draft", ta.value); } catch (e) {}
+  });
+  // 刻意不监听 Enter：默认行为即换行，执行必须点按钮（防误发）
+
+  // ---------- 场景提示词 ----------
+  function buildInstructions() {
+    return [
+      "你是 TDev 的「微调模式」执行 Agent。当前项目已经完成第一轮开发（功能结构完整），用户正一边查看运行效果、一边提出细节调整需求。",
+      "本会话与「AI开发」模块共用同一份聊天记录和执行日志，之前的开发对话都在历史里，可以直接引用。",
+      "",
+      "【当前项目】" + CTX.prjName,
+      "【工作目录】" + CTX.cwd,
+      "",
+      "【需要用户确认时必须弹窗，不要只在正文里提问】",
+      "需要用户做选择 / 确认方案 / 输入密码或密钥时，单独输出一行（不要放进代码块）：",
+      "[[ASK:{\"title\":\"一句话说明\",\"body\":\"为什么要问、影响什么\",\"options\":[{\"v\":\"值\",\"label\":\"说明\"}],\"field\":{\"key\":\"键\",\"label\":\"输入框标题\",\"secret\":true}}]]",
+      "options 与 field 至少给一个；不需要输入就不要 field。输出这一行后停下等回答，不要猜着继续。",
+      "",
+      "【工作方式】",
+      "1. 先读再改：动手前先读 doc/data-model.md（数据结构以此为准，代码与文档不一致时先改文档）；技术栈与构建命令看 AGENTS.md 第 2 章；红线看 ARCHITECTURE.md 第 10 章。",
+      "2. 最小改动：只改与本条指令相关的文件，不重构目录、不换技术栈、不重写已完成模块、不删表字段。",
+      "3. 改完自验：编译必须通过；如果项目实例正在运行，重启一次让用户立刻看到效果，不要反复重启。",
+      "4. 收尾说明：回复最后用 3-6 行说清「改了哪些文件 / 怎么验证的 / 需要用户确认什么」。",
+      "5. 禁止：删除项目目录、修改 src/template/devStandard 模板、修改 doc 下的流程 JSON、git push 或发布到线上服务器 —— 除非用户本条指令明确要求。",
+      "6. 需求不明确时用上面的 ASK 格式问，不要猜着大改。回复用中文，简短，不贴大段代码。"
+    ].join("\n");
+  }
+
+  // ---------- Agent 流式事件（window.emit 只发给发起 run 的窗口） ----------
+  function ensureListener() {
+    if (!window.__TAURI__ || !window.__TAURI__.event) return;
+    window.__TAURI__.event.listen("agent_stream", function (ev) {
+      var d = ev.payload || {};
+      if (d.type === "reasoning") {
+        if (!LAST_THINK) LAST_THINK = logLine("think", "思考：");
+        appendTo(LAST_THINK, d.text || "");
+        LAST_OUT = null;
+      } else if (d.type === "delta") {
+        if (!LAST_OUT) LAST_OUT = logLine("out", "");
+        appendTo(LAST_OUT, d.text || "");
+        RUN_FULL += (d.text || "");
+        LAST_THINK = null;
+        askScan(RUN_FULL);
+      } else if (d.type === "tool") {
+        logLine("tool", "🔧 " + (d.text || d.tool || "工具"), true);
+        LAST_OUT = null; LAST_THINK = null;
+      } else if (d.type === "tool_done") {
+        logLine("tool", "   ↳ " + (d.text || "") + (d.error ? " 失败" : " 完成") +
+          (d.duration ? "（" + Number(d.duration).toFixed(1) + "s）" : ""), true);
+        LAST_OUT = null; LAST_THINK = null;
+      }
+      // done / error 由 invoke 的 Promise 统一收口，避免重复提示
+    });
+  }
+
+  // ---------- 确认项：解析 [[ASK:{...}]] 并弹阻塞弹窗 ----------
+  function askScan(full) {
+    var t = String(full || "");
+    var i = t.indexOf("[[ASK:");
+    if (i < 0) return false;
+    var j = t.indexOf("]]", i);
+    if (j < 0) return false;
+    var raw = t.slice(i + 6, j);
+    if (ASK_SHOWN === raw) return true;
+    var spec = null;
+    try { spec = JSON.parse(raw); } catch (e) { return false; }
+    if (!spec) return false;
+    ASK_SHOWN = raw;
+    ASK_OPEN = true;
+    logLine("ask", "❓ 需要你确认：" + (spec.title || "请选择"), true);
+    askShow(spec);
+    syncExecBtn();
+    return true;
+  }
+
+  function askShow(spec) {
+    var old = document.getElementById("askMask");
+    if (old) old.remove();
+    var mask = document.createElement("div");
+    mask.id = "askMask";
+    mask.className = "ask-mask";
+    var H = [];
+    H.push('<div class="ask-card">');
+    H.push('<div class="ask-title">' + esc(spec.title || "需要你确认一下") + '</div>');
+    if (spec.body) H.push('<div class="ask-body">' + esc(spec.body) + '</div>');
+    if (spec.options && spec.options.length) {
+      H.push('<div class="ask-opts">');
+      spec.options.forEach(function (o, k) {
+        H.push('<label class="ask-opt"><input type="radio" name="askOpt" value="' +
+          esc(String(o.v || o.label || "")) + '"' + (k === 0 ? " checked" : "") + '> <span>' +
+          esc(o.label || o.v || "") + '</span></label>');
+      });
+      H.push('</div>');
+    }
+    var secret = !!(spec.field && spec.field.secret);
+    if (spec.field) {
+      H.push('<div class="ask-field"><label>' + esc(spec.field.label || "请输入") + '</label>');
+      H.push('<input id="askVal" type="' + (secret ? "password" : "text") +
+        '" autocomplete="off" spellcheck="false" placeholder="' + esc(spec.field.placeholder || "") + '"></div>');
+    }
+    H.push('<div class="ask-actions"><button class="ghost" id="askCancel">先不做</button>');
+    H.push('<button class="primary" id="askOk">确定并继续</button></div>');
+    H.push('</div>');
+    mask.innerHTML = H.join("");
+    document.body.appendChild(mask);
+
+    var valEl = document.getElementById("askVal");
+    if (valEl) setTimeout(function () { valEl.focus(); }, 60);
+
+    function closeAsk() { ASK_OPEN = false; ASK_SHOWN = ""; syncExecBtn(); mask.remove(); }
+
+    document.getElementById("askCancel").onclick = function () {
+      closeAsk();
+      logLine("sys", "已选择「先不做」，已告诉 Agent 停下等你安排。", true);
+      send("用户选择「先不做」，这一步暂停。请说明当前项目的状态和下一步建议，不要继续做这一步。",
+           "已选择「先不做」", true);
+    };
+    document.getElementById("askOk").onclick = function () {
+      var opt = "";
+      var r = mask.querySelector('input[name="askOpt"]:checked');
+      if (r) opt = r.value;
+      var val = valEl ? valEl.value : "";
+      if (spec.field && !String(val).trim()) {
+        if (valEl) { valEl.style.borderColor = "#D64545"; valEl.focus(); }
+        return;
+      }
+      var parts = [];
+      if (opt) parts.push(opt);
+      if (val) parts.push(val);
+      var ans = parts.join(" | ");
+      if (!ans) return;
+      closeAsk();
+      var display = secret ? ("已填写 " + (spec.field.label || "密钥") + "：[已遮蔽]") : ans;
+      logLine("me", "▸ " + display, true);
+      histPush(display, true);
+      send(ans, display, true);
+    };
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  // ---------- 执行 ----------
+  // send(text, display, fromAsk)：fromAsk=true 时指令行已由调用方写过，不再重复
+  function send(text, display, fromAsk) {
+    if (RUNNING) return;
+    text = String(text == null ? "" : text).trim();
+    if (!text) { ta.focus(); return; }
+    if (!CTX.prjGuid) { logLine("err", "✗ 没取到项目上下文，请回主窗口重新「进入微调模式」。"); return; }
+
+    if (!fromAsk) {
+      logLine("me", "▸ " + text, true);
+      histPush(text, true);
+      ta.value = "";
+      try { localStorage.removeItem("tune_draft"); } catch (e) {}
+      autoGrow();
+    }
+    RUN_FULL = "";
+    ASK_SHOWN = "";
+    setRunning(true);
+
+    window.__TAURI__.core.invoke("agent_ask_stream", {
+      question: text,
+      // 与「AI开发」同一会话名（同项目）→ 之后 AI开发 若也带 session_id，天然接上同一上下文
+      sessionId: "module:ai-code:" + CTX.prjGuid,
+      instructions: buildInstructions(),
+      cwd: CTX.cwd,
+      // 微调是多轮对话（"刚才那个再往左一点"）：会话 ID 必须进请求体，
+      // /v1/runs 不认 X-Hermes-Session-Id 请求头，只有 body 里的 session_id 才续历史。
+      sessionMemory: true
+    }).then(function (finalText) {
+      if (finalText && !LAST_OUT) logLine("out", finalText);
+      if (finalText) histPush(finalText, false);
+      if (!ASK_OPEN) logLine("ok", "— 执行完成 —", true);
+      setRunning(false);
+    }).catch(function (e) {
+      var msg = (e && e.message ? e.message : String(e));
+      logLine("err", "✗ " + msg, true);
+      histPush("（执行失败）" + msg, false);
+      setRunning(false);
+    });
+  }
+  $("execBtn").addEventListener("click", function () { send(ta.value); });
+
+  // ---------- 启动：取上下文 + 载入与 AI开发 共用的记录 ----------
+  function renderSharedHistory() {
+    var hist = readJson(histKey()).slice(-8);
+    if (hist.length) {
+      logLine("sys", "—— 与 AI开发 共用的最近对话 ——");
+      hist.forEach(function (h) {
+        logLine(h.me ? "me" : "hist", (h.me ? "你：" : "Agent：") + String(h.t || "").slice(0, 400));
+      });
+    }
+    var logs = readJson(logKey()).slice(-40);
+    if (logs.length) {
+      logLine("sys", "—— 与 AI开发 共用的执行过程（最近 " + logs.length + " 条）——");
+      logs.forEach(function (r) {
+        logLine(CLS_MAP[r.c] || "out", String(r.m || "").slice(0, 500));
+      });
+    }
+  }
+
+  function boot() {
+    var a = 90;
+    try { a = parseInt(localStorage.getItem("tune_win_alpha") || "90", 10) || 90; } catch (e) {}
+    $("alpha").value = a;
+    applyAlpha(a);
+    ensureListener();
+    syncExecBtn();
+
+    if (!window.__TAURI__ || !window.__TAURI__.core) {
+      logLine("err", "✗ Tauri 不可用（非桌面环境）");
+      return;
+    }
+    window.__TAURI__.core.invoke("tune_ctx").then(function (c) {
+      if (!c || !c.prjGuid) {
+        logLine("err", "✗ 未取到项目上下文，请回主窗口重新「进入微调模式」。");
+        return;
+      }
+      CTX = c;
+      $("prjName").textContent = c.prjName || "";
+      document.title = "微调 · " + (c.prjName || "");
+      renderSharedHistory();
+      logLine("sys", "微调模式已就绪：" + (c.prjName || ""));
+      logLine("sys", "工作目录：" + (c.cwd || ""));
+      logLine("sys", "回车换行，点「执行」发给 Agent；Agent 需要确认时会自动弹窗。");
+    }).catch(function (e) {
+      logLine("err", "✗ 读取项目上下文失败：" + (e && e.message ? e.message : String(e)));
+    });
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

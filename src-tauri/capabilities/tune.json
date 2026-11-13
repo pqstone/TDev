@@ -1,0 +1,10 @@
+{
+  "identifier": "tune",
+  "description": "微调浮窗：只授予核心 API（事件监听 / 窗口信息），不授予 fs / shell / dialog",
+  "windows": [
+    "tune"
+  ],
+  "permissions": [
+    "core:default"
+  ]
+}
