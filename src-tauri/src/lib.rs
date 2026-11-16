@@ -34,6 +34,35 @@ fn agent_now_secs() -> i64 {
         .unwrap_or(0)
 }
 
+/// Hermes Agent API Key —— 绝不硬编码进源码！
+/// 本仓库是公开仓库，写死等于把 key 公开。读取顺序：
+///   1. 环境变量 TDEV_AGENT_KEY
+///   2. 用户配置文件 %USERPROFILE%\.tdev\agent.key（或 ~/.tdev/agent.key）
+/// 都取不到则返回空字符串，调用方直接报「未配置」而不是发一个必然 401 的请求。
+fn agent_key() -> String {
+    if let Ok(k) = std::env::var("TDEV_AGENT_KEY") {
+        let k = k.trim().to_string();
+        if !k.is_empty() {
+            return k;
+        }
+    }
+    if let Some(home) = std::env::var_os("USERPROFILE").or_else(|| std::env::var_os("HOME")) {
+        let p = std::path::PathBuf::from(home)
+            .join(".tdev")
+            .join("agent.key");
+        if let Ok(s) = std::fs::read_to_string(&p) {
+            let k = s.trim().to_string();
+            if !k.is_empty() {
+                return k;
+            }
+        }
+    }
+    String::new()
+}
+
+/// 统一的「未配置 key」错误文案
+const AGENT_KEY_MISSING: &str = "未配置 Agent API Key：请设置环境变量 TDEV_AGENT_KEY，或写入 %USERPROFILE%\\.tdev\\agent.key（一行纯文本）。";
+
 /// 拿锁：已有活锁则拒绝（返回给前端的错误文案要能直接展示给用户）
 fn agent_lock_try() -> Result<(), String> {
     let now = agent_now_secs();
@@ -562,10 +591,14 @@ async fn agent_ask(question: String, session_id: String) -> Result<String, Strin
         "model": "hermes-agent",
         "messages": [{"role": "user", "content": question}]
     });
+    let key = agent_key();
+    if key.is_empty() {
+        return Err(AGENT_KEY_MISSING.to_string());
+    }
     let client = reqwest::Client::new();
     let resp = client.post(url)
         .header("Content-Type", "application/json")
-        .header("Authorization", "Bearer ***REMOVED***-ROTATE_ME")
+        .header("Authorization", format!("Bearer {key}"))
         .header("X-Hermes-Session-Id", session_id)
         .body(body.to_string())
         // Agent 执行时长不可预期：超时设为 1 小时（足够长）
@@ -607,7 +640,10 @@ async fn agent_ask_stream(
 
     // TD 实例（8644）：TDev 专用 Agent，与 QQ 用的 default(8642) 进程隔离
     let base = "http://127.0.0.1:8644";
-    let key = "***REMOVED***-ROTATE_ME";
+    let key = agent_key();
+    if key.is_empty() {
+        return Err(AGENT_KEY_MISSING.to_string());
+    }
     let client = reqwest::Client::new();
 
     // 1. 启动 run
