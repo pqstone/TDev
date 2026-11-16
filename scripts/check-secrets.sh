@@ -20,11 +20,13 @@ case "${1:-}" in
 esac
 
 # 高危模式（扩展正则）。加一条就多一层保险。
+# 注意 sk- 阈值必须 >=32：前端打包产物里 sk-image-xxx-color 这类 CSS 类名会误报。
 PATTERNS=$(cat <<'EOF'
 AKIA[0-9A-Z]{16}
 gh[pousr]_[A-Za-z0-9]{20,}
 github_pat_[A-Za-z0-9_]{20,}
-sk-[A-Za-z0-9_-]{20,}
+sk-[A-Za-z0-9]{32,}
+sk-[A-Za-z0-9_-]{32,}
 ark-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 xox[baprs]-[A-Za-z0-9-]{10,}
 AIza[0-9A-Za-z_-]{30,}
