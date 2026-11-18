@@ -12,7 +12,7 @@ use tauri::Emitter;
 pub mod deploy;
 
 // ============================================================
-// 全局 Agent 互斥锁（2026-11-06 卢Sir 定：只允许一个 Agent 运行）
+// 全局 Agent 互斥锁（2026-11-06 产品定：只允许一个 Agent 运行）
 // ------------------------------------------------------------
 // 病根：TDev 每个场景都能自己发 run，前端防重入只管得住「计划按钮」，
 // 管不住 ASK 回答 / 「看看」/ 聊天提问等旁路入口；多点几次就是 3 个 run 并发
@@ -151,7 +151,7 @@ fn agent_force_unlock() -> serde_json::Value {
 use std::os::windows::process::CommandExt;
 
 /// 系统构建前先把目录骨架建好，Agent 只负责往里填内容。
-/// 原则（2026-11-05 卢Sir 定）：
+/// 原则（2026-11-05 产品定）：
 ///   ① 公共运行时（数据库 / JDK / Web 服务 / 依赖缓存）放 工作空间/Public，多项目共用，不重复安装；
 ///   ② 项目自己的一切都落在 工作空间/<项目名>/ 内，不外溢 —— 整个目录拷走就能迁移部署。
 #[tauri::command]
@@ -896,7 +896,7 @@ async fn tune_open(app: tauri::AppHandle, prj_guid: String, prj_name: String, cw
         let _ = w.show();
         let _ = w.unminimize();
         let _ = w.set_focus();
-        // 主窗口收起，只留浮窗（卢Sir 要求：点「微调模式」→ 主窗口最小化）
+        // 主窗口收起，只留浮窗（产品要求：点「微调模式」→ 主窗口最小化）
         if let Some(m) = app.get_webview_window("main") { let _ = m.minimize(); }
         return Ok(());
     }
@@ -2244,7 +2244,7 @@ fn extract_accent(json_text: &str) -> Option<String> {
 }
 
 // ============================================================
-// 本地 Agent 进程管理（2026-11-17 · 卢Sir 需求）
+// 本地 Agent 进程管理（2026-11-17 · 产品需求）
 // ------------------------------------------------------------
 // 目标：Agent配置 里勾了「本地 Agent」的项，可以看状态灯、
 // 启动 / 重启 / 停止、打开命令行对话框（可编辑命令行并执行）。
@@ -2256,7 +2256,7 @@ fn extract_accent(json_text: &str) -> Option<String> {
 // ============================================================
 
 /// 统一构造「无窗口」子进程。
-/// 病根（2026-11-17 卢Sir 报「黑色命令行窗口持续弹窗」）：netstat / tasklist 是控制台程序，
+/// 病根（2026-11-17 产品报「黑色命令行窗口持续弹窗」）：netstat / tasklist 是控制台程序，
 /// 从 TDev（GUI 子系统）里 spawn 时不带 CREATE_NO_WINDOW 就会各弹一个黑窗；
 /// 状态轮询 5s 一轮、每轮 2-3 个命令 → 桌面上黑窗持续闪。
 fn la_hidden(program: &str) -> std::process::Command {

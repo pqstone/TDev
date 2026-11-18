@@ -1119,7 +1119,7 @@
       "✗ 未处理的 Promise 拒绝：": "✗ Unhandled promise rejection: ",
       "✗ 校验没过（": "✗ Validation failed (",
       "✗ 测试失败：": "✗ Test failed: ",
-      "✗ 返工 2 次仍未过，停下等卢Sir 定夺": "✗ Still failing after 2 retries - stopping for your decision",
+      "✗ 返工 2 次仍未过，停下等你定夺": "✗ Still failing after 2 retries - stopping for your decision",
       "只在 Agent 真的卡死（长时间无任何反应）时才强制解锁。确定？": "Force unlock only when the agent is really stuck (no activity for a long time). Continue?",
       "在线与 Agent 沟通聊天（对接 Hermes Dashboard）": "Chat with the agent (Hermes Dashboard)",
       "已强制解锁。如果刚才确实有任务在跑，它的结果可能没写完 —— 做之前先看一眼代码状态。": "Force-unlocked. If a task was running, its output may be incomplete - check the code first.",
@@ -2852,7 +2852,7 @@ function doConnect(baseUrl, token) {
 
     function agentScene(sceneId) { return AGENT_SCENES[sceneId] || null; }
 
-    // ===== 聊天输入框统一处理（2026-11-06 卢Sir 要求）=====
+    // ===== 聊天输入框统一处理（2026-11-06 产品要求）=====
     // ① 切出页面后切回来，已输入未发送的内容不能丢：切换会 renderXxx() 重建 innerHTML，
     //    输入框连同内容一起被销毁 —— 所以按「场景 + 项目」存 localStorage，重建后自动填回。
     // ② 必须支持多行：单行 input 写不下稍长一点的修改描述。
@@ -3322,7 +3322,7 @@ function doConnect(baseUrl, token) {
 
     // 统一流式发送：气泡 + 事件监听 + 三区渲染（思考链 / 工具 / 打字机）
     // hooks: { beforeSend(text)->text, onStart(), onDone(text), onError(msg) }
-    // ===== agent_stream 全局单监听器（2026-11-06 卢Sir 报「重复执行/重复输出」的根因）=====
+    // ===== agent_stream 全局单监听器（2026-11-06 产品报「重复执行/重复输出」的根因）=====
     // 病根：原来每次 agentRun 都 event.listen 一个新的监听器，靠 cleanup 里的 unlisten 收尾。
     // 一旦这一轮被中断 / 页面重渲染 / 异常跳出，unlisten 就丢了，监听器永久残留。
     // 残留 N 个 → 同一条 SSE 事件被处理 N 遍 → 同一条回复弹出 N 个气泡、
@@ -3586,7 +3586,7 @@ function doConnect(baseUrl, token) {
       document.getElementById("memSendBtn").addEventListener("click", memSend);
       bindComposer(document.getElementById("memInput"), "memory", memSend);
       var memN = agentHistRender("memory");
-      if (!memN) memSys("先发一句「我叫卢Sir，记住」，再发「我叫什么名字？」—— 第二句里没有任何提示词，它答得出来就说明是自带记忆。");
+      if (!memN) memSys("先发一句「我叫张三，记住」，再发「我叫什么名字？」—— 第二句里没有任何提示词，它答得出来就说明是自带记忆。");
       chatConnect();
     }
 
@@ -4195,10 +4195,10 @@ function doConnect(baseUrl, token) {
           if (st.note) L.push('<div class="ui-step-note">产出：' + escHtml(st.note) + '</div>');
           L.push('</div>');
           L.push('<span class="ui-step-status" data-role="status">' + aiStepText(state) + '</span>');
-          // 按钮下沉到每一步（卢Sir：开始/暂停/重试放步骤上，而不是只放在计划底部）
+          // 按钮下沉到每一步（产品：开始/暂停/重试放步骤上，而不是只放在计划底部）
           // 正在跑别的步骤时，其他步骤的「执行」不显示，避免看得到点得动却必然被拒。
           if (state === "done") {
-            // 卢Sir 2026-11-09：去掉「看看」按钮（执行完不再需要对每步单独查看），只留「重做」。
+            // 产品2026-11-09：去掉「看看」按钮（执行完不再需要对每步单独查看），只留「重做」。
             if (!_stepRunning) L.push('<button class="ui-step-btn" data-run="' + st.n + '" title="重做这一步（会重跑一次）">重做</button>');
           } else if (state === "doing") {
             L.push('<button class="ui-step-btn ui-step-btn-warn" data-pause="1">暂停</button>');
@@ -4441,7 +4441,7 @@ function doConnect(baseUrl, token) {
       ];
     }
 
-    // ===== AI开发前置闸门（2026-11-13 卢Sir 要求）=====
+    // ===== AI开发前置闸门（2026-11-13 产品要求）=====
     // AI 开发要求前序菜单全部亮绿灯，顺序：基础信息 → 主题风格 → 项目约束 → 业务流程 → 业务表单。
     // 缺哪个就拦住，并把用户送到那个模块；读不到状态时不拦人（fail-open，别把人锁死）。
     var AI_GATE = [
@@ -4691,7 +4691,7 @@ function doConnect(baseUrl, token) {
       var _keptByUser = 0;
       if (aiPlanKeepDone > 0) {
         // 逐位判断，不找连续前缀。
-        // 卢Sir 的实际场景：1-6 已完成、7 没做、8/9/10 手工标了完成 ——
+        // 产品的实际场景：1-6 已完成、7 没做、8/9/10 手工标了完成 ——
         // 如果按「连续前缀」保留，第 7 步一断，8/9/10 就被丢掉了。
         // 规则：该位置旧计划是 done 就用旧的（原样不动），否则用新生成的。
         var _out = [];
@@ -4864,7 +4864,7 @@ function doConnect(baseUrl, token) {
 
     function aiPlanCur() {
       if (!aiPlan || !aiPlan.steps) return null;
-      // 单步模式：只认指定那一步（卢Sir：按钮下沉到步骤上，能单独执行某一步）
+      // 单步模式：只认指定那一步（产品：按钮下沉到步骤上，能单独执行某一步）
       if (aiPlan.stepMode && aiPlan.target) {
         var t = aiPlan.steps[aiPlan.target - 1];
         if (t && t.state !== "done") return t;
@@ -4924,7 +4924,7 @@ function doConnect(baseUrl, token) {
         L.push("");
       }
       L.push("【要求】");
-      // 卢Sir 2026-11-09：数据结构文档必须每步开工前先读 —— 它容错具于「常驻一句路径」，
+      // 产品2026-11-09：数据结构文档必须每步开工前先读 —— 它容错具于「常驻一句路径」，
       // 纯前端步骤会被模型自行判为「不用建表」而跳过，所以固定写进单步提示词第 0 条。
       L.push("0. 开工前先读项目目录下 doc/data-model.md（由「业务表单」模块按业务流程生成；文件不存在就说明「还没生成业务表单，请先去『业务表单』模块生成」并跳过表结构相关改动）；凡涉及表、字段、接口的改动，一律照它来，不许自己另设计一套。");
       L.push("1. 只做第 " + st.n + " 步，做完就停，不要顺手做下一步。");
@@ -5020,7 +5020,7 @@ function doConnect(baseUrl, token) {
           aiWatchStop();
           aiPlanSave(); aiRenderPlan();
           aiToolState("已停止：第 " + st2.n + " 步返工 2 次仍没过", "bad");
-          aiToolLog("err", "✗ 返工 2 次仍未过，停下等卢Sir 定夺");
+          aiToolLog("err", "✗ 返工 2 次仍未过，停下等你定夺");
           aiAddMsg("第 " + st2.n + " 步返工 2 次还是没过，浩克不再空转。剩下的：\n- " + viols.join("\n- ") + "\n\n可以：① 点「继续执行」再试一次 ② 直接说怎么改 ③ 说这步跳过。", false);
           return;
         }
@@ -5144,7 +5144,7 @@ function doConnect(baseUrl, token) {
 
     // ---- 看门狗：一轮到底是真在跑，还是早就断了没人告诉界面 ----
     // 判定依据只有一个：还有没有新事件进来。90 秒没动静就亮黄灯，300 秒就自动解锁，
-    // 免得界面永远停在「处理中」、按钮永远点不动（卢Sir 就是这么被坑的）。
+    // 免得界面永远停在「处理中」、按钮永远点不动（产品就是这么被坑的）。
     var _aiWatch = null;
     function aiWatchStop() {
       if (_aiWatch) { clearInterval(_aiWatch); _aiWatch = null; }
@@ -5329,7 +5329,7 @@ function doConnect(baseUrl, token) {
     }
 
     // ---- 执行过程日志：工具调用 / 思考 / 耗时，独立面板，永远滚到最新一条 ----
-    // 2026-11-13 卢Sir 要求「微调模式和 AI开发 共享执行输出」：
+    // 2026-11-13 产品要求「微调模式和 AI开发 共享执行输出」：
     //   DOM 只是投影，真源是 localStorage 的 ai_log_<prjGUID>（微调浮窗读写同一份）。
     //   以前切页面日志就没了，现在持久化，两个窗口看到的是同一条流水。
     function aiLogKey() {
