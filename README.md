@@ -50,6 +50,28 @@
   - **工具设置**：项目空间（工作路径）、模型配置（大模型接入）、Agent配置（Hermes/OpenClaw 接入）、微调模式（浮窗式细节调整）
   - **测试模块**：Agent连接测试（QQ 风格在线聊天，对接 Hermes API Server）
 
+## 效果截图
+
+> 三步把需求变成可交付系统：先定流程 → 再让 AI 按流程开发 → 最后在微调模式里对齐真实业务。
+
+### ① 通过流程，让系统输出逻辑可控
+
+业务流程先画清楚，AI 的输出才有边界，不会自由发挥。
+
+![业务流程 —— 让系统输出逻辑可控](docs/screenshots/1-flow-logic.png)
+
+### ② AI 根据预设业务逻辑开发系统
+
+Agent 读取已确定的业务流程与业务表单，按步骤开发，每一步都可验证。
+
+![AI 根据预设业务逻辑开发系统](docs/screenshots/2-ai-coding.png)
+
+### ③ 在微调模式下，让项目匹配实际业务，达到商用水准
+
+第一轮开发完成后，用始终置顶的极简浮窗边看效果边提细节调整。
+
+![微调模式 —— 对齐实际业务](docs/screenshots/3-tune-mode.png)
+
 ## 已实现功能
 
 - **基础信息页**：展示当前选中项目的基础信息（名称/类型/说明/prjGUID/创建时间），右下角删除项目按钮（confirm 确认后删除）。
@@ -172,6 +194,28 @@ TDev is a Tauri v2 desktop application designed as an AI-collaborative engineeri
 - Fine-tune Mode: after the first development round, an always-on-top minimal window (opaque input area, adjustable 10–100% window opacity) that shares chat history and execution log with the AI Coding module.
 - Tooling: workspace management, LLM model configuration, and Agent connection settings.
 - Tech Stack: Pure static frontend (no framework) | Rust + Tauri v2 | SQLite (rusqlite).
+
+### Screenshots
+
+> Three steps from requirement to delivery: define the flow → let AI build against it → align with real business in Fine-tune Mode.
+
+**1. A defined business flow keeps the system's output under control**
+
+Draw the process first, so the AI's output has boundaries and won't improvise.
+
+![Business flow keeps output under control](docs/screenshots/1-flow-logic.png)
+
+**2. AI builds the system from the predefined business logic**
+
+The agent reads the confirmed flow and business forms, then develops step by step — every step verifiable.
+
+![AI builds from predefined business logic](docs/screenshots/2-ai-coding.png)
+
+**3. Fine-tune Mode aligns the project with real business needs — commercial quality**
+
+After the first round, use the always-on-top window to tweak details while watching the live result.
+
+![Fine-tune Mode](docs/screenshots/3-tune-mode.png)
 
 ### Modules
 
