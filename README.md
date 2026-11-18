@@ -57,7 +57,8 @@
 - **工具设置**：
   - **项目空间**：设定 TDev 工作路径（文件夹选择器），新建项目时在工作空间下创建项目目录。
   - **模型配置**：配置大模型接入（名称/提供商/URL/API Key/模型名），支持 OpenAI/DeepSeek/火山方舟/通义/Anthropic/Gemini/Ollama/自定义，Key 脱敏显示。
-  - **Agent配置**：配置 Agent 接入（名称/类型/地址/Key/附加参数），支持 Hermes/OpenClaw/OpenAI Agent/自定义。
+  - **模型参数自检**（2026-11-18）：启动时检查 Hermes 的 `config.yaml`（model 段）/ `data/.env`（`<PROVIDER>_API_KEY`、`<PROVIDER>_BASE_URL`）/ provider 注册表（78 项）三处，缺任一项就弹「Hermes 模型参数配置」。弹窗显示**生效值 + 来源**（config.yaml / .env / provider 默认），保存时**同时写** config 与 .env。详见 `docs/model-config.md`。
+  - **Agent配置**：配置 Agent 接入（名称/类型/地址/Key/附加参数），支持 Hermes/OpenClaw/OpenAI Agent/自定义。勾选「本地 Agent」后列表出现状态灯 + **启动 / 重启 / 停止 / 命令行…**：启动/停止走启动器脚本的 `--json` / `--stop`（优雅，不强杀），并记住「上次是启动还是停止」——下次打开 TDev 尊重该意图。详见 `docs/local-agent.md`。
 - **测试模块 → Agent连接测试**：QQ 风格在线聊天（气泡消息、输入框、发送按钮、连接状态），对接 Hermes API Server，X-Hermes-Session-Id 按项目隔离会话；消息历史 + 思考状态 localStorage 持久化。
 - **部署发布**（2026-11-10）：
   - **服务器管理**：按项目维护服务器（名称 / Linux|Windows / 地址 / 端口 / 用户名 / 密码 / 备注），密码用 **Windows DPAPI** 加密入库，界面只显示「密码已设置」；支持端口连通性测试。
@@ -78,6 +79,7 @@
   - **交互**：回车换行、必须点「执行」才发送（防误发）；Agent 需要确认时按 `[[ASK:{…}]]` 弹阻塞式确认框，答案作为下一轮发回。
   - **与 AI开发 共享**：聊天记录 `ai_hist_<项目>` 与执行输出 `ai_log_<项目>` 同一份真源，两个窗口互通；标题栏「主窗口」按钮关闭浮窗并恢复主窗口。
 - **多语言（中文 / English）**：顶栏语言切换，选择持久化。实现为「原文即键」的词典 + DOM 自动翻译（记得原文，可 100% 切回中文）+ MutationObserver 兜动态渲染 + alert/confirm 覆盖；新增文案只需加词条，无需改调用处。文档内容（技术栈表、自检清单）暂不翻译。
+  - **微调浮窗**（`dist/tune.html`，独立窗口）：自带一套轻量 i18n，跟随主窗口的 `localStorage.tdev_lang`；英文模式实测中文 UI 残留 0。详见 `docs/i18n.md` §7。
 
 ## 快速开始
 
@@ -131,7 +133,7 @@ TDev/
 - **库文件**：`%APPDATA%\com.tdev.app\tdev.db`（AppConfig 目录）。
 - **访问方式**：前端 `invoke('db_init')` 等自定义 command；禁止前端直连或拼接 SQL。
 - **已建表**：`app_meta`（键值配置）、`demo_items`（演示 CRUD）、`projects`（项目：prjGUID/prjName/prjType/prjDescription/created_at）。
-- **项目相关命令**：`project_list`（列表）、`project_create`（新增，自动生成 UUID v4 作 prjGUID，同时在工作空间创建目录并复制 `src/template` 模板、生成项目文档）、`project_delete`（按 prjGUID 删除）。
+- **项目相关命令**：`project_list`（列表）、`project_create`（新增，自动生成 UUID v4 作 prjGUID，同时在工作空间创建目录并复制 `template/`（exe 同级目录）模板、生成项目文档）、`project_delete`（按 prjGUID 删除）。
 - **配置命令**：`cfg_save`（配置 upsert 保存）、`cfg_load`（配置读取），用于工作空间/模型/Agent 配置持久化（`app_meta` 表）。
 - **Agent 聊天命令**：`agent_ask(question, sessionId)`（异步，调用 Hermes API Server `/v1/chat/completions`，通过 `X-Hermes-Session-Id` header 按项目隔离会话）。
 

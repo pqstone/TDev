@@ -441,6 +441,24 @@
   }
 
   // ---------- 执行 ----------
+  // 微调模式和主窗口共用「默认 Agent」：从 agents 配置取 defaultName 对应的 url/key。
+  // 不缓存 —— 用户在配置页切换默认后，浮窗下一次发送立刻跟着变。
+  function loadAgentTarget() {
+    if (!window.__TAURI__ || !window.__TAURI__.core) return Promise.resolve({});
+    return window.__TAURI__.core.invoke("cfg_load", { category: "agents" }).then(function (v) {
+      var cfg = null;
+      try { cfg = JSON.parse(v || "{}"); } catch (e) {}
+      var name = (cfg && cfg.defaultName) ? String(cfg.defaultName) : "";
+      var list = (cfg && cfg.list) ? cfg.list : [];
+      for (var i = 0; i < list.length; i++) {
+        if (list[i] && list[i].name === name) {
+          return { agentUrl: list[i].url || "", agentKey: list[i].key || "" };
+        }
+      }
+      return {};   // 未设默认 → 后端回落内置 TD(8644)
+    }).catch(function () { return {}; });
+  }
+
   // send(text, display, fromAsk)：fromAsk=true 时指令行已由调用方写过，不再重复
   function send(text, display, fromAsk) {
     if (RUNNING) return;
@@ -459,15 +477,17 @@
     ASK_SHOWN = "";
     setRunning(true);
 
-    window.__TAURI__.core.invoke("agent_ask_stream", {
-      question: text,
-      // 与「AI开发」同一会话名（同项目）→ 之后 AI开发 若也带 session_id，天然接上同一上下文
-      sessionId: "module:ai-code:" + CTX.prjGuid,
-      instructions: buildInstructions(),
-      cwd: CTX.cwd,
-      // 微调是多轮对话（"刚才那个再往左一点"）：会话 ID 必须进请求体，
-      // /v1/runs 不认 X-Hermes-Session-Id 请求头，只有 body 里的 session_id 才续历史。
-      sessionMemory: true
+    loadAgentTarget().then(function (target) {
+      return window.__TAURI__.core.invoke("agent_ask_stream", Object.assign({
+        question: text,
+        // 与「AI开发」同一会话名（同项目）→ 之后 AI开发 若也带 session_id，天然接上同一上下文
+        sessionId: "module:ai-code:" + CTX.prjGuid,
+        instructions: buildInstructions(),
+        cwd: CTX.cwd,
+        // 微调是多轮对话（"刚才那个再往左一点"）：会话 ID 必须进请求体，
+        // /v1/runs 不认 X-Hermes-Session-Id 请求头，只有 body 里的 session_id 才续历史。
+        sessionMemory: true
+      }, target));
     }).then(function (finalText) {
       if (finalText && !LAST_OUT) logLine("out", finalText);
       if (finalText) histPush(finalText, false);
@@ -530,6 +550,108 @@
   }
 
   boot();
+})();
+</script>
+
+<!-- TDEV_TUNE_I18N: 跟随主窗口语言（localStorage tdev_lang 同源共享） -->
+<script>
+(function () {
+  var LANG = "zh";
+  try { LANG = localStorage.getItem("tdev_lang") === "en" ? "en" : "zh"; } catch (e) {}
+  if (LANG !== "en") return;
+
+  var DICT = {
+    "微调模式": "Fine-tune Mode",
+    "TDev 微调模式": "TDev Fine-tune Mode",
+    "窗体": "Window",
+    "清": "Clear",
+    "主窗口": "Main",
+    "执行": "Run",
+    "就绪": "Ready",
+    "回车换行 ·": "Enter = newline ·",
+    "点击「执行」": "Click Run",
+    "发送": "Send",
+    "清空日志（同时清 AI开发 的执行过程）": "Clear log (also clears the AI Coding run log)",
+    "关闭浮窗并回到主窗口": "Close this float and return to the main window",
+    "描述要调整的细节（回车换行，点「执行」发送）": "Describe the tweak (Enter = newline, click Run to send)",
+    "执行中…": "Running…",
+    "执行中：Agent 正在改代码，别重复点执行": "Running: the agent is editing code — don't click Run again",
+    "等你确认": "Waiting for you",
+    "执行中不清屏，等这一轮结束。": "Not cleared while running — wait for this round to finish.",
+    "日志已清空（AI开发 的执行过程同步清空）。": "Log cleared (the AI Coding run log was cleared too).",
+    "思考：": "Thinking: ",
+    "工具": "Tool",
+    "失败": "Failed",
+    "完成": "Done",
+    "❓ 需要你确认：": "❓ Need your confirmation: ",
+    "请选择": "Please choose",
+    "需要你确认一下": "Needs your confirmation",
+    "请输入": "Please enter",
+    "先不做": "Not now",
+    "确定并继续": "Confirm & continue",
+    "已选择「先不做」，已告诉 Agent 停下等你安排。": "Chose \"Not now\" — told the agent to stop and wait.",
+    "已选择「先不做」": "Chose \"Not now\"",
+    "已填写": "Filled in",
+    "密钥": "Secret",
+    "：[已遮蔽]": ": [masked]",
+    "✗ 没取到项目上下文，请回主窗口重新「进入微调模式」。": "✗ No project context — go back to the main window and enter Fine-tune Mode again.",
+    "— 执行完成 —": "— Run complete —",
+    "（执行失败）": "(run failed)",
+    "—— 与 AI开发 共用的最近对话 ——": "—— Recent chat shared with AI Coding ——",
+    "你：": "You: ",
+    "—— 与 AI开发 共用的执行过程（最近 ": "—— Run log shared with AI Coding (latest ",
+    " 条）——": " entries) ——",
+    "✗ Tauri 不可用（非桌面环境）": "✗ Tauri unavailable (not a desktop environment)",
+    "微调 · ": "Tune · ",
+    "微调模式已就绪：": "Fine-tune Mode ready: ",
+    "工作目录：": "Working dir: ",
+    "回车换行，点「执行」发给 Agent；Agent 需要确认时会自动弹窗。": "Enter = newline; click Run to send. The agent pops a dialog when it needs confirmation.",
+    "✗ 读取项目上下文失败：": "✗ Failed to read project context: "
+  };
+  function tr(s) {
+    if (!s) return s;
+    var t = s.trim();
+    if (Object.prototype.hasOwnProperty.call(DICT, t)) return s.replace(t, DICT[t]);
+    for (var k in DICT) { if (k.length >= 4 && s.indexOf(k) >= 0) s = s.split(k).join(DICT[k]); }
+    return s;
+  }
+  var CJK = /[\u4e00-\u9fff]/;
+  function walk(node) {
+    if (!node) return;
+    if (node.nodeType === 3) {
+      var v = node.nodeValue;
+      if (!v || !CJK.test(v)) return;
+      var nv = tr(v);
+      if (nv !== v) node.nodeValue = nv;
+      return;
+    }
+    if (node.nodeType !== 1) return;
+    ["title", "placeholder"].forEach(function (a) {
+      try {
+        var val = node.getAttribute(a);
+        if (val && CJK.test(val)) node.setAttribute(a, tr(val));
+      } catch (e) {}
+    });
+    for (var i = 0; i < node.childNodes.length; i++) walk(node.childNodes[i]);
+  }
+  function apply() {
+    document.documentElement.setAttribute("lang", "en");
+    walk(document.body);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", apply);
+  else apply();
+  if (window.MutationObserver) {
+    var obs = new MutationObserver(function (muts) {
+      for (var i = 0; i < muts.length; i++) {
+        var m = muts[i];
+        if (m.type === "childList") {
+          for (var j = 0; j < m.addedNodes.length; j++) walk(m.addedNodes[j]);
+        } else { walk(m.target); }
+      }
+    });
+    obs.observe(document.body, { childList: true, subtree: true, characterData: true,
+                                 attributes: true, attributeFilter: ["title", "placeholder"] });
+  }
 })();
 </script>
 </body>

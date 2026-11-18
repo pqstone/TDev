@@ -5,7 +5,22 @@
 
 ---
 
-## 0. 最新状态（2026-11-13）
+## 0. 最新状态（2026-11-18）
+
+### 本轮新增（模型参数自检 + 本地 Agent 启停语义 + 去绝对路径 + 多语言补齐）
+
+| 能力 | 位置 | 说明 |
+| --- | --- | --- |
+| 模型参数自检 | `docs/model-config.md` + `hermes_model_check/save`（lib.rs）+ `dist/index.html` | 启动自检 `config.yaml` / `data/.env` / provider 注册表三处；缺失弹「Hermes 模型参数配置」，展示**生效值 + 来源**；保存同时写 config 与 .env |
+| 模型探针脚本 | `<Hermes>/data/scripts/model_config.py` | 用 Hermes 自己的 `PROVIDER_REGISTRY`（78 项）+ `read_raw_config()`，输出 JSON（`ok/missing/resolved/providers`） |
+| 本地 Agent 启停 v2 | `docs/local-agent.md` §8 | 停止/重启走启动器 `--stop` / `--restart`（优雅，避免 `unknown_execution` 冻结）；`local_agent_desired` 记住用户意图；按钮状态联动 |
+| 模板路径相对化 | `lib.rs::template_root()` | 6 处绝对路径（`E:/88.project/TDev/...`）改为 `<exe目录>\template` 优先、源码布局兜底；部署指令里的 `env.bat` 也改相对；全仓 `88.project` 命中 0 |
+| 多语言补齐 | `dist/index.html` + `dist/tune.html` | 主界面补 `微调模式`/`业务表单`；浮窗新增 i18n 层（跟随 `tdev_lang`），英文模式实测中文残留 0 |
+| 打包清单 | `docs/packaging-manifest.md` | 必须随包的关键文件 + 校验命令；`model_config.py` 已进清单 |
+
+> 本轮关键坑：① `model:` 段替换的下标必须从 `start+1` 开始，否则删掉顶层键；② `cmd /C` 对含引号命令行会剥引号，路径无空格时不要加引号；③ `app\.venv` 的 `pyvenv.cfg` 带绝对 home，绿色包一律用 `py314\python.exe` + 手动补 site-packages。
+
+## 0.1 上一轮状态（2026-11-13）
 
 ### 本轮新增（业务表单 + 微调模式 + 前置闸门）
 
@@ -20,7 +35,7 @@
 
 > 关键约束：`dist/index.html` 是编译期嵌入二进制的，改完必须 `cargo build --release` 并重启 exe；业务表单的编辑路径**不能整块重建面板**（会失焦）；`[[ASK]]` 是文本协议，答案要作为新一轮 run 发回。
 
-## 0.1 上一轮状态（2026-11-10）
+## 0.2 上一轮状态（2026-11-10）
 
 ### 本轮新增（部署发布 + 多语言）
 

@@ -53,7 +53,7 @@
     .mi-dot.on { background:#2e9e6b; box-shadow:0 0 4px rgba(46,158,107,.6); }
     /* 右侧功能展示、操作区 */
     .content { flex:1; overflow-y:auto; padding:24px; }
-    /* 连接测试 + 记忆测试双面板同屏，外层允许滚动（矮屏不至于被裁掉下半页） */
+    /* Agent 连接测试：单面板（Agent 选择/重连 + 记忆测试聊天框） */
     .content.chat-page { overflow-y:auto; padding-bottom:12px; }
     .content.theme-page { overflow:hidden; padding-bottom:12px; }
     .content.constr-page { overflow:hidden; padding-bottom:12px; }
@@ -128,6 +128,22 @@
     .cfg-item-name { display:block; font-size:14px; font-weight:600; color:var(--ink900); }
     .cfg-item-sub { display:block; font-size:12px; color:var(--ink500); margin-top:2px; word-break:break-all; }
     .cfg-item-key { display:block; font-size:12px; color:var(--p700); margin-top:2px; font-family:Consolas,monospace; }
+    .cfg-item.is-default { border-color:var(--p500); background:rgba(26,108,179,.05); }
+    .agent-def-badge { display:inline-block; font-size:11px; line-height:16px; padding:0 7px; border-radius:9px; background:var(--p700); color:#fff; margin-left:8px; vertical-align:middle; font-weight:600; }
+    /* ---- 本地 Agent 管理（docs/local-agent.md）---- */
+    .cfg-item-body { flex:1; min-width:0; }
+    .cfg-item-row { display:flex; align-items:center; gap:12px; }
+    .agent-local { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line300); }
+    .agent-led { width:9px; height:9px; border-radius:50%; background:var(--ink300); flex:0 0 auto; }
+    .agent-led.on { background:var(--success); box-shadow:0 0 0 3px rgba(46,158,107,.16); }
+    .agent-led.off { background:var(--danger); box-shadow:0 0 0 3px rgba(214,69,69,.12); }
+    .agent-led.busy { background:var(--warning); animation:ledPulse 1s ease-in-out infinite; }
+    @keyframes ledPulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .agent-led-text { font-size:12px; color:var(--ink500); min-width:150px; }
+    .agent-local-badge { display:inline-block; font-size:11px; line-height:16px; padding:0 7px; border-radius:9px; background:var(--sunken); color:var(--p700); margin-left:8px; vertical-align:middle; font-weight:600; }
+    .agent-cmd-out { margin:12px 0 0; padding:10px 12px; max-height:220px; overflow:auto; background:var(--sunken); border:1px solid var(--line300); border-radius:var(--r-md); font-family:Consolas,monospace; font-size:12px; color:var(--ink700); white-space:pre-wrap; word-break:break-all; }
+    .agent-cmd-modal textarea, .agent-cmd-modal input { width:100%; font-family:Consolas,monospace; font-size:13px; padding:8px 10px; border:1px solid var(--line300); border-radius:var(--r-md); background:var(--surface); color:var(--ink900); }
+    .agent-cmd-modal textarea { resize:vertical; min-height:56px; }
     /* ===== 部署发布：服务器 ===== */
     .dep-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
     .dep-head h4 { margin:0; }
@@ -218,9 +234,7 @@
     .chat-input { flex:1; min-height:36px; padding:0 14px; border:1px solid var(--line300); border-radius:var(--r-md); font-size:14px; font-family:inherit; color:var(--ink900); background:var(--surface); }
     textarea.chat-input { padding:8px 14px; line-height:1.5; resize:none; max-height:120px; overflow-y:auto; }
     .chat-input:focus { outline:none; border-color:var(--p500); box-shadow:0 0 0 2px rgba(26,108,179,.25); }
-    /* ===== Agent 连接测试 / 记忆测试：同页双面板 ===== */
-    .chat-panel.is-half { height:calc(50vh - 150px); min-height:300px; }
-    .chat-panel.is-half + .chat-panel.is-half { margin-top:16px; }
+    /* ===== Agent 连接测试：单面板 ===== */
     .mem-head-title { font-size:13px; font-weight:600; color:var(--ink900); }
     .mem-badge { font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(26,108,179,.12); color:var(--p700); font-weight:600; }
     .mem-sid { font-size:11px; color:var(--ink500); font-family:Consolas,monospace; }
@@ -530,7 +544,6 @@
       <div class="mi" data-m="4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>部署发布<span class="mi-dot"></span></div>
       <div class="menu-title" style="margin-top:24px">工具设置</div>
       <div class="mi" data-m="5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 12h18"/></svg>项目空间</div>
-      <div class="mi" data-m="6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M6 6l1.8 1.8M16.2 16.2L18 18M18 6l-1.8 1.8M7.8 16.2L6 18"/></svg>模型配置</div>
       <div class="mi" data-m="7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 3v5"/><circle cx="9" cy="13" r="0.6"/><circle cx="15" cy="13" r="0.6"/></svg>Agent配置</div>
       <div class="mi" data-m="10"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></svg>微调模式</div>
       <div class="menu-title" style="margin-top:24px">测试模块</div>
@@ -594,9 +607,28 @@
       "AI开发": "AI Coding",
       "部署发布": "Deploy",
       "项目空间": "Workspace",
-      "模型配置": "Models",
       "Agent配置": "Agent Config",
       "Agent连接测试": "Agent Chat",
+      "业务表单": "Business Forms",
+      "按业务流程生成业务表单（字段 / 关系），供 AI 开发调用":
+        "Generate business forms (fields / relations) from the business flow for AI coding",
+      "微调模式": "Fine-tune Mode",
+      "浮窗式细节调整：输入框 + 半透明执行日志，边看边改":
+        "Floating detail tuning: input box + translucent run log — tweak while watching",
+      "第一轮开发完成后，用浮在最前端的极简窗口提细节调整":
+        "After the first dev round, request detail tweaks in a minimal always-on-top window",
+      "进入后会打开一个独立浮窗：只有聊天输入框和半透明的执行日志。":
+        "Opens a separate floating window with only a chat input and a translucent run log.",
+      "你可以一边打开项目页面看效果，一边在浮窗里要求调整。":
+        "Keep the project page open to watch the effect while asking for tweaks in the float.",
+      "当前未选择项目，请先在左上角选择项目。":
+        "No project selected — pick one in the top-left first.",
+      "当前项目：": "Current project: ",
+      "进入微调模式": "Enter Fine-tune Mode",
+      "请先在左上角选择项目，再进入微调模式。":
+        "Select a project in the top-left first, then enter Fine-tune Mode.",
+      "请先到「项目空间」设置工作路径，再进入微调模式。":
+        "Set the working path in Workspace first, then enter Fine-tune Mode.",
       "Agent 记忆测试": "Agent Memory Test",
       "🧠 Agent 记忆测试": "🧠 Agent Memory Test",
       "固定提示 0 字": "0 fixed prompt",
@@ -708,8 +740,6 @@
       "尚未设置工作路径": "No working directory set",
       "浏览…": "Browse…",
       "请输入路径": "Enter a path",
-      "已配置模型": "Configured models",
-      "暂无模型配置，请添加。": "No models yet.",
       "已配置 Agent": "Configured agents",
       "暂无 Agent 配置，请添加。": "No agents yet.",
       "项目基础信息": "Project basics",
@@ -1406,7 +1436,6 @@
       // 后续接构建/上传时：发布记录按 prjKey("deploy") 存取，继续在 PRJ_REFRESH[4] 重建。
       4: { t: "部署发布", s: "构建、打包与发布", body: [], dynamic: "deploy" },
       5: { t: "项目空间", s: "设定 TDev 工具的工作路径", body: [], dynamic: "workspace" },
-      6: { t: "模型配置", s: "大模型接入参数配置（URL / API Key / 模型名）", body: [], dynamic: "models" },
       7: { t: "Agent配置", s: "OpenClaw / Hermes 等 Agent 接入参数", body: [], dynamic: "agents" },
       8: { t: "Agent连接测试", s: "在线与 Agent 沟通聊天（对接 Hermes Dashboard）", body: [], dynamic: "chat" },
       // 微调模式：不是页面，点菜单直接开独立浮窗（流程完整后再提细节调整）
@@ -1523,13 +1552,13 @@
 
 
     // ================= 工具设置：动态页面渲染 =================
-    var cfgCache = { workspace: null, models: [], agents: [] };
+    var cfgCache = { workspace: null, agents: [] };
 
     function escHtml(s) {
       return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
-    // 通用: 读取配置（category: workspace/models/agents）
+    // 通用: 读取配置（category: workspace/agents）
     function cfgLoad(category) {
       if (!window.__TAURI__ || !window.__TAURI__.core) return Promise.resolve(null);
       return window.__TAURI__.core.invoke("cfg_load", { category: category }).then(function(v){
@@ -1540,6 +1569,46 @@
     function cfgSave(category, payload) {
       if (!window.__TAURI__ || !window.__TAURI__.core) return Promise.reject("Tauri 不可用");
       return window.__TAURI__.core.invoke("cfg_save", { category: category, payload: JSON.stringify(payload) });
+    }
+
+    // ===== 当前生效的 Agent（Agent配置页「设为默认」）=====
+    // AGENT_DEFAULT = null 表示未设默认 → 后端回落内置 TD 实例（127.0.0.1:8644）
+    var AGENT_DEFAULT = null;
+    var AGENT_CFG = { list: [], defaultName: "" };   // 最近一次读到的原始配置，保住 defaultName 不被覆盖
+
+    function agentCfgApply(cfg) {
+      AGENT_CFG = {
+        list: (cfg && cfg.list) ? cfg.list : [],
+        defaultName: (cfg && cfg.defaultName) ? String(cfg.defaultName) : ""
+      };
+      AGENT_DEFAULT = null;
+      if (AGENT_CFG.defaultName) {
+        for (var i = 0; i < AGENT_CFG.list.length; i++) {
+          if (AGENT_CFG.list[i] && AGENT_CFG.list[i].name === AGENT_CFG.defaultName) {
+            AGENT_DEFAULT = AGENT_CFG.list[i];
+            break;
+          }
+        }
+      }
+      return AGENT_DEFAULT;
+    }
+
+    function agentDefaultLoad() {
+      return cfgLoad("agents")
+        .then(function(cfg){ return agentCfgApply(cfg); })
+        .catch(function(){ agentCfgApply(null); return null; });
+    }
+
+    // 发给后端的「这次用谁」参数：没有默认 Agent 就什么都不传 → 后端用内置 TD
+    function agentTargetArgs() {
+      if (!AGENT_DEFAULT) return {};
+      return { agentUrl: AGENT_DEFAULT.url || "", agentKey: AGENT_DEFAULT.key || "" };
+    }
+
+    function agentDefaultLabel() {
+      return AGENT_DEFAULT
+        ? (AGENT_DEFAULT.name || AGENT_DEFAULT.url) + "（" + (AGENT_DEFAULT.url || "") + "）"
+        : "内置 TD 实例（127.0.0.1:8644）";
     }
 
     // ---------- 项目空间 ----------
@@ -1579,131 +1648,422 @@
       });
     }
 
-    // ---------- 模型配置 ----------
-    function renderModels() {
-      cfgLoad("models").then(function(cfg){
-        var list = (cfg && cfg.list) ? cfg.list : [];
-        content.innerHTML =
-          '<div class="page-title">模型配置</div>' +
-          '<div class="page-sub">配置大模型接入参数（支持 OpenAI / DeepSeek / 通义 / 方舟 / Anthropic / Gemini 等）</div>' +
-          '<div class="panel">' +
-            '<h4>新增模型</h4>' +
-            '<div class="cfg-grid">' +
-              '<div class="field"><label>配置名称</label><input id="mName" placeholder="例如 DeepSeek 主模型" /></div>' +
-              '<div class="field"><label>提供商</label><select id="mProvider">' +
-                '<option value="openai">OpenAI</option><option value="deepseek">DeepSeek</option>' +
-                '<option value="ark">火山方舟 (Volcengine Ark)</option><option value="dashscope">阿里通义 (DashScope)</option>' +
-                '<option value="anthropic">Anthropic</option><option value="gemini">Google Gemini</option>' +
-                '<option value="ollama">Ollama (本地)</option><option value="custom">自定义 (OpenAI 兼容)</option>' +
-              '</select></div>' +
-              '<div class="field"><label>模型 URL 地址</label><input id="mUrl" placeholder="https://api.deepseek.com/v1" /></div>' +
-              '<div class="field"><label>API Key</label><input id="mKey" type="password" placeholder="sk-..." /></div>' +
-              '<div class="field"><label>模型名称</label><input id="mModel" placeholder="deepseek-chat / gpt-4o / ..." /></div>' +
-            '</div>' +
-            '<div class="info-actions"><button class="btn btn-primary" id="mAdd">添加模型</button></div>' +
-            '<h4 style="margin-top:24px">已配置模型</h4>' +
-            '<div id="mList"></div>' +
-          '</div>';
-        document.getElementById("mAdd").addEventListener("click", function(){
-          var name = document.getElementById("mName").value.trim();
-          var provider = document.getElementById("mProvider").value;
-          var url = document.getElementById("mUrl").value.trim();
-          var key = document.getElementById("mKey").value.trim();
-          var model = document.getElementById("mModel").value.trim();
-          if (!name || !url || !key || !model) { alert("请填写全部字段"); return; }
-          list.push({ name: name, provider: provider, url: url, key: key, model: model });
-          cfgSave("models", { list: list }).then(function(){
-            renderModels();
-            document.getElementById("statusText").textContent = "已添加模型：" + name;
-          }).catch(function(e){ alert("保存失败：" + e); });
-        });
-        renderModelList(list);
+    // ---------- Agent 配置 ----------
+    // 编辑复用顶部表单：AGENT_EDIT_IDX >= 0 表示「保存修改」，否则「添加」
+    var AGENT_EDIT_IDX = -1;
+
+    function agentFormReset() {
+      AGENT_EDIT_IDX = -1;
+      ["aName", "aUrl", "aKey", "aExtra", "aScript", "aCwd"].forEach(function(id){
+        var el = document.getElementById(id); if (el) el.value = "";
       });
-    }
-    function renderModelList(list) {
-      var box = document.getElementById("mList");
-      if (!box) return;
-      if (!list.length) { box.innerHTML = '<p style="color:var(--ink500);font-size:13px">暂无模型配置，请添加。</p>'; return; }
-      var rows = list.map(function(m, i){
-        var masked = m.key ? m.key.slice(0, 6) + "••••" + m.key.slice(-4) : "";
-        return '<div class="cfg-item">' +
-          '<div class="cfg-item-main"><span class="cfg-item-name">' + escHtml(m.name) + '</span>' +
-          '<span class="cfg-item-sub">' + escHtml(m.provider) + ' · ' + escHtml(m.model) + ' · ' + escHtml(m.url) + '</span>' +
-          '<span class="cfg-item-key">Key: ' + escHtml(masked) + '</span></div>' +
-          '<button class="btn btn-danger btn-sm" data-idx="' + i + '">删除</button>' +
-          '</div>';
-      }).join("");
-      box.innerHTML = rows;
-      box.querySelectorAll("button[data-idx]").forEach(function(btn){
-        btn.addEventListener("click", function(){
-          var idx = +btn.dataset.idx;
-          if (!window.confirm("确定删除模型「" + list[idx].name + "」？")) return;
-          list.splice(idx, 1);
-          cfgSave("models", { list: list }).then(function(){ renderModels(); });
-        });
-      });
+      var lc = document.getElementById("aLocal"); if (lc) lc.checked = false;
+      agentLocalToggle();
+      var t = document.getElementById("aType"); if (t) t.value = "hermes";
+      var b = document.getElementById("aAddBtn"); if (b) b.textContent = "添加 Agent";
+      var c = document.getElementById("aCancelEdit"); if (c) c.style.display = "none";
+      var h = document.getElementById("aEditHint"); if (h) h.textContent = "";
+      var ft = document.getElementById("aFormTitle"); if (ft) ft.textContent = "新增 Agent";
     }
 
-    // ---------- Agent 配置 ----------
+    function agentEditStart(idx, list) {
+      var a = list[idx];
+      if (!a) return;
+      AGENT_EDIT_IDX = idx;
+      document.getElementById("aName").value = a.name || "";
+      document.getElementById("aType").value = a.type || "hermes";
+      document.getElementById("aUrl").value = a.url || "";
+      document.getElementById("aKey").value = a.key || "";
+      document.getElementById("aExtra").value = a.extra || "";
+      var lc = document.getElementById("aLocal"); if (lc) lc.checked = !!a.local;
+      document.getElementById("aScript").value = a.script || "";
+      document.getElementById("aCwd").value = a.cwd || "";
+      agentLocalToggle();
+      var b = document.getElementById("aAddBtn"); if (b) b.textContent = "保存修改";
+      var c = document.getElementById("aCancelEdit"); if (c) c.style.display = "";
+      var h = document.getElementById("aEditHint"); if (h) h.textContent = "正在修改：" + (a.name || "");
+      var ft = document.getElementById("aFormTitle"); if (ft) ft.textContent = "修改 Agent";
+      var panel = document.querySelector("#content .panel");
+      if (panel && panel.scrollIntoView) panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      var nameEl = document.getElementById("aName");
+      if (nameEl && nameEl.focus) nameEl.focus();
+    }
+
+    function agentFormSubmit(list) {
+      var name = document.getElementById("aName").value.trim();
+      var type = document.getElementById("aType").value;
+      var url = document.getElementById("aUrl").value.trim();
+      var key = document.getElementById("aKey").value.trim();
+      var extra = document.getElementById("aExtra").value.trim();
+      var isLocal = !!(document.getElementById("aLocal") && document.getElementById("aLocal").checked);
+      var script = document.getElementById("aScript").value.trim();
+      var cwd = document.getElementById("aCwd").value.trim();
+      var cmdline = "";
+      if (AGENT_EDIT_IDX >= 0 && list[AGENT_EDIT_IDX] && list[AGENT_EDIT_IDX].cmdline) cmdline = list[AGENT_EDIT_IDX].cmdline;
+      if (!name || !url) { alert("请填写 Agent 名称与接入地址"); return; }
+      if (isLocal && !script) { alert("勾选了「本地 Agent」，请填写启动脚本路径"); return; }
+
+      // 重名检查（编辑时排除自己）
+      var dup = list.some(function(x, i2){ return x.name === name && i2 !== AGENT_EDIT_IDX; });
+      if (dup) { alert("Agent 名称已存在：" + name); return; }
+
+      var isEdit = AGENT_EDIT_IDX >= 0 && !!list[AGENT_EDIT_IDX];
+      var oldName = isEdit ? list[AGENT_EDIT_IDX].name : "";
+      var item = { name: name, type: type, url: url, key: key, extra: extra,
+        local: isLocal, script: isLocal ? script : "", cwd: isLocal ? cwd : "",
+        cmdline: isLocal ? cmdline : "" };
+      if (isEdit) list[AGENT_EDIT_IDX] = item; else list.push(item);
+
+      // 改名时要同步 defaultName，否则默认会指向一个不存在的名字
+      var nextDef = AGENT_CFG.defaultName;
+      if (isEdit && AGENT_CFG.defaultName === oldName) nextDef = name;
+
+      cfgSave("agents", { list: list, defaultName: nextDef }).then(function(){
+        return agentDefaultLoad();
+      }).then(function(){
+        renderAgents();
+        var st = document.getElementById("statusText");
+        if (st) st.textContent = (isEdit ? "已修改 Agent：" : "已添加 Agent：") + name;
+      }).catch(function(e){ alert("保存失败：" + e); });
+    }
+
     function renderAgents() {
+      AGENT_EDIT_IDX = -1;
       cfgLoad("agents").then(function(cfg){
         var list = (cfg && cfg.list) ? cfg.list : [];
+        agentCfgApply(cfg);
         content.innerHTML =
           '<div class="page-title">Agent 配置</div>' +
-          '<div class="page-sub">配置 OpenClaw / Hermes 等 Agent 接入参数，支撑在线沟通</div>' +
+          '<div class="page-sub">「设为默认」的 Agent 将用于主题风格 / 业务流程 / 业务表单 / AI开发 / 部署发布 等全部功能</div>' +
           '<div class="panel">' +
-            '<h4>新增 Agent</h4>' +
+            '<h4 id="aFormTitle">新增 Agent</h4>' +
             '<div class="cfg-grid">' +
               '<div class="field"><label>Agent 名称</label><input id="aName" placeholder="例如 Hermes-Hulk" /></div>' +
               '<div class="field"><label>Agent 类型</label><select id="aType">' +
                 '<option value="hermes">Hermes</option><option value="openclaw">OpenClaw</option>' +
                 '<option value="openai">OpenAI Agent</option><option value="custom">自定义</option>' +
               '</select></div>' +
-              '<div class="field"><label>接入地址 (Base URL)</label><input id="aUrl" placeholder="http://127.0.0.1:xxxx 或 https://..." /></div>' +
-              '<div class="field"><label>API Key / Token</label><input id="aKey" type="password" placeholder="可选" /></div>' +
+              '<div class="field"><label>接入地址 (Base URL)</label><input id="aUrl" placeholder="http://127.0.0.1:8644 或 https://..." /></div>' +
+              '<div class="field"><label>API Key / Token</label><input id="aKey" type="password" placeholder="可选（留空表示不鉴权）" /></div>' +
               '<div class="field"><label>会话标识 / 附加参数</label><input id="aExtra" placeholder="可选：如 session_id / agent_id" /></div>' +
+              '<div class="field" style="grid-column:1/-1"><label>本地 Agent</label>' +
+                '<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;color:var(--ink700)">' +
+                  '<input type="checkbox" id="aLocal" style="width:auto;margin:0" /> 在本机启动（列表里可看状态灯、启动 / 重启 / 停止）' +
+                '</label></div>' +
+              '<div class="field" id="aScriptWrap" style="grid-column:1/-1;display:none"><label>启动脚本 / 可执行文件</label>' +
+                '<div style="display:flex;gap:8px">' +
+                  '<input id="aScript" placeholder="例如 E:\\HermesMinimal_v23\\start_all_v23.bat" style="flex:1" />' +
+                  '<button class="btn btn-secondary" id="aScriptPick" type="button">浏览…</button>' +
+                '</div></div>' +
+              '<div class="field" id="aCwdWrap" style="grid-column:1/-1;display:none"><label>工作目录（可选，默认脚本所在目录）</label>' +
+                '<input id="aCwd" placeholder="例如 E:\\HermesMinimal_v23" /></div>' +
             '</div>' +
-            '<div class="info-actions"><button class="btn btn-primary" id="aAdd">添加 Agent</button></div>' +
+            '<div class="info-actions">' +
+              '<button class="btn btn-primary" id="aAddBtn">添加 Agent</button>' +
+              '<button class="btn btn-secondary" id="aCancelEdit" style="display:none">取消修改</button>' +
+              '<span id="aEditHint" style="font-size:13px;color:var(--p700);margin-left:10px"></span>' +
+            '</div>' +
             '<h4 style="margin-top:24px">已配置 Agent</h4>' +
+            '<p id="aDefaultHint" style="font-size:13px;color:var(--ink500);margin-bottom:10px"></p>' +
+            '<div style="margin-bottom:10px"><button class="btn btn-secondary btn-sm" onclick="hermesModelEnsure(true)">模型参数…</button></div>' +
             '<div id="aList"></div>' +
           '</div>';
-        document.getElementById("aAdd").addEventListener("click", function(){
-          var name = document.getElementById("aName").value.trim();
-          var type = document.getElementById("aType").value;
-          var url = document.getElementById("aUrl").value.trim();
-          var key = document.getElementById("aKey").value.trim();
-          var extra = document.getElementById("aExtra").value.trim();
-          if (!name || !url) { alert("请填写 Agent 名称与接入地址"); return; }
-          list.push({ name: name, type: type, url: url, key: key, extra: extra });
-          cfgSave("agents", { list: list }).then(function(){
-            renderAgents();
-            document.getElementById("statusText").textContent = "已添加 Agent：" + name;
-          }).catch(function(e){ alert("保存失败：" + e); });
-        });
+        document.getElementById("aAddBtn").addEventListener("click", function(){ agentFormSubmit(list); });
+        document.getElementById("aCancelEdit").addEventListener("click", agentFormReset);
+        var lcEl = document.getElementById("aLocal");
+        if (lcEl) lcEl.addEventListener("change", agentLocalToggle);
+        var spEl = document.getElementById("aScriptPick");
+        if (spEl) spEl.addEventListener("click", agentPickScript);
+        agentLocalToggle();
         renderAgentList(list);
       });
     }
+
     function renderAgentList(list) {
       var box = document.getElementById("aList");
       if (!box) return;
+      var hint = document.getElementById("aDefaultHint");
+      if (hint) {
+        hint.innerHTML = AGENT_DEFAULT
+          ? '当前生效：<b style="color:var(--p700)">' + escHtml(AGENT_DEFAULT.name) + '</b> · ' + escHtml(AGENT_DEFAULT.url)
+          : '当前生效：<b>内置 TD 实例</b>（127.0.0.1:8644）—— 未设置默认 Agent';
+      }
       if (!list.length) { box.innerHTML = '<p style="color:var(--ink500);font-size:13px">暂无 Agent 配置，请添加。</p>'; return; }
+      var defName = AGENT_DEFAULT ? AGENT_DEFAULT.name : "";
       var rows = list.map(function(a, i){
-        var masked = a.key ? a.key.slice(0, 6) + "••••" + a.key.slice(-4) : "（未设置）";
-        return '<div class="cfg-item">' +
-          '<div class="cfg-item-main"><span class="cfg-item-name">' + escHtml(a.name) + '</span>' +
-          '<span class="cfg-item-sub">' + escHtml(a.type) + ' · ' + escHtml(a.url) + (a.extra ? ' · ' + escHtml(a.extra) : '') + '</span>' +
-          '<span class="cfg-item-key">Token: ' + escHtml(masked) + '</span></div>' +
-          '<button class="btn btn-danger btn-sm" data-idx="' + i + '">删除</button>' +
+        var masked = a.key ? a.key.slice(0, 6) + "••••" + a.key.slice(-4) : "（不鉴权）";
+        var isDef = !!defName && a.name === defName;
+        var localRow = a.local
+          ? '<div class="agent-local">' +
+              '<span class="agent-led busy" id="aled_' + i + '"></span>' +
+              '<span class="agent-led-text" id="aledt_' + i + '">检测中…</span>' +
+              '<button class="btn btn-secondary btn-sm" data-lstart="' + i + '">启动</button>' +
+              '<button class="btn btn-secondary btn-sm" data-lrestart="' + i + '" disabled>重启</button>' +
+              '<button class="btn btn-danger btn-sm" data-lstop="' + i + '" disabled>停止</button>' +
+              '<button class="btn btn-secondary btn-sm" data-lcmd="' + i + '">命令行…</button>' +
+            '</div>'
+          : '';
+        return '<div class="cfg-item' + (isDef ? ' is-default' : '') + '">' +
+          '<div class="cfg-item-body">' +
+            '<div class="cfg-item-row">' +
+              '<div class="cfg-item-main"><span class="cfg-item-name">' + escHtml(a.name) +
+                (isDef ? '<span class="agent-def-badge">默认</span>' : '') +
+                (a.local ? '<span class="agent-local-badge">本地</span>' : '') + '</span>' +
+              '<span class="cfg-item-sub">' + escHtml(a.type) + ' · ' + escHtml(a.url) + (a.extra ? ' · ' + escHtml(a.extra) : '') +
+                (a.local ? ' · ' + escHtml(a.script || "（未配置启动脚本）") : '') + '</span>' +
+              '<span class="cfg-item-key">Token: ' + escHtml(masked) + '</span></div>' +
+              '<button class="btn btn-secondary btn-sm" data-edit="' + i + '">修改</button>' +
+              '<button class="btn ' + (isDef ? 'btn-secondary' : 'btn-primary') + ' btn-sm" data-setdef="' + i + '">' +
+                (isDef ? '取消默认' : '设为默认') + '</button>' +
+              '<button class="btn btn-danger btn-sm" data-idx="' + i + '">删除</button>' +
+            '</div>' + localRow +
+          '</div>' +
           '</div>';
       }).join("");
       box.innerHTML = rows;
+
+      // 修改：把数据填进顶部表单
+      box.querySelectorAll("button[data-edit]").forEach(function(btn){
+        btn.addEventListener("click", function(){
+          agentEditStart(+btn.dataset.edit, list);
+        });
+      });
+
+      // 设为默认 / 取消默认
+      box.querySelectorAll("button[data-setdef]").forEach(function(btn){
+        btn.addEventListener("click", function(){
+          var a = list[+btn.dataset.setdef];
+          var isCur = AGENT_DEFAULT && AGENT_DEFAULT.name === a.name;
+          var nextDef = isCur ? "" : a.name;
+          cfgSave("agents", { list: list, defaultName: nextDef }).then(function(){
+            return agentDefaultLoad();
+          }).then(function(){
+            renderAgents();
+            var st = document.getElementById("statusText");
+            if (st) st.textContent = nextDef ? ("默认 Agent 已设为：" + nextDef) : "已取消默认（回到内置 TD 实例）";
+          }).catch(function(e){ alert("保存失败：" + e); });
+        });
+      });
+
+      // 删除
       box.querySelectorAll("button[data-idx]").forEach(function(btn){
         btn.addEventListener("click", function(){
           var idx = +btn.dataset.idx;
           if (!window.confirm("确定删除 Agent「" + list[idx].name + "」？")) return;
+          var removed = list[idx].name;
           list.splice(idx, 1);
-          cfgSave("agents", { list: list }).then(function(){ renderAgents(); });
+          var nextDef = (AGENT_CFG.defaultName === removed) ? "" : AGENT_CFG.defaultName;
+          cfgSave("agents", { list: list, defaultName: nextDef }).then(function(){
+            return agentDefaultLoad();
+          }).then(function(){ renderAgents(); });
         });
+      });
+
+      // 本地 Agent：启动 / 重启 / 停止 / 命令行
+      box.querySelectorAll("button[data-lstart]").forEach(function(btn){
+        btn.addEventListener("click", function(){ agentLocalOp(+btn.dataset.lstart, list, "start"); });
+      });
+      box.querySelectorAll("button[data-lrestart]").forEach(function(btn){
+        btn.addEventListener("click", function(){ agentLocalOp(+btn.dataset.lrestart, list, "restart"); });
+      });
+      box.querySelectorAll("button[data-lstop]").forEach(function(btn){
+        btn.addEventListener("click", function(){ agentLocalOp(+btn.dataset.lstop, list, "stop"); });
+      });
+      box.querySelectorAll("button[data-lcmd]").forEach(function(btn){
+        btn.addEventListener("click", function(){ agentCmdDialog(+btn.dataset.lcmd, list); });
+      });
+      agentLedStart(list);
+    }
+
+    // ================= 本地 Agent 管理（docs/local-agent.md）=================
+    var AGENT_LED_TIMER = null;
+
+    // 勾/取消「本地 Agent」→ 显示/隐藏脚本与工作目录
+    function agentLocalToggle() {
+      var on = document.getElementById("aLocal");
+      var sw = document.getElementById("aScriptWrap");
+      var cw = document.getElementById("aCwdWrap");
+      var show = !!(on && on.checked);
+      if (sw) sw.style.display = show ? "" : "none";
+      if (cw) cw.style.display = show ? "" : "none";
+    }
+
+    function agentPickScript() {
+      if (!(window.__TAURI__ && window.__TAURI__.dialog)) { alert("文件对话框不可用（非 Tauri 环境）"); return; }
+      window.__TAURI__.dialog.open({
+        multiple: false, directory: false,
+        filters: [{ name: "启动脚本", extensions: ["bat", "cmd", "ps1", "exe"] }]
+      }).then(function(sel){
+        if (!sel) return;
+        var p = String(sel);
+        var se = document.getElementById("aScript"); if (se) se.value = p;
+        var cw = document.getElementById("aCwd");
+        if (cw && !cw.value.trim()) cw.value = p.replace(/[\\/][^\\/]*$/, "");
+      }).catch(function(){});
+    }
+
+    function agentLedStop() {
+      if (AGENT_LED_TIMER) { clearInterval(AGENT_LED_TIMER); AGENT_LED_TIMER = null; }
+    }
+
+    // 三个按钮跟随后端真实状态：运行中只能「重启/停止」，已停止只能「启动」。
+    // running === null 表示操作进行中/状态未知 → 全部锁住，防止连点。
+    function agentLedButtons(i, running) {
+      var set = function(sel, disabled) {
+        var b = document.querySelector('button[data-' + sel + '="' + i + '"]');
+        if (!b) return;
+        b.disabled = !!disabled;
+      };
+      if (running === null || running === undefined) {
+        set("lstart", true); set("lrestart", true); set("lstop", true);
+        return;
+      }
+      set("lstart", running);        // 运行中：启动不可用
+      set("lrestart", !running);     // 已停止：重启不可用
+      set("lstop", !running);        // 已停止：停止不可用
+    }
+
+    function agentLedPaint(i, s) {
+      var led = document.getElementById("aled_" + i);
+      var txt = document.getElementById("aledt_" + i);
+      if (!led || !txt) return;
+      agentLedButtons(i, !!(s && s.running));
+      if (s && s.running) {
+        led.className = "agent-led on";
+        var extra = [];
+        if (s.pid) extra.push("PID " + s.pid);
+        if (s.image) extra.push(s.image);
+        if (s.port) extra.push("端口 " + s.port);
+        txt.textContent = "运行中" + (extra.length ? " · " + extra.join(" · ") : "");
+      } else {
+        led.className = "agent-led off";
+        txt.textContent = (s && s.scriptOk === false) ? "已停止 · 启动脚本不存在" : "已停止";
+      }
+    }
+
+    function agentLedTick(list) {
+      if (!(window.__TAURI__ && window.__TAURI__.core)) return;
+      list.forEach(function(a, i){
+        if (!a || !a.local) return;
+        if (!document.getElementById("aled_" + i)) return;
+        window.__TAURI__.core.invoke("local_agent_status", { url: a.url || "", script: a.script || "" })
+          .then(function(s){ agentLedPaint(i, s); })
+          .catch(function(e){
+            var txt = document.getElementById("aledt_" + i);
+            if (txt) txt.textContent = "状态未知：" + e;
+            // 状态取不到时回到「可启动」的保守态，别让按钮永久锁死
+            agentLedButtons(i, false);
+          });
+      });
+    }
+
+    function agentLedStart(list) {
+      agentLedStop();
+      if (!(window.__TAURI__ && window.__TAURI__.core)) return;
+      agentLedTick(list);
+      AGENT_LED_TIMER = setInterval(function(){ agentLedTick(list); }, 5000);
+    }
+
+    function agentLocalOp(idx, list, kind) {
+      var a = list[idx];
+      if (!a) return;
+      if (!(window.__TAURI__ && window.__TAURI__.core)) { alert("Tauri 不可用（未连接）"); return; }
+      var led = document.getElementById("aled_" + idx);
+      var txt = document.getElementById("aledt_" + idx);
+      agentLedButtons(idx, null);          // 执行期间锁住三个按钮，防止连点
+      if (led) led.className = "agent-led busy";
+      if (txt) txt.textContent = kind === "start" ? "启动中…" : (kind === "stop" ? "停止中…" : "重启中…");
+      var cmd = kind === "start" ? "local_agent_start" : (kind === "stop" ? "local_agent_stop" : "local_agent_restart");
+      var args = { url: a.url || "", script: a.script || "" };
+      if (kind !== "stop") { args.cwd = a.cwd || ""; args.cmdline = a.cmdline || ""; }
+      window.__TAURI__.core.invoke(cmd, args).then(function(r){
+        var st = document.getElementById("statusText");
+        if (st) {
+          st.textContent = kind === "start" ? ("已启动 " + a.name + (r && r.pid ? "（PID " + r.pid + "）" : ""))
+            : (kind === "stop" ? ("已停止 " + a.name) : ("已重启 " + a.name));
+        }
+        setTimeout(function(){ agentLedTick(list); }, 900);
+        setTimeout(function(){ agentLedTick(list); }, 3200);
+      }).catch(function(e){
+        if (led) led.className = "agent-led off";
+        if (txt) txt.textContent = "操作失败";
+        agentLedButtons(idx, false);       // 失败后放开按钮，允许重试
+        setTimeout(function(){ agentLedTick(list); }, 600);
+        alert((kind === "start" ? "启动失败：" : (kind === "stop" ? "停止失败：" : "重启失败：")) + e);
+      });
+    }
+
+    function agentCmdDialog(idx, list) {
+      var a = list[idx];
+      if (!a) return;
+      var script = a.script || "";
+      var defCwd = a.cwd || (script ? script.replace(/[\\/][^\\/]*$/, "") : "");
+      var defCmd = a.cmdline || ('cmd /C "' + script + '"');
+      var old = document.getElementById("agentCmdModal");
+      if (old) old.remove();
+      var wrap = document.createElement("div");
+      wrap.className = "modal show agent-cmd-modal";
+      wrap.id = "agentCmdModal";
+      wrap.innerHTML =
+        '<div class="modal-box" style="width:780px;max-width:94vw">' +
+          '<h4>启动 Agent — 命令行</h4>' +
+          '<div style="font-size:12px;color:var(--ink500);margin-bottom:12px">' +
+            'Agent：<b style="color:var(--p700)">' + escHtml(a.name) + '</b> · 接入地址 ' + escHtml(a.url || "（未填）") +
+          '</div>' +
+          '<div class="field" style="margin-bottom:12px"><label>命令行（可编辑）</label>' +
+            '<textarea id="acmdLine" rows="2"></textarea></div>' +
+          '<div class="field" style="margin-bottom:12px"><label>工作目录</label>' +
+            '<input id="acmdCwd" /></div>' +
+          '<div id="acmdStat" style="font-size:12px;color:var(--ink500);min-height:18px"></div>' +
+          '<pre id="acmdOut" class="agent-cmd-out" style="display:none"></pre>' +
+          '<div class="modal-actions">' +
+            '<button class="btn btn-secondary" id="acmdClose">关闭</button>' +
+            '<button class="btn btn-secondary" id="acmdTry">试运行（看输出，最多 8 秒）</button>' +
+            '<button class="btn btn-primary" id="acmdRun">执行启动</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(wrap);
+      document.getElementById("acmdLine").value = defCmd;
+      document.getElementById("acmdCwd").value = defCwd;
+      var close = function(){ var w = document.getElementById("agentCmdModal"); if (w) w.remove(); agentLedTick(list); };
+      wrap.addEventListener("click", function(e){ if (e.target === wrap) close(); });
+      document.getElementById("acmdClose").addEventListener("click", close);
+      var readForm = function(){
+        var line = document.getElementById("acmdLine").value.trim();
+        var cwd = document.getElementById("acmdCwd").value.trim();
+        if (!line) { alert("命令行不能为空"); return null; }
+        return { line: line, cwd: cwd };
+      };
+      var remember = function(v){
+        a.cmdline = v.line; a.cwd = v.cwd;
+        cfgSave("agents", { list: list, defaultName: AGENT_CFG.defaultName }).catch(function(){});
+      };
+      document.getElementById("acmdTry").addEventListener("click", function(){
+        var v = readForm(); if (!v) return;
+        var stat = document.getElementById("acmdStat");
+        var out = document.getElementById("acmdOut");
+        if (stat) stat.textContent = "执行中…（最多 8 秒）";
+        if (out) { out.style.display = "none"; out.textContent = ""; }
+        window.__TAURI__.core.invoke("local_agent_cmd_run", { script: script, cwd: v.cwd, cmdline: v.line, waitMs: 8000 })
+          .then(function(r){
+            if (stat) stat.textContent = r.timedOut ? "8 秒内未结束，已强制结束（命令可能常驻）" : ("退出码 " + (r.code === null ? "?" : r.code) + (r.ok ? " · 成功" : " · 失败"));
+            if (out) { out.style.display = "block"; out.textContent = (r.output || "（无输出）"); }
+          })
+          .catch(function(e){ if (stat) stat.textContent = "执行失败：" + e; });
+      });
+      document.getElementById("acmdRun").addEventListener("click", function(){
+        var v = readForm(); if (!v) return;
+        var stat = document.getElementById("acmdStat");
+        if (stat) stat.textContent = "启动中…";
+        remember(v);
+        window.__TAURI__.core.invoke("local_agent_start", { script: script, cwd: v.cwd, cmdline: v.line })
+          .then(function(r){
+            if (stat) stat.textContent = "已执行启动（PID " + (r && r.pid) + "）";
+            var st = document.getElementById("statusText");
+            if (st) st.textContent = "已启动 " + a.name + (r && r.pid ? "（PID " + r.pid + "）" : "");
+            setTimeout(function(){ agentLedTick(list); }, 1200);
+          })
+          .catch(function(e){ if (stat) stat.textContent = "启动失败：" + e; });
       });
     }
 
@@ -2183,15 +2543,16 @@
     }
 
     function chatConnect() {
-      // API Server 模式：填充 Agent 下拉框（供查看/选择），聊天走 agent_ask HTTP 调用
+      // 填充 Agent 下拉框：这里选中的就是「默认 Agent」，直接决定所有功能用谁
       if (!window.__TAURI__ || !window.__TAURI__.core) {
         chatAddSystem("Tauri 环境不可用");
         chatSetStatus("不可用", "off");
         return;
       }
       window.__TAURI__.core.invoke("cfg_load", { category: "agents" }).then(function(v){
-        var list = [];
-        try { var parsed = JSON.parse(v || "{}"); list = (parsed && parsed.list) ? parsed.list : []; } catch(e) {}
+        var parsed = null, list = [];
+        try { parsed = JSON.parse(v || "{}"); list = (parsed && parsed.list) ? parsed.list : []; } catch(e) {}
+        agentCfgApply(parsed);   // 同步全局默认 Agent
         var sel = document.getElementById("chatAgentSel");
         if (sel) {
           sel.innerHTML = "";
@@ -2203,14 +2564,36 @@
               sel.appendChild(o);
             });
             sel.style.minWidth = "160px";
+            // 选中当前生效的默认 Agent
+            if (AGENT_DEFAULT) {
+              for (var i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].textContent.split(" · ")[0] === AGENT_DEFAULT.name) {
+                  sel.selectedIndex = i;
+                  break;
+                }
+              }
+            }
+            // 选择即「设为默认」—— 主题风格 / 业务流程 / 业务表单 / AI开发 / 部署发布 全部跟着切
+            sel.addEventListener("change", function(){
+              var opt = sel.options[sel.selectedIndex];
+              var nm = opt ? opt.textContent.split(" · ")[0] : "";
+              if (!nm || nm === "未配置 Agent") return;
+              cfgSave("agents", { list: AGENT_CFG.list, defaultName: nm }).then(function(){
+                return agentDefaultLoad();
+              }).then(function(){
+                chatSetStatus(AGENT_DEFAULT ? ("默认：" + AGENT_DEFAULT.name) : "内置 TD", "on");
+                var st = document.getElementById("statusText");
+                if (st) st.textContent = "默认 Agent 已切换为：" + nm + "（全部功能生效）";
+              }).catch(function(e){ alert("切换失败：" + e); });
+            });
           } else {
             var o = document.createElement("option");
             o.value = "";
-            o.textContent = "未配置 Agent";
+            o.textContent = "未配置 Agent（使用内置 TD）";
             sel.appendChild(o);
           }
         }
-        chatSetStatus("API Server", "on");
+        chatSetStatus(AGENT_DEFAULT ? ("默认：" + AGENT_DEFAULT.name) : "内置 TD", "on");
         chatAddSystem("已连接 Hermes API Server（会话按项目隔离），可直接发送消息");
       }).catch(function(){
         chatSetStatus("读取失败", "off");
@@ -3141,7 +3524,7 @@ function doConnect(baseUrl, token) {
       }
       var ready = s.clean ? Promise.resolve(null) : agentConstEnsure();
       return ready.then(function () {
-        return window.__TAURI__.core.invoke("agent_ask_stream", {
+        return window.__TAURI__.core.invoke("agent_ask_stream", Object.assign({
           question: payload,
           sessionId: sid,
           instructions: instr,
@@ -3150,7 +3533,7 @@ function doConnect(baseUrl, token) {
           cwd: s.clean ? undefined : (aiProjectDir() || undefined),
           // 只有记忆测试把会话 ID 放进请求体（/v1/runs 不认请求头），其它场景维持原样
           sessionMemory: !!s.clean
-        });
+        }, agentTargetArgs()));
       }).then(function (reply) {
         if (!finished) {
           cleanup();
@@ -3172,22 +3555,16 @@ function doConnect(baseUrl, token) {
       content.classList.add("chat-page");  // 禁止外层滚动，避免双滚动条
       content.innerHTML =
         '<div class="page-title">Agent连接测试</div>' +
-        '<div class="page-sub">在线与 Agent 沟通聊天（对接 Hermes Dashboard /api/pty）</div>' +
-        '<div class="chat-panel is-half">' +
+        '<div class="page-sub">选择 Agent 并验证连接；下方为记忆测试（固定 Session、零固定提示、零历史）</div>' +
+        '<div class="chat-panel">' +
+          // 头部：Agent 选择 + 连接状态 + 重连（原「连接测试聊天框」已移除，只留选择与重连）
           '<div class="chat-head">' +
             '<span class="chat-agent-label">Agent：</span>' +
             '<select id="chatAgentSel" class="chat-sel"></select>' +
             '<span id="chatStatus" class="chat-status off">未连接</span>' +
             '<button class="btn btn-secondary btn-sm" id="chatReconnect" style="margin-left:auto">重新连接</button>' +
           '</div>' +
-          '<div class="chat-msg-list" id="chatMsgList"></div>' +
-          '<div class="chat-input-row">' +
-            '<textarea id="chatInput" class="chat-input" rows="1" placeholder="输入消息，Enter 发送，Shift+Enter 换行…"></textarea>' +
-            '<button class="btn btn-primary" id="chatSendBtn">发送</button>' +
-          '</div>' +
-        '</div>' +
-        // ===== 记忆测试：固定 Session + 零固定提示 + 零历史，只发当前输入 =====
-        '<div class="chat-panel is-half">' +
+          // ===== 记忆测试：固定 Session + 零固定提示 + 零历史，只发当前输入 =====
           '<div class="chat-head">' +
             '<span class="mem-head-title">🧠 Agent 记忆测试</span>' +
             '<span class="mem-badge">固定提示 0 字</span>' +
@@ -3201,23 +3578,15 @@ function doConnect(baseUrl, token) {
             '<button class="btn btn-secondary" id="memSendBtn">发送</button>' +
           '</div>' +
         '</div>';
-      document.getElementById("chatSendBtn").addEventListener("click", chatSend);
-      bindComposer(document.getElementById("chatInput"), "chat", chatSend);
       document.getElementById("chatReconnect").addEventListener("click", function(){
         if (chatWs) { try { chatWs.close(); } catch(e){} chatWs = null; }
         chatConnect();
       });
-      chatRestoreHist();
-      // 记忆测试面板
+      // 记忆测试（页面上唯一的聊天框）
       document.getElementById("memSendBtn").addEventListener("click", memSend);
       bindComposer(document.getElementById("memInput"), "memory", memSend);
       var memN = agentHistRender("memory");
-      if (!memN) memSys("先发一句「我叫卢Sir，记住」，再发「我叫什么名字？」—— 第二句里没有任何提示词，它答得出来就说明记忆是自带的。");
-      // 恢复思考中状态（上轮未完成）
-      var pending = false;
-      try { pending = localStorage.getItem("chat_pending_" + chatSid()) === "1"; }
-      catch(e) {}
-      if (pending) chatShowThinking();
+      if (!memN) memSys("先发一句「我叫卢Sir，记住」，再发「我叫什么名字？」—— 第二句里没有任何提示词，它答得出来就说明是自带记忆。");
       chatConnect();
     }
 
@@ -3239,7 +3608,7 @@ function doConnect(baseUrl, token) {
           '</div>' +
           '<div class="theme-row">' +
             '<span class="theme-label">参考模板</span>' +
-            '<span class="theme-tpl-info">E:\88.project\TDev\src	emplate	heme（tokens.json + theme.md + ui-preview.html）</span>' +
+            '<span class="theme-tpl-info">template\\theme（与 tdev.exe 同级，内含 tokens.json + theme.md + ui-preview.html）</span>' +
           '</div>' +
           '<div class="theme-row">' +
             '<button class="btn btn-primary" id="thGenBtn">生成主题</button>' +
@@ -3350,10 +3719,10 @@ function doConnect(baseUrl, token) {
         localStorage.setItem("theme_color_" + currentProject.prjGUID, accent);
       } catch(e) {}
       var prompt = "请为项目 " + currentProject.prjName + " 生成完整的主题风格交互定义（Design Tokens），严格遵循模板文件结构。" +
-        "结构参考模板目录：E:\88.project\TDev\src\template\theme\（内含 tokens.json / theme.md / ui-preview.html，遵循其中定义的结构与命名规范，可自行发挥配色方案）。" +
+        "结构参考模板目录：template\\theme\（内含 tokens.json / theme.md / ui-preview.html，遵循其中定义的结构与命名规范，可自行发挥配色方案）。" +
         "用户需求：" + desc + "。主题主色（accent）：" + accent +
         "。请基于主色生成完整主题（含浅色/深色色系），并在 color.palette 下生成 10 阶色卡（accent-50~accent-900，以主色为 accent-700，向白/黑衍生），只输出完整可用的 tokens.json JSON，不要多余文字，不要代码块标记。";
-      window.__TAURI__.core.invoke("agent_ask", { question: prompt, sessionId: currentProject.prjGUID, cwd: aiProjectDir() || undefined })
+      window.__TAURI__.core.invoke("agent_ask", Object.assign({ question: prompt, sessionId: currentProject.prjGUID, cwd: aiProjectDir() || undefined }, agentTargetArgs()))
         .then(function(reply) {
           // 剥离 Agent 回复的非 JSON 前缀（可能带说明文字）
           var cleanReply = reply;
@@ -7179,7 +7548,6 @@ function doConnect(baseUrl, token) {
 
     function renderDynamic(idx, kind) {
       if (kind === "workspace") renderWorkspace();
-      else if (kind === "models") renderModels();
       else if (kind === "agents") renderAgents();
       else if (kind === "constraints") renderConstraints();
       else if (kind === "theme") renderTheme();
@@ -7195,6 +7563,7 @@ function doConnect(baseUrl, token) {
       // 清理页面级 class（防残留导致布局问题）
       content.classList.remove("chat-page", "theme-page", "constr-page");
       current = idx;
+      if (idx !== 7) agentLedStop();   // 离开 Agent配置页：停掉本地 Agent 状态轮询
       var m = MODULES[idx];
       var body = m.body.map(function(t){ return "<p>" + t + "</p>"; }).join("");
       var extra = (idx === 5) ? dbBox() : '';
@@ -7214,6 +7583,8 @@ function doConnect(baseUrl, token) {
         if (!window.__TAURI__ || !window.__TAURI__.core) { dbState.msg = "Tauri 不可用（未连接）"; render(current); return; }
         dbState.msg = await window.__TAURI__.core.invoke("db_init");
         dbState.ready = true;
+        // 启动即解析「默认 Agent」—— 各功能发请求时直接用，避免每轮都读配置
+        await agentDefaultLoad();
       } catch(e) { dbState.msg = "数据库初始化失败：" + e; }
       render(current);
     }
@@ -7344,6 +7715,165 @@ function doConnect(baseUrl, token) {
       }
     }
 
+    // ===== Hermes 模型参数检查（config.yaml 的 model 段 + data/.env 的 API Key）=====
+    // 启动时自动检查：缺配置就弹「模型参数配置」窗口；齐全则完全不打扰。
+    var HERMES_MODEL_MODAL_ID = "hermesModelModal";
+
+    function hermesModelEnsure(force) {
+      if (!(window.__TAURI__ && window.__TAURI__.core)) return;
+      window.__TAURI__.core.invoke("hermes_model_check").then(function(r){
+        if (!r) return;
+        if (r.ok && !force) return;
+        hermesModelModal(r);
+      }).catch(function(e){
+        console.warn("hermes_model_check:", e);   // 没配本地 Agent 等情况静默
+      });
+    }
+
+    function hermesModelModal(info) {
+      var old = document.getElementById(HERMES_MODEL_MODAL_ID);
+      if (old) old.remove();
+      var r = (info && info.resolved) || {};
+      var modelR = r.model || {};
+      var provR = r.provider || {};
+      var baseR = r.baseUrl || {};
+      var keyR = r.apiKey || {};
+      var providers = (info && info.providers) || [];
+      var missing = (info && info.missing) || [];
+
+      // 三处来源统一成标签：config.yaml / .env / provider 默认
+      var srcLabel = function(src) {
+        if (!src || src === "none") return "未配置";
+        if (src === "config") return "config.yaml";
+        if (src === "provider-default") return "provider 默认";
+        if (src.indexOf("env:") === 0) return ".env · " + src.slice(4);
+        return src;
+      };
+      var cell = function(label, value, src, danger) {
+        return '<span style="color:#6b7280">' + label + '</span>' +
+               '<span style="word-break:break-all' + (danger ? ';color:#c0392b' : '') + '">' + escHtml(value || "—") + '</span>' +
+               '<span style="color:#9aa0a6">' + escHtml(srcLabel(src)) + '</span>';
+      };
+      var srcRows = cell("模型", modelR.value, modelR.source, !modelR.value) +
+                    cell("Provider", provR.value, provR.source, !provR.value) +
+                    cell("Base URL", baseR.value, baseR.source, !baseR.value) +
+                    cell("API Key", keyR.set ? "已配置" : "未配置", keyR.source, !keyR.set);
+
+      var optHtml = providers.map(function(p){
+        return '<option value="' + escHtml(p.id) + '">' + escHtml(p.name || p.id) + '</option>';
+      }).join("");
+
+      var wrap = document.createElement("div");
+      wrap.className = "modal show";
+      wrap.id = HERMES_MODEL_MODAL_ID;
+      wrap.innerHTML =
+        '<div class="modal-box" style="width:690px;max-width:95vw">' +
+          '<h4>Hermes 模型参数配置</h4>' +
+          '<div style="font-size:12.5px;color:var(--ink500);margin-bottom:12px;line-height:1.7">' +
+            (missing.length
+              ? '检测到缺少：<b style="color:#c0392b">' + missing.map(escHtml).join('、') + '</b>'
+              : '以下为「实际生效值 + 来源」，可修改后保存') +
+            (info && info.configPath ? '<br><span style="font-family:monospace;font-size:11.5px">' + escHtml(info.configPath) + '</span>' : '') +
+          '</div>' +
+          '<div style="font-size:12px;background:#f7f8fa;border:1px solid #e6e8eb;border-radius:8px;padding:10px 12px;margin-bottom:14px">' +
+            '<div style="display:grid;grid-template-columns:76px 1fr 150px;gap:6px 10px">' + srcRows + '</div>' +
+          '</div>' +
+          '<div class="field" style="margin-bottom:10px"><label>Provider（来自 Hermes 注册表）</label>' +
+            '<input id="mcProvider" list="mcProviderList" placeholder="deepseek / openai / anthropic ..." />' +
+            '<datalist id="mcProviderList">' + optHtml + '</datalist></div>' +
+          '<div class="field" style="margin-bottom:10px"><label>模型名称（model.default）</label>' +
+            '<input id="mcModel" placeholder="例如 deepseek-v4.1-flash" /></div>' +
+          '<div class="field" style="margin-bottom:10px"><label>Base URL</label>' +
+            '<input id="mcBaseUrl" placeholder="https://..." />' +
+            '<div id="mcBaseHint" style="font-size:11.5px;color:#9aa0a6;margin-top:4px"></div></div>' +
+          '<div class="field" style="margin-bottom:10px"><label>API Key（写入 data/.env 的 <span id="mcEnvKey">API_KEY</span>）</label>' +
+            '<input id="mcKey" type="password" /></div>' +
+          '<div style="font-size:11.5px;color:#9aa0a6;margin-bottom:6px">保存会同时写 config.yaml（model 段）和 .env（API Key + Base URL），让三处保持一致。</div>' +
+          '<div id="mcStat" style="font-size:12px;color:var(--ink500);min-height:18px"></div>' +
+          '<div class="modal-actions">' +
+            '<button class="btn btn-secondary" id="mcLater">稍后</button>' +
+            '<button class="btn btn-primary" id="mcSave">保存</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(wrap);
+
+      document.getElementById("mcProvider").value = provR.value || "deepseek";
+      document.getElementById("mcModel").value = modelR.value || "";
+      document.getElementById("mcBaseUrl").value = baseR.value || "";
+      document.getElementById("mcEnvKey").textContent =
+        (keyR.envKeys && keyR.envKeys.length ? keyR.envKeys[0] : ((info && info.envApiKeyKey) || "API_KEY"));
+      document.getElementById("mcKey").placeholder = keyR.set ? "已配置，留空 = 不修改" : "未配置，请填写";
+
+      // 切换 Provider 时同步显示它的默认端点（数据来自 Hermes 注册表）
+      var provEl = document.getElementById("mcProvider");
+      var syncProvHint = function() {
+        var id = (provEl.value || "").trim().toLowerCase();
+        var hit = null;
+        for (var pi = 0; pi < providers.length; pi++) {
+          if ((providers[pi].id || "").toLowerCase() === id) { hit = providers[pi]; break; }
+        }
+        var hint = document.getElementById("mcBaseHint");
+        if (hit) {
+          hint.textContent = "默认端点：" + (hit.defaultBaseUrl || "—") +
+            (hit.baseUrlEnv ? "　·　环境变量：" + hit.baseUrlEnv : "") +
+            (hit.apiKeyEnvs && hit.apiKeyEnvs.length ? "　·　Key 变量：" + hit.apiKeyEnvs.join(" / ") : "");
+        } else {
+          hint.textContent = baseR.providerDefault ? ("默认端点：" + baseR.providerDefault) : "";
+        }
+      };
+      provEl.addEventListener("input", syncProvHint);
+      provEl.addEventListener("change", syncProvHint);
+      syncProvHint();
+
+      var stat = document.getElementById("mcStat");
+      document.getElementById("mcLater").addEventListener("click", function(){ wrap.remove(); });
+
+      document.getElementById("mcSave").addEventListener("click", function(){
+        var provider = document.getElementById("mcProvider").value.trim();
+        var model = document.getElementById("mcModel").value.trim();
+        var baseUrl = document.getElementById("mcBaseUrl").value.trim();
+        var apiKey = document.getElementById("mcKey").value.trim();
+        if (!provider || !model) {
+          stat.style.color = "#c0392b";
+          stat.textContent = "Provider 和模型名称不能为空";
+          return;
+        }
+        stat.style.color = "var(--ink500)";
+        stat.textContent = "保存中…";
+        window.__TAURI__.core.invoke("hermes_model_save", {
+          provider: provider, model: model, baseUrl: baseUrl, apiKey: apiKey
+        }).then(function(r){
+          stat.style.color = "var(--p700)";
+          var wrote = (r && r.wroteEnv && r.wroteEnv.length)
+            ? ("，已同步 .env：" + r.wroteEnv.join("、")) : "";
+          stat.textContent = "已保存" + wrote + "（备份：" + ((r && r.backup) || "—") + "）。重启 Agent 后生效。";
+          var acts = wrap.querySelector(".modal-actions");
+          acts.innerHTML =
+            '<button class="btn btn-secondary" id="mcClose">关闭</button>' +
+            '<button class="btn btn-primary" id="mcRestart">立即重启 Agent</button>';
+          document.getElementById("mcClose").addEventListener("click", function(){ wrap.remove(); });
+          document.getElementById("mcRestart").addEventListener("click", function(){
+            stat.style.color = "var(--ink500)";
+            stat.textContent = "重启中…（QQ 会短暂断线）";
+            window.__TAURI__.core.invoke("local_agent_restart", {
+              url: "", script: (info && info.script) || "",
+              cwd: (info && info.root) || "", cmdline: ""
+            }).then(function(){
+              stat.style.color = "var(--p700)";
+              stat.textContent = "已重启，模型配置已生效。";
+              setTimeout(function(){ wrap.remove(); }, 1200);
+            }).catch(function(e){
+              stat.style.color = "#c0392b";
+              stat.textContent = "重启失败：" + e;
+            });
+          });
+        }).catch(function(e){
+          stat.style.color = "#c0392b";
+          stat.textContent = "保存失败：" + e;
+        });
+      });
+    }
+
     document.getElementById("projAdd").addEventListener("click", showProjectModal);
     document.getElementById("pjCancel").addEventListener("click", hideProjectModal);
     document.getElementById("pjSave").addEventListener("click", saveProject);
@@ -7365,6 +7895,8 @@ function doConnect(baseUrl, token) {
     render(0);
     initDb();
     loadProjects();
+    // 启动自检：Hermes 模型参数缺失 → 弹「模型参数配置」窗口（延迟避开首屏渲染）
+    setTimeout(function(){ hermesModelEnsure(false); }, 2500);
   </script>
 </body>
 </html>

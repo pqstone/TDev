@@ -1151,7 +1151,7 @@ r#"【部署任务上下文（由 TDev 提供，直接使用，不要重新询�
 启动验证端口（参考）：{verify_port}
 以上“参考”值只是按项目类型给的默认猜测，必须先看服务器实际情况（Tomcat/服务装在哪、端口占没占、目录能不能写），不一致就按实际调整，并在回复里说明为什么改。
 本机构建环境：项目同级有 Public\runtime\env.bat（JDK17+Maven+Tomcat），构建前必须先加载它，例如：
-  cmd: call "E:\88.project\TestSpace\Public\runtime\env.bat" && mvn -q -DskipTests clean package
+  cmd: cd /d "{project_dir}" && call "..\Public\runtime\env.bat" && mvn -q -DskipTests clean package
 
 【部署铁律】
 1. 必须真的执行命令并把真实输出作为依据，禁止编造“部署成功”。

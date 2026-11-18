@@ -63,6 +63,42 @@ fn agent_key() -> String {
 /// 统一的「未配置 key」错误文案
 const AGENT_KEY_MISSING: &str = "未配置 Agent API Key：请设置环境变量 TDEV_AGENT_KEY，或写入 %USERPROFILE%\\.tdev\\agent.key（一行纯文本）。";
 
+/// 内置的 TDev 专用 Agent 实例（TD profile，独立进程/端口）
+const BUILTIN_AGENT_BASE: &str = "http://127.0.0.1:8644";
+
+/// Agent 接入地址规范化：去掉尾部 '/' 和 '/v1'
+/// 兼容用户填 "http://127.0.0.1:8644" / ".../" / ".../v1"，内部统一再拼 /v1/...
+fn normalize_agent_base(raw: &str) -> String {
+    let mut s = raw.trim().trim_end_matches('/').to_string();
+    if let Some(stripped) = s.strip_suffix("/v1") {
+        s = stripped.trim_end_matches('/').to_string();
+    }
+    s
+}
+
+/// 解析本次调用用哪个 Agent：前端指定优先，否则回落内置 TD 实例。
+/// 返回 (base, key, is_custom)。
+/// is_custom=true 时允许 key 为空（自建 Agent 可能不鉴权）；回落模式则必须有 key。
+fn resolve_agent_target(
+    agent_url: Option<String>,
+    agent_key_override: Option<String>,
+) -> (String, String, bool) {
+    let custom = agent_url
+        .as_ref()
+        .map(|u| !u.trim().is_empty())
+        .unwrap_or(false);
+    let base = if custom {
+        normalize_agent_base(agent_url.as_deref().unwrap_or(""))
+    } else {
+        BUILTIN_AGENT_BASE.to_string()
+    };
+    let key = match agent_key_override {
+        Some(k) => k.trim().to_string(),   // 显式传空串 = 该 Agent 不用鉴权
+        None => agent_key(),
+    };
+    (base, key, custom)
+}
+
 /// 拿锁：已有活锁则拒绝（返回给前端的错误文案要能直接展示给用户）
 fn agent_lock_try() -> Result<(), String> {
     let now = agent_now_secs();
@@ -183,6 +219,22 @@ pub fn run() {
             let dir = app.path().app_config_dir()?;
             std::fs::create_dir_all(&dir)
                 .map_err(|e| Box::<dyn std::error::Error>::from(e))?;
+
+            // TDev 启动 ⇒ 本地 Agent 可用：后台线程调一次启动器（脚本幂等，
+            // 在线时 0.2s 返回 "already running"，不会打断正在跑的会话）。
+            // 放后台线程 + 延迟 1.2s：不阻塞窗口创建，也不和 WebView2 初始化抢 CPU。
+            let handle = app.handle().clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(1200));
+                if la_desired_get(&handle) == "stopped" {
+                    la_autostart_log(&handle, "skip: user stopped the agent last time");
+                    return;
+                }
+                if let Some(script) = la_first_local_script(&handle) {
+                    la_autostart_log(&handle, "ensure: auto-start local agent");
+                    let _ = la_graceful_launcher(&script, &["--json", "--timeout", "90"]);
+                }
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -204,6 +256,13 @@ pub fn run() {
             tune_drag,
             agent_lock_state,
             agent_force_unlock,
+            local_agent_status,
+            local_agent_start,
+            local_agent_stop,
+            local_agent_restart,
+            local_agent_cmd_run,
+            hermes_model_check,
+            hermes_model_save,
             project_save_theme,
             theme_preview_html,
             theme_read_project,
@@ -254,6 +313,31 @@ fn db_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
 pub(crate) fn db_conn(app: &tauri::AppHandle) -> Result<Connection, String> {
     let path = db_path(app)?;
     Connection::open(&path).map_err(|e| format!("打开数据库失败: {e}"))
+}
+
+/// 模板根目录：只从 exe 所在位置推导，**不写死任何绝对路径**。
+///   1) `<exe目录>\template`               —— 发布包布局（TDev\tdev.exe + TDev\template\）
+///   2) `<exe目录>\..\..\..\src\template`  —— 源码布局（src-tauri\target\{release,debug}\ → TDev\src\template）
+/// 两处都不存在时返回发布布局路径，让报错信息提示该把 template\ 放哪。
+fn template_root() -> std::path::PathBuf {
+    let dir = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.to_path_buf()))
+        .unwrap_or_else(|| std::path::PathBuf::from("."));
+    let packaged = dir.join("template");
+    if packaged.is_dir() {
+        return packaged;
+    }
+    let source = dir.join("..").join("..").join("..").join("src").join("template");
+    if source.is_dir() {
+        return source;
+    }
+    packaged
+}
+
+/// 模板内的相对文件（例：`theme/theme.md`、`devStandard/AGENTS.md`）
+fn template_file(rel: &str) -> std::path::PathBuf {
+    template_root().join(rel)
 }
 
 /// 当前时间字符串（YYYY-MM-DD HH:MM:SS，纯 std）
@@ -578,7 +662,13 @@ fn cfg_load(app: tauri::AppHandle, category: String) -> Result<String, String> {
 /// 调用 Hermes CLI 问答（-z 模式），支持指定会话 ID 保持上下文
 /// 返回 Agent 的回复文本
 #[tauri::command]
-async fn agent_ask(question: String, session_id: String) -> Result<String, String> {
+async fn agent_ask(
+    question: String,
+    session_id: String,
+    // 默认 Agent（Agent配置页「设为默认」）：不传则回落内置 TD 实例
+    agent_url: Option<String>,
+    agent_key: Option<String>,
+) -> Result<String, String> {
     // 和流式对话共用同一把锁：主题生成 / 流程梳理 / 计划执行，全程只允许一个 Agent。
     agent_lock_try()?;
     let _lock_guard = AgentLockGuard;
@@ -586,23 +676,27 @@ async fn agent_ask(question: String, session_id: String) -> Result<String, Strin
     // async 命令：直接 async reqwest（配合 Tauri async runtime，UI 不冻结）
     // TD：TDev 专用 Agent 实例（独立进程、独立 profile、独立端口 8644），
     // 与 QQ/Hulk 用的 8642 分开，避免长会话把开发请求拖住。
-    let url = "http://127.0.0.1:8644/v1/chat/completions";
+    // Agent 目标：Agent配置页「设为默认」优先；未设置则用内置 TD 实例（8644）
+    let (base, key, custom) = resolve_agent_target(agent_url, agent_key);
+    if key.is_empty() && !custom {
+        return Err(AGENT_KEY_MISSING.to_string());
+    }
+    let url = format!("{base}/v1/chat/completions");
     let body = serde_json::json!({
         "model": "hermes-agent",
         "messages": [{"role": "user", "content": question}]
     });
-    let key = agent_key();
-    if key.is_empty() {
-        return Err(AGENT_KEY_MISSING.to_string());
-    }
     let client = reqwest::Client::new();
-    let resp = client.post(url)
+    let mut req = client.post(&url)
         .header("Content-Type", "application/json")
-        .header("Authorization", format!("Bearer {key}"))
         .header("X-Hermes-Session-Id", session_id)
         .body(body.to_string())
         // Agent 执行时长不可预期：超时设为 1 小时（足够长）
-        .timeout(std::time::Duration::from_secs(3600))
+        .timeout(std::time::Duration::from_secs(3600));
+    if !key.is_empty() {
+        req = req.header("Authorization", format!("Bearer {key}"));
+    }
+    let resp = req
         .send()
         .await
         .map_err(|e| format!("请求 Hermes API 失败: {e}"))?;
@@ -633,15 +727,17 @@ async fn agent_ask_stream(
     // 想让「固定 Session」真的续上历史，必须把 session_id 放进请求体。
     // 默认 false —— 现有场景行为保持不变。
     session_memory: Option<bool>,
+    // 默认 Agent（Agent配置页「设为默认」）：不传则回落内置 TD 实例
+    agent_url: Option<String>,
+    agent_key: Option<String>,
 ) -> Result<String, String> {
     // 硬锁：同一时刻只允许一个 Agent run。守卫在任何 return / 出错路径都会自动释放。
     agent_lock_try()?;
     let _lock_guard = AgentLockGuard;
 
-    // TD 实例（8644）：TDev 专用 Agent，与 QQ 用的 default(8642) 进程隔离
-    let base = "http://127.0.0.1:8644";
-    let key = agent_key();
-    if key.is_empty() {
+    // Agent 目标：Agent配置页「设为默认」优先；未设置则用内置 TD 实例（8644）
+    let (base, key, custom) = resolve_agent_target(agent_url, agent_key);
+    if key.is_empty() && !custom {
         return Err(AGENT_KEY_MISSING.to_string());
     }
     let client = reqwest::Client::new();
@@ -664,12 +760,15 @@ async fn agent_ask_stream(
     if session_memory.unwrap_or(false) {
         run_body["session_id"] = serde_json::Value::String(session_id.clone());
     }
-    let resp = client.post(format!("{base}/v1/runs"))
+    let mut run_req = client.post(format!("{base}/v1/runs"))
         .header("Content-Type", "application/json")
-        .header("Authorization", format!("Bearer {key}"))
         .header("X-Hermes-Session-Id", session_id.clone())
         .body(run_body.to_string())
-        .timeout(std::time::Duration::from_secs(30))
+        .timeout(std::time::Duration::from_secs(30));
+    if !key.is_empty() {
+        run_req = run_req.header("Authorization", format!("Bearer {key}"));
+    }
+    let resp = run_req
         .send()
         .await
         .map_err(|e| format!("启动运行失败: {e}"))?;
@@ -681,10 +780,13 @@ async fn agent_ask_stream(
 
     // 2. SSE 流式读取
     let events_url = format!("{base}/v1/runs/{run_id}/events");
-    let sse_resp = client.get(&events_url)
-        .header("Authorization", format!("Bearer {key}"))
+    let mut sse_req = client.get(&events_url)
         .header("X-Hermes-Session-Id", session_id)
-        .timeout(std::time::Duration::from_secs(3600))
+        .timeout(std::time::Duration::from_secs(3600));
+    if !key.is_empty() {
+        sse_req = sse_req.header("Authorization", format!("Bearer {key}"));
+    }
+    let sse_resp = sse_req
         .send()
         .await
         .map_err(|e| format!("连接事件流失败: {e}"))?;
@@ -859,8 +961,7 @@ fn project_save_theme(prj_guid: String, prj_name: String, workspace: String, con
     let preview_path = format!("{}/ui-preview.html", dir);
     std::fs::write(&preview_path, preview).map_err(|e| format!("写入 ui-preview.html 失败: {e}"))?;
     // 3) theme.md（复制模板说明，标注本项目主题信息）
-    let tpl_md = "E:/88.project/TDev/src/template/theme/theme.md";
-    let md = std::fs::read_to_string(tpl_md).unwrap_or_default();
+    let md = std::fs::read_to_string(template_file("theme/theme.md")).unwrap_or_default();
     let md = format!("> 本项目主题由 AI 生成。主色：{}。
 
 {}", accent, md);
@@ -871,8 +972,7 @@ fn project_save_theme(prj_guid: String, prj_name: String, workspace: String, con
 
 /// 用色系数据构建预览页（复用 theme_preview_html 的替换逻辑）
 fn build_preview_html(accent: &str, palette: &std::collections::HashMap<String, String>, color_map: &std::collections::HashMap<String, String>) -> String {
-    let tpl = "E:/88.project/TDev/src/template/theme/ui-preview.html";
-    let mut out = std::fs::read_to_string(tpl).unwrap_or_default();
+    let mut out = std::fs::read_to_string(template_file("theme/ui-preview.html")).unwrap_or_default();
     for step in ["50", "100", "200", "300", "400", "500", "600", "700", "800", "900"] {
         if let Some(color) = palette.get(step) {
             let old_var = format!("--color-accent-{}: #{};", step, template_palette_value(step));
@@ -1206,8 +1306,10 @@ fn constr_read_tpl(file: String, prj_name: String, workspace: String) -> Result<
         }
     }
     // 2) 回退模板
-    let tpl_path = format!("E:/88.project/TDev/src/template/devStandard/{safe}");
-    std::fs::read_to_string(&tpl_path).map_err(|e| format!("读取失败: {e}"))
+    let tpl_path = template_file(&format!("devStandard/{safe}"));
+    std::fs::read_to_string(&tpl_path).map_err(|e| {
+        format!("读取失败（模板目录：{}）: {e}", template_root().display())
+    })
 }
 
 /// 保存规范文件到当前项目的 devStandard 目录
@@ -1234,7 +1336,7 @@ fn constr_save(file: String, prj_name: String, workspace: String, content: Strin
 fn constr_context(prj_name: String, workspace: String) -> Result<serde_json::Value, String> {
     let ws = workspace.trim_end_matches('/').to_string();
     let pn = prj_name.trim().to_string();
-    let tpl_dir = "E:/88.project/TDev/src/template/devStandard";
+    let tpl_dir = template_root().join("devStandard");
     let has_proj = !pn.is_empty() && !ws.is_empty();
 
     // 三个文件的实际路径：项目目录优先，无则回退模板
@@ -1246,7 +1348,7 @@ fn constr_context(prj_name: String, workspace: String) -> Result<serde_json::Val
             from_project = true;
             proj
         } else {
-            format!("{}/{}", tpl_dir, f)
+            tpl_dir.join(f).to_string_lossy().to_string()
         };
         paths.insert(f.to_string(), serde_json::Value::String(p));
     }
@@ -2139,6 +2241,919 @@ fn extract_accent(json_text: &str) -> Option<String> {
     // 通用: theme.colors.accent.default
     if let Some(a) = v["theme"]["colors"]["accent"]["default"].as_str() { return Some(a.to_string()); }
     None
+}
+
+// ============================================================
+// 本地 Agent 进程管理（2026-11-17 · 卢Sir 需求）
+// ------------------------------------------------------------
+// 目标：Agent配置 里勾了「本地 Agent」的项，可以看状态灯、
+// 启动 / 重启 / 停止、打开命令行对话框（可编辑命令行并执行）。
+// 设计文档：docs/local-agent.md
+// 关键约束：
+//   1) 启动一律 CREATE_NO_WINDOW —— 桌面绝不弹黑窗；
+//   2) 状态判定「端口优先、PID 兜底」——脚本自己 start /min 脱离也能判对；
+//   3) 停止走 taskkill /T /F 杀进程树，但拒绝杀自己与系统关键进程。
+// ============================================================
+
+/// 统一构造「无窗口」子进程。
+/// 病根（2026-11-17 卢Sir 报「黑色命令行窗口持续弹窗」）：netstat / tasklist 是控制台程序，
+/// 从 TDev（GUI 子系统）里 spawn 时不带 CREATE_NO_WINDOW 就会各弹一个黑窗；
+/// 状态轮询 5s 一轮、每轮 2-3 个命令 → 桌面上黑窗持续闪。
+fn la_hidden(program: &str) -> std::process::Command {
+    let mut c = std::process::Command::new(program);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        c.creation_flags(CREATE_NO_WINDOW);
+    }
+    c
+}
+
+/// 脚本路径归一化（做 PID 记录的 key）
+fn la_norm(script: &str) -> String {
+    script.trim().replace('/', "\\").to_lowercase()
+}
+
+fn la_pids_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
+    let dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|e| format!("定位 AppConfig 目录失败: {e}"))?;
+    std::fs::create_dir_all(&dir).map_err(|e| format!("创建目录失败: {e}"))?;
+    Ok(dir.join("agent_pids.json"))
+}
+
+fn la_pids_read(app: &tauri::AppHandle) -> serde_json::Map<String, serde_json::Value> {
+    la_pids_path(app)
+        .ok()
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+        .and_then(|v| v.as_object().cloned())
+        .unwrap_or_default()
+}
+
+fn la_pids_write(app: &tauri::AppHandle, m: &serde_json::Map<String, serde_json::Value>) {
+    if let Ok(p) = la_pids_path(app) {
+        let _ = std::fs::write(p, serde_json::Value::Object(m.clone()).to_string());
+    }
+}
+
+fn la_track_set(app: &tauri::AppHandle, script: &str, pid: u32) {
+    let mut m = la_pids_read(app);
+    m.insert(la_norm(script), serde_json::json!(pid));
+    la_pids_write(app, &m);
+}
+
+fn la_track_get(app: &tauri::AppHandle, script: &str) -> Option<u32> {
+    la_pids_read(app)
+        .get(&la_norm(script))
+        .and_then(|v| v.as_u64())
+        .map(|v| v as u32)
+}
+
+fn la_track_clear(app: &tauri::AppHandle, script: &str) {
+    let mut m = la_pids_read(app);
+    m.remove(&la_norm(script));
+    la_pids_write(app, &m);
+}
+
+/// 从接入地址解析端口：http://127.0.0.1:8642/v1 → 8642；无端口按 80/443
+fn la_url_port(url: &str) -> Option<u16> {
+    let s = url.trim();
+    if s.is_empty() {
+        return None;
+    }
+    let rest = match s.find("://") {
+        Some(i) => &s[i + 3..],
+        None => s,
+    };
+    let hostport = rest
+        .split('/')
+        .next()
+        .unwrap_or("")
+        .split('?')
+        .next()
+        .unwrap_or("");
+    if hostport.is_empty() {
+        return None;
+    }
+    if let Some(rest6) = hostport.strip_prefix('[') {
+        if let Some(end) = rest6.find(']') {
+            let after = &rest6[end + 1..];
+            if let Some(p) = after.strip_prefix(':') {
+                return p.parse::<u16>().ok();
+            }
+            return Some(if s.starts_with("https") { 443 } else { 80 });
+        }
+    }
+    if let Some((_, p)) = hostport.rsplit_once(':') {
+        if !p.is_empty() {
+            return p.parse::<u16>().ok();
+        }
+    }
+    Some(if s.starts_with("https") { 443 } else { 80 })
+}
+
+fn la_port_listening(port: u16) -> bool {
+    use std::net::{SocketAddr, TcpStream};
+    use std::time::Duration;
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    TcpStream::connect_timeout(&addr, Duration::from_millis(350)).is_ok()
+}
+
+/// 端口占用者 PID（netstat -ano 的 LISTENING 行）
+fn la_pid_on_port(port: u16) -> Option<u32> {
+    let out = la_hidden("netstat").args(["-ano"]).output().ok()?;
+    let text = String::from_utf8_lossy(&out.stdout);
+    let want = port.to_string();
+    for line in text.lines() {
+        if !line.contains("LISTENING") {
+            continue;
+        }
+        let cols: Vec<&str> = line.split_whitespace().collect();
+        if cols.len() < 5 {
+            continue;
+        }
+        // 本地地址列形如 127.0.0.1:8642 / [::1]:8642 / 0.0.0.0:8642
+        if cols[1].rsplit(':').next().unwrap_or("") != want {
+            continue;
+        }
+        if let Ok(pid) = cols[cols.len() - 1].parse::<u32>() {
+            return Some(pid);
+        }
+    }
+    None
+}
+
+/// 一次 tasklist 同时判定「是否存活 + 映像名」：存活返回 Some(小写映像名)，不存在返回 None。
+/// 合并调用是为了让每轮状态轮询只 spawn 一个 tasklist（少一个黑窗风险，也快一倍）。
+fn la_proc_image(pid: u32) -> Option<String> {
+    if pid == 0 {
+        return None;
+    }
+    let out = la_hidden("tasklist")
+        .args(["/FI", &format!("PID eq {pid}"), "/NH", "/FO", "CSV"])
+        .output()
+        .ok()?;
+    let text = String::from_utf8_lossy(&out.stdout);
+    // 输出形如 "python.exe","4321","Console","1","27,044 K"；无匹配时是 "INFO: No tasks are running..."
+    if !text.contains(&format!("\"{pid}\"")) {
+        return None;
+    }
+    let img = text
+        .split(',')
+        .next()
+        .unwrap_or("")
+        .trim()
+        .trim_matches('"')
+        .to_lowercase();
+    if img.is_empty() {
+        None
+    } else {
+        Some(img)
+    }
+}
+
+fn la_pid_alive(pid: u32) -> bool {
+    la_proc_image(pid).is_some()
+}
+
+/// 系统关键进程，绝不杀（防 URL 填错端口误杀数据库/资源管理器）
+fn la_is_protected(image: &str) -> bool {
+    matches!(
+        image,
+        "system" | "system idle process" | "smss.exe" | "csrss.exe" | "wininit.exe"
+            | "winlogon.exe" | "services.exe" | "lsass.exe" | "svchost.exe" | "explorer.exe"
+            | "mysqld.exe" | "sqlservr.exe" | "postgres.exe" | "nginx.exe" | "httpd.exe"
+            | "tdev.exe"
+    )
+}
+
+fn la_kill_tree(pid: u32) -> bool {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        let st = std::process::Command::new("taskkill")
+            .args(["/PID", &pid.to_string(), "/T", "/F"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status();
+        matches!(st, Ok(s) if s.success())
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = pid;
+        false
+    }
+}
+
+/// 解析「脚本 + 工作目录 + 命令行」三件套，启动与试运行共用
+fn la_resolve(
+    script: &str,
+    cwd: Option<&str>,
+    cmdline: Option<&str>,
+) -> Result<(std::path::PathBuf, String, String), String> {
+    let script = script.trim().to_string();
+    if script.is_empty() {
+        return Err("未配置启动脚本".to_string());
+    }
+    let sp = std::path::Path::new(&script);
+    if !sp.exists() {
+        return Err(format!("启动脚本不存在：{script}"));
+    }
+    let dir = match cwd.map(|s| s.trim()).filter(|s| !s.is_empty()) {
+        Some(d) => std::path::PathBuf::from(d),
+        None => sp
+            .parent()
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(|| std::path::PathBuf::from(".")),
+    };
+    if !dir.exists() {
+        return Err(format!("工作目录不存在：{}", dir.display()));
+    }
+    let line = cmdline
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| format!("cmd /C \"{script}\""));
+    Ok((dir, line, script))
+}
+
+/// 本地 Agent 状态：端口优先，PID 兜底
+#[tauri::command]
+fn local_agent_status(app: tauri::AppHandle, url: String, script: String) -> serde_json::Value {
+    let port = la_url_port(&url);
+    let listening = port.map(la_port_listening).unwrap_or(false);
+    let port_pid = if listening { port.and_then(la_pid_on_port) } else { None };
+    let tracked = if script.trim().is_empty() {
+        None
+    } else {
+        la_track_get(&app, &script)
+    };
+    // 只 spawn 一次 tasklist：先确认端口占用者，再退回记录的 PID
+    let mut pid: Option<u32> = None;
+    let mut image = String::new();
+    if let Some(p) = port_pid {
+        if let Some(img) = la_proc_image(p) {
+            pid = Some(p);
+            image = img;
+        }
+    }
+    if pid.is_none() {
+        if let Some(t) = tracked {
+            if let Some(img) = la_proc_image(t) {
+                pid = Some(t);
+                image = img;
+            }
+        }
+    }
+    let running = listening || pid.is_some();
+    let script_ok = !script.trim().is_empty() && std::path::Path::new(script.trim()).exists();
+    serde_json::json!({
+        "running": running,
+        "pid": pid,
+        "port": port,
+        "listening": listening,
+        "trackedPid": tracked,
+        "scriptOk": script_ok,
+        "image": image
+    })
+}
+
+/// 启动本地 Agent（无窗口、独立进程组），记录 PID
+#[tauri::command]
+fn local_agent_start(
+    app: tauri::AppHandle,
+    script: String,
+    cwd: Option<String>,
+    cmdline: Option<String>,
+) -> Result<serde_json::Value, String> {
+    let (dir, line, script) = la_resolve(&script, cwd.as_deref(), cmdline.as_deref())?;
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        const CREATE_NEW_PROCESS_GROUP: u32 = 0x0000_0200;
+        let child = std::process::Command::new("cmd")
+            .arg("/C")
+            .arg(&line)
+            .current_dir(&dir)
+            .creation_flags(CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP)
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+            .map_err(|e| format!("启动失败：{e}"))?;
+        let pid = child.id();
+        la_track_set(&app, &script, pid);
+        la_desired_set(&app, "running");   // 用户明确要它跑，下次打开 TDev 继续保活
+        Ok(serde_json::json!({
+            "ok": true, "pid": pid, "cmdline": line, "cwd": dir.display().to_string()
+        }))
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = (app, dir, line, script);
+        Err("本地 Agent 管理目前仅支持 Windows".to_string())
+    }
+}
+
+/// 读 agents 配置里「默认 + local=true」那个 Agent 的启动脚本 —— TDev 启动时用它 ensure。
+fn la_first_local_script(app: &tauri::AppHandle) -> Option<String> {
+    let conn = db_conn(app).ok()?;
+    let raw: String = conn
+        .query_row("SELECT value FROM app_meta WHERE key='agents'", [], |r| r.get(0))
+        .ok()?;
+    let cfg: serde_json::Value = serde_json::from_str(&raw).ok()?;
+    let list = cfg.get("list")?.as_array()?;
+    let default_name = cfg.get("defaultName").and_then(|v| v.as_str()).unwrap_or("");
+    let is_local = |a: &serde_json::Value| {
+        a.get("local").and_then(|x| x.as_bool()).unwrap_or(false)
+    };
+    let pick = list
+        .iter()
+        .find(|a| is_local(a) && a.get("name").and_then(|x| x.as_str()) == Some(default_name))
+        .or_else(|| list.iter().find(|a| is_local(a)))?;
+    pick.get("script")?
+        .as_str()
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.to_string())
+}
+
+/// 「用户期望状态」：TDev 启动时据此决定是否自动拉起本地 Agent。
+/// 用户点过「停止」→ stopped，下次打开 TDev 不会违背他的意图自己拉起。
+fn la_desired_get(app: &tauri::AppHandle) -> String {
+    db_conn(app)
+        .ok()
+        .and_then(|c| {
+            c.query_row("SELECT value FROM app_meta WHERE key='local_agent_desired'", [], |r| {
+                r.get::<_, String>(0)
+            })
+            .ok()
+        })
+        .unwrap_or_else(|| "running".to_string())
+}
+
+fn la_desired_set(app: &tauri::AppHandle, state: &str) {
+    if let Ok(c) = db_conn(app) {
+        let _ = c.execute(
+            "INSERT INTO app_meta(key, value) VALUES('local_agent_desired', ?1)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            [state],
+        );
+    }
+}
+
+/// 自启决策留痕（%APPDATA%/com.tdev.app/hermes-autostart.log），出事能对时间线。
+fn la_autostart_log(app: &tauri::AppHandle, line: &str) {
+    if let Ok(dir) = app.path().app_config_dir() {
+        let _ = std::fs::create_dir_all(&dir);
+        if let Ok(mut f) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(dir.join("hermes-autostart.log"))
+        {
+            use std::io::Write;
+            let _ = writeln!(f, "{} {}", now_str(), line);
+        }
+    }
+}
+
+/// 默认本地 Agent 的安装根目录（启动脚本所在目录）。
+fn la_first_local_root(app: &tauri::AppHandle) -> Option<std::path::PathBuf> {
+    let script = la_first_local_script(app)?;
+    std::path::Path::new(&script).parent().map(|p| p.to_path_buf())
+}
+
+/// 解析 config.yaml 里 `model:` 这一层的扁平键值（只认缩进子行，够覆盖当前格式）。
+fn model_block(cfg: &str) -> std::collections::BTreeMap<String, String> {
+    let mut out = std::collections::BTreeMap::new();
+    let mut in_model = false;
+    for line in cfg.lines() {
+        let t = line.trim_end();
+        if !t.starts_with(' ') && t.trim() == "model:" {
+            in_model = true;
+            continue;
+        }
+        if !in_model { continue; }
+        if t.trim().is_empty() { continue; }
+        if !t.starts_with(' ') { break; }
+        let body = t.trim_start();
+        if let Some((k, v)) = body.split_once(':') {
+            let key = k.trim();
+            if key.is_empty() || key.starts_with('#') { continue; }
+            let val = v.trim().trim_matches('\'').trim_matches('"').to_string();
+            out.insert(key.to_string(), val);
+        }
+    }
+    out
+}
+
+/// 只改 `model:` 段的指定键，其它段/注释原样保留；缺失的键追加到段末。
+fn set_model_block(cfg: &str, updates: &[(&str, String)]) -> String {
+    let mut lines: Vec<String> = cfg.lines().map(|s| s.to_string()).collect();
+    let start = lines.iter().position(|l| !l.starts_with(' ') && l.trim() == "model:");
+    let mut pairs: Vec<(String, String)> = Vec::new();
+    let mut end = 0usize;
+    if let Some(i) = start {
+        let mut j = i + 1;
+        while j < lines.len() {
+            let l = &lines[j];
+            if l.trim().is_empty() { j += 1; continue; }
+            if !l.starts_with(' ') { break; }
+            if let Some((k, v)) = l.trim_start().split_once(':') {
+                pairs.push((k.trim().to_string(), v.trim().to_string()));
+            }
+            j += 1;
+        }
+        end = j;
+    }
+    for (k, v) in updates {
+        let rendered = if v.is_empty() {
+            "''".to_string()
+        } else if v.contains(':') || v.contains('#') || v.contains(' ') {
+            format!("'{}'", v.replace('\'', "''"))
+        } else {
+            v.clone()
+        };
+        if let Some(slot) = pairs.iter_mut().find(|(mk, _)| mk == k) {
+            slot.1 = rendered;
+        } else {
+            pairs.push((k.to_string(), rendered));
+        }
+    }
+    let block: Vec<String> = pairs.iter().map(|(k, v)| format!("  {k}: {v}")).collect();
+    match start {
+        Some(i) => {
+            // 注意从 i+1 开始：i 是 "model:" 这一行本身，必须保留
+            lines.splice(i + 1..end, block);
+            lines.join("\n") + "\n"
+        }
+        None => {
+            let mut out = vec!["model:".to_string()];
+            out.extend(block);
+            out.extend(lines);
+            out.join("\n") + "\n"
+        }
+    }
+}
+
+/// provider → 它在 data/.env 里用的 key 名。
+fn provider_env_key(provider: &str) -> String {
+    match provider.trim().to_lowercase().as_str() {
+        "deepseek" => "DEEPSEEK_API_KEY".to_string(),
+        "openai" => "OPENAI_API_KEY".to_string(),
+        "anthropic" | "claude" => "ANTHROPIC_API_KEY".to_string(),
+        "google" | "gemini" => "GOOGLE_API_KEY".to_string(),
+        "xai" | "grok" => "XAI_API_KEY".to_string(),
+        "ark" | "volcengine" => "ARK_API_KEY".to_string(),
+        other if !other.is_empty() => format!("{}_API_KEY", other.to_uppercase().replace('-', "_")),
+        _ => "API_KEY".to_string(),
+    }
+}
+
+fn env_get(path: &std::path::Path, key: &str) -> String {
+    let Ok(text) = std::fs::read_to_string(path) else { return String::new() };
+    for line in text.lines() {
+        let l = line.trim();
+        if l.starts_with('#') { continue; }
+        if let Some((k, v)) = l.split_once('=') {
+            if k.trim() == key {
+                return v.trim().trim_matches('"').to_string();
+            }
+        }
+    }
+    String::new()
+}
+
+fn env_set(path: &std::path::Path, key: &str, val: &str) -> std::io::Result<()> {
+    let text = std::fs::read_to_string(path).unwrap_or_default();
+    let mut lines: Vec<String> = text.lines().map(|s| s.to_string()).collect();
+    let mut found = false;
+    for l in lines.iter_mut() {
+        if l.trim_start().starts_with('#') { continue; }
+        if let Some((k, _)) = l.split_once('=') {
+            if k.trim() == key {
+                *l = format!("{key}={val}");
+                found = true;
+                break;
+            }
+        }
+    }
+    if !found { lines.push(format!("{key}={val}")); }
+    std::fs::write(path, lines.join("\n") + "\n")
+}
+
+/// 调 `<root>/data/scripts/model_config.py`：用 Hermes 自己的 provider 注册表 + 配置解析器，
+/// 把 config.yaml / .env / provider 三处合并成「生效值 + 来源」。失败返回 None（走 Rust 兜底）。
+fn run_model_probe(root: &std::path::Path) -> Option<serde_json::Value> {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        // 绿色包用 py314\python.exe（app\.venv 的 pyvenv.cfg 带绝对 home，换盘会失效）；
+        // 开发机两者都在，优先 py314，脚本自己会把 app\.venv\Lib\site-packages 补进 sys.path。
+        let py_pkg = root.join("py314").join("python.exe");
+        let py_venv = root.join("app").join(".venv").join("Scripts").join("python.exe");
+        let py = if py_pkg.exists() { py_pkg } else { py_venv };
+        let script = root.join("data").join("scripts").join("model_config.py");
+        if !py.exists() || !script.exists() {
+            return None;
+        }
+        let out = std::process::Command::new(py)
+            .arg(script)
+            .current_dir(root)
+            .creation_flags(CREATE_NO_WINDOW)
+            .stdin(std::process::Stdio::null())
+            .output()
+            .ok()?;
+        let text = String::from_utf8_lossy(&out.stdout);
+        serde_json::from_str(text.trim()).ok()
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = root;
+        None
+    }
+}
+
+/// 检查本地 Agent 的模型参数：config.yaml 的 model 段 + data/.env + provider 注册表三处合并。
+/// 缺失时前端弹「模型参数配置」窗口。
+#[tauri::command]
+fn hermes_model_check(app: tauri::AppHandle) -> Result<serde_json::Value, String> {
+    let root = la_first_local_root(&app)
+        .ok_or_else(|| "未找到本地 Agent 配置（先在 Agent 配置里添加并勾选「本地」）".to_string())?;
+    let script_path = la_first_local_script(&app).unwrap_or_default();
+
+    // 首选：Hermes 自己的 provider 注册表（78 项）+ read_raw_config，三处来源天然一致
+    if let Some(mut v) = run_model_probe(&root) {
+        if let Some(obj) = v.as_object_mut() {
+            obj.insert("script".to_string(), serde_json::json!(script_path));
+            obj.insert("engine".to_string(), serde_json::json!("hermes-registry"));
+        }
+        return Ok(v);
+    }
+
+    // 兜底：脚本缺失 / 解释器异常时，用 Rust 直接解析（结构与上面保持一致）
+    let cfg_path = root.join("data").join("config.yaml");
+    let env_path = root.join("data").join(".env");
+    if !cfg_path.exists() {
+        return Ok(serde_json::json!({
+            "ok": false,
+            "missing": ["config.yaml"],
+            "root": root.display().to_string(),
+            "configPath": cfg_path.display().to_string(),
+            "envPath": env_path.display().to_string(),
+            "engine": "fallback",
+            "resolved": {},
+            "providers": [],
+            "script": script_path
+        }));
+    }
+    let text = std::fs::read_to_string(&cfg_path).map_err(|e| format!("读 config.yaml 失败：{e}"))?;
+    let m = model_block(&text);
+    let provider = m.get("provider").cloned().unwrap_or_default();
+    let model = m.get("default").cloned().unwrap_or_default();
+    let base_url = m.get("base_url").cloned().unwrap_or_default();
+    let env_key = provider_env_key(&provider);
+    let api_key = env_get(&env_path, &env_key);
+
+    // 与 Hermes 运行期一致：config → env → provider 默认
+    let provider_upper = provider.trim().to_uppercase().replace('-', "_");
+    let env_base_key = if provider_upper.is_empty() {
+        String::new()
+    } else {
+        format!("{provider_upper}_BASE_URL")
+    };
+    let env_base = if env_base_key.is_empty() {
+        String::new()
+    } else {
+        env_get(&env_path, &env_base_key)
+    };
+    let base_from_config = !base_url.trim().is_empty();
+    let effective_base = if base_from_config {
+        base_url.clone()
+    } else {
+        env_base.clone()
+    };
+    let base_source = if base_from_config {
+        "config".to_string()
+    } else if !env_base.trim().is_empty() {
+        format!("env:{env_base_key}")
+    } else {
+        "none".to_string()
+    };
+    let key_set = !api_key.trim().is_empty();
+
+    let mut missing: Vec<String> = Vec::new();
+    if model.trim().is_empty() { missing.push("model.default".to_string()); }
+    if provider.trim().is_empty() { missing.push("model.provider".to_string()); }
+    if effective_base.trim().is_empty() { missing.push("model.base_url".to_string()); }
+    if !key_set { missing.push(env_key.clone()); }
+
+    Ok(serde_json::json!({
+        "ok": missing.is_empty(),
+        "missing": missing,
+        "root": root.display().to_string(),
+        "configPath": cfg_path.display().to_string(),
+        "envPath": env_path.display().to_string(),
+        "engine": "fallback",
+        "script": script_path,
+        "providers": [],
+        "providerDef": {},
+        "envBaseUrlKey": env_base_key,
+        "envApiKeyKey": env_key,
+        "resolved": {
+            "model": {
+                "value": model,
+                "source": if model.trim().is_empty() { "none" } else { "config" }
+            },
+            "provider": {
+                "value": provider,
+                "source": if provider.trim().is_empty() { "none" } else { "config" }
+            },
+            "baseUrl": {
+                "value": effective_base,
+                "source": base_source,
+                "configValue": base_url,
+                "envValue": env_base,
+                "envKey": env_base_key,
+                "providerDefault": ""
+            },
+            "apiKey": {
+                "set": key_set,
+                "source": if key_set { "env" } else { "none" },
+                "envKeys": [env_key],
+                "fromConfig": false
+            }
+        }
+    }))
+}
+
+/// 保存模型参数：备份 config.yaml/.env → 只改 model 段 + 对应 API Key。
+#[tauri::command]
+fn hermes_model_save(
+    app: tauri::AppHandle,
+    provider: String,
+    model: String,
+    base_url: String,
+    api_key: String,
+) -> Result<serde_json::Value, String> {
+    if provider.trim().is_empty() || model.trim().is_empty() {
+        return Err("Provider 和 Model 不能为空".to_string());
+    }
+    let root = la_first_local_root(&app).ok_or_else(|| "未找到本地 Agent 配置".to_string())?;
+    let cfg_path = root.join("data").join("config.yaml");
+    let env_path = root.join("data").join(".env");
+    let text = std::fs::read_to_string(&cfg_path).map_err(|e| format!("读 config.yaml 失败：{e}"))?;
+
+    let stamp = now_str().replace([':', ' ', '-'], "");
+    let bak = cfg_path.with_file_name(format!("config.yaml.bak-tdev-{stamp}"));
+    let _ = std::fs::copy(&cfg_path, &bak);
+    if env_path.exists() {
+        let _ = std::fs::copy(&env_path, env_path.with_file_name(format!(".env.bak-tdev-{stamp}")));
+    }
+
+    let new_text = set_model_block(
+        &text,
+        &[
+            ("default", model.trim().to_string()),
+            ("provider", provider.trim().to_string()),
+            ("base_url", base_url.trim().to_string()),
+        ],
+    );
+    std::fs::write(&cfg_path, new_text).map_err(|e| format!("写 config.yaml 失败：{e}"))?;
+
+    let mut wrote_env: Vec<String> = Vec::new();
+    if !api_key.trim().is_empty() {
+        let k = provider_env_key(&provider);
+        env_set(&env_path, &k, api_key.trim()).map_err(|e| format!("写 .env 失败：{e}"))?;
+        wrote_env.push(k);
+    }
+    // 同步写 .env 的 <PROVIDER>_BASE_URL：让 config.yaml 与 .env 指向同一个地址。
+    // 否则会出现「config 写 A、env 还是 B」，换 provider 时行为对不上（Hermes 运行期 env 优先）。
+    let provider_upper = provider.trim().to_uppercase().replace('-', "_");
+    if !base_url.trim().is_empty() && !provider_upper.is_empty() {
+        let env_base_key = format!("{provider_upper}_BASE_URL");
+        env_set(&env_path, &env_base_key, base_url.trim())
+            .map_err(|e| format!("写 {env_base_key} 到 .env 失败：{e}"))?;
+        wrote_env.push(env_base_key);
+    }
+
+    Ok(serde_json::json!({
+        "ok": true,
+        "backup": bak.display().to_string(),
+        "configPath": cfg_path.display().to_string(),
+        "envPath": env_path.display().to_string(),
+        "wroteEnv": wrote_env
+    }))
+}
+
+/// 直接调用「自带 start/stop 的启动器脚本」（目前是 start_qq_channel.py）：
+/// 无窗口、拿 JSON、不经过 cmd /C —— 因此没有 `pause` 卡死和引号解析问题。
+/// 返回 None 时调用方回落到原来的「杀进程树」逻辑。
+fn la_graceful_launcher(script: &str, args: &[&str]) -> Option<serde_json::Value> {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        let sp = std::path::Path::new(script);
+        if sp.file_name()?.to_string_lossy().to_lowercase() != "start_qq_channel.py" {
+            return None;
+        }
+        let dir = sp.parent()?;
+        let py = dir.join("app").join(".venv").join("Scripts").join("python.exe");
+        if !py.exists() {
+            return None;
+        }
+        let out = std::process::Command::new(py)
+            .arg(sp)
+            .args(args)
+            .current_dir(dir)
+            .creation_flags(CREATE_NO_WINDOW)
+            .stdin(std::process::Stdio::null())
+            .output()
+            .ok()?;
+        let text = String::from_utf8_lossy(&out.stdout);
+        let v: serde_json::Value = serde_json::from_str(text.trim()).ok()?;
+        if !v.get("ok").and_then(|x| x.as_bool()).unwrap_or(false) {
+            return None;
+        }
+        Some(v)
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = (script, args);
+        None
+    }
+}
+
+/// 停止本地 Agent：端口占用者优先，其次记录的 PID；杀整棵进程树
+#[tauri::command]
+fn local_agent_stop(
+    app: tauri::AppHandle,
+    url: String,
+    script: String,
+) -> Result<serde_json::Value, String> {
+    // Hermes 启动器自带优雅停止：优先走 `--stop`。
+    // 强杀（taskkill /T /F）会把进行中的 turn 变成 unknown_execution 冻结整个会话，
+    // 之后必须 sessions discard 才能恢复 —— 所以能优雅停就别杀。
+    if let Some(v) = la_graceful_launcher(&script, &["--stop", "--json"]) {
+        la_track_clear(&app, &script);
+        la_desired_set(&app, "stopped");   // 记住「用户要它停」，下次打开 TDev 不自动拉起
+        return Ok(v);
+    }
+
+    let self_pid = std::process::id();
+    let mut killed: Vec<u32> = Vec::new();
+    let mut refused: Vec<String> = Vec::new();
+    let port = la_url_port(&url);
+
+    let try_kill = |pid: u32, killed: &mut Vec<u32>, refused: &mut Vec<String>| {
+        if pid == self_pid {
+            refused.push(format!("{pid}（TDev 自己，拒绝）"));
+            return;
+        }
+        let image = la_proc_image(pid).unwrap_or_default();
+        if la_is_protected(&image) {
+            refused.push(format!("{pid}（{image} 系统关键进程，拒绝）"));
+            return;
+        }
+        if la_kill_tree(pid) {
+            killed.push(pid);
+        } else {
+            refused.push(format!("{pid}（杀进程失败，可能已退出）"));
+        }
+    };
+
+    if let Some(p) = port {
+        if let Some(pid) = la_pid_on_port(p) {
+            try_kill(pid, &mut killed, &mut refused);
+        }
+    }
+    if let Some(pid) = la_track_get(&app, &script) {
+        if la_pid_alive(pid) && !killed.contains(&pid) {
+            try_kill(pid, &mut killed, &mut refused);
+        }
+    }
+    la_track_clear(&app, &script);
+
+    let mut port_free = true;
+    if let Some(p) = port {
+        port_free = false;
+        for _ in 0..20 {
+            if !la_port_listening(p) {
+                port_free = true;
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(250));
+        }
+    }
+    la_desired_set(&app, "stopped");
+    Ok(serde_json::json!({
+        "ok": port_free && refused.is_empty(),
+        "killed": killed,
+        "refused": refused,
+        "portFree": port_free
+    }))
+}
+
+/// 重启：停止 → 等端口空闲 → 短暂等待 → 启动
+#[tauri::command]
+fn local_agent_restart(
+    app: tauri::AppHandle,
+    url: String,
+    script: String,
+    cwd: Option<String>,
+    cmdline: Option<String>,
+) -> Result<serde_json::Value, String> {
+    // 启动器自带重启（内部 stop → start，一次到位，还能等到就绪）；失败再走通用 stop+start
+    if let Some(v) = la_graceful_launcher(&script, &["--restart", "--json", "--timeout", "90"]) {
+        la_desired_set(&app, "running");
+        return Ok(v);
+    }
+    let _ = local_agent_stop(app.clone(), url.clone(), script.clone());
+    if let Some(p) = la_url_port(&url) {
+        for _ in 0..20 {
+            if !la_port_listening(p) {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(250));
+        }
+    }
+    std::thread::sleep(std::time::Duration::from_millis(600));
+    local_agent_start(app, script, cwd, cmdline)
+}
+
+/// 对话框「试运行」：执行命令行并捕获输出（GBK 解码），最多等 wait_ms（默认 8s，上限 60s）
+#[tauri::command]
+fn local_agent_cmd_run(
+    script: String,
+    cwd: Option<String>,
+    cmdline: Option<String>,
+    wait_ms: Option<u64>,
+) -> Result<serde_json::Value, String> {
+    let (dir, line, _script) = la_resolve(&script, cwd.as_deref(), cmdline.as_deref())?;
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        let mut child = std::process::Command::new("cmd")
+            .arg("/C")
+            .arg(&line)
+            .current_dir(&dir)
+            .creation_flags(CREATE_NO_WINDOW)
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
+            .map_err(|e| format!("执行失败：{e}"))?;
+        let limit = std::time::Duration::from_millis(wait_ms.unwrap_or(8000).min(60000));
+        let started = std::time::Instant::now();
+        let mut timed_out = false;
+        loop {
+            match child.try_wait() {
+                Ok(Some(_)) => break,
+                Ok(None) => {}
+                Err(e) => return Err(format!("等待进程失败：{e}")),
+            }
+            if started.elapsed() >= limit {
+                timed_out = true;
+                let _ = child.kill();
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(120));
+        }
+        let out = child.wait_with_output().map_err(|e| e.to_string())?;
+        let dec = |b: &[u8]| -> String {
+            let (s, _, _) = encoding_rs::GBK.decode(b);
+            s.into_owned()
+        };
+        let mut text = dec(&out.stdout);
+        let err = dec(&out.stderr);
+        if !err.trim().is_empty() {
+            text.push_str("\n[stderr]\n");
+            text.push_str(&err);
+        }
+        if text.len() > 12000 {
+            text.truncate(12000);
+            text.push_str("\n…（输出过长，已截断）");
+        }
+        Ok(serde_json::json!({
+            "ok": out.status.success() && !timed_out,
+            "code": out.status.code(),
+            "timedOut": timed_out,
+            "cmdline": line,
+            "output": text
+        }))
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = (dir, line);
+        Err("本地 Agent 管理目前仅支持 Windows".to_string())
+    }
 }
 
 /// 示例命令 ①：递归新建文件夹，返回结果文本
